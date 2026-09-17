@@ -1,0 +1,8 @@
+node_modules/
+.obsidian/
+.graphify/
+scripts/
+package-lock.json
+*.canvas
+README.md
+LICENSE

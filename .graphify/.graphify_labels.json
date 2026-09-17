@@ -1,0 +1,15 @@
+{
+  "0": "Delivery plan and risk register",
+  "1": "Manual access and accessibility",
+  "2": "Architecture decisions and stack",
+  "3": "Agent workflow and API contracts",
+  "4": "Knowledge system maintenance",
+  "5": "Implementation handoff and runbook",
+  "6": "Corrections and undo",
+  "7": "Verification and release readiness",
+  "8": "System architecture",
+  "9": "Atomic sales and retries",
+  "10": "Analytics and missing data",
+  "11": "Authorization and tool safety",
+  "12": "Verification and release readiness"
+}

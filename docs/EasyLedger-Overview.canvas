@@ -1,0 +1,335 @@
+{
+  "nodes": [
+    {
+      "id": "intro",
+      "type": "text",
+      "x": 0,
+      "y": -230,
+      "width": 1830,
+      "height": 155,
+      "text": "# EasyLedger · Project overview\nVoice → validated tools → trustworthy ledger → interactive dashboards\n\n**Planning only. Backend and working journeys first; theme undecided.** Open a file card to read the live note. Columns group responsibilities; arrows show the suggested reading and implementation flow."
+    },
+    {
+      "id": "group-0",
+      "type": "group",
+      "x": 0,
+      "y": 0,
+      "width": 440,
+      "height": 1670,
+      "label": "01 · PURPOSE & SCOPE",
+      "color": "4"
+    },
+    {
+      "id": "note-0-0",
+      "type": "file",
+      "file": "docs/00-Home.md",
+      "x": 25,
+      "y": 55,
+      "width": 390,
+      "height": 270,
+      "color": "4"
+    },
+    {
+      "id": "note-0-1",
+      "type": "file",
+      "file": "docs/01-Product-Brief.md",
+      "x": 25,
+      "y": 375,
+      "width": 390,
+      "height": 270,
+      "color": "4"
+    },
+    {
+      "id": "note-0-2",
+      "type": "file",
+      "file": "docs/02-SRS.md",
+      "x": 25,
+      "y": 695,
+      "width": 390,
+      "height": 270,
+      "color": "4"
+    },
+    {
+      "id": "note-0-3",
+      "type": "file",
+      "file": "docs/15-Use-Cases.md",
+      "x": 25,
+      "y": 1015,
+      "width": 390,
+      "height": 270,
+      "color": "4"
+    },
+    {
+      "id": "note-0-4",
+      "type": "file",
+      "file": "docs/14-Glossary.md",
+      "x": 25,
+      "y": 1335,
+      "width": 390,
+      "height": 270,
+      "color": "4"
+    },
+    {
+      "id": "group-1",
+      "type": "group",
+      "x": 480,
+      "y": 0,
+      "width": 440,
+      "height": 1350,
+      "label": "02 · SYSTEM & AGENT",
+      "color": "5"
+    },
+    {
+      "id": "note-1-0",
+      "type": "file",
+      "file": "docs/03-Architecture.md",
+      "x": 505,
+      "y": 55,
+      "width": 390,
+      "height": 270,
+      "color": "5"
+    },
+    {
+      "id": "note-1-1",
+      "type": "file",
+      "file": "docs/04-Decisions.md",
+      "x": 505,
+      "y": 375,
+      "width": 390,
+      "height": 270,
+      "color": "5"
+    },
+    {
+      "id": "note-1-2",
+      "type": "file",
+      "file": "docs/05-Data-Model.md",
+      "x": 505,
+      "y": 695,
+      "width": 390,
+      "height": 270,
+      "color": "5"
+    },
+    {
+      "id": "note-1-3",
+      "type": "file",
+      "file": "docs/06-Agent-and-API.md",
+      "x": 505,
+      "y": 1015,
+      "width": 390,
+      "height": 270,
+      "color": "5"
+    },
+    {
+      "id": "group-2",
+      "type": "group",
+      "x": 960,
+      "y": 0,
+      "width": 440,
+      "height": 1350,
+      "label": "03 · EXPERIENCE & TRUST",
+      "color": "6"
+    },
+    {
+      "id": "note-2-0",
+      "type": "file",
+      "file": "docs/07-Dashboard-and-UX.md",
+      "x": 985,
+      "y": 55,
+      "width": 390,
+      "height": 270,
+      "color": "6"
+    },
+    {
+      "id": "note-2-1",
+      "type": "file",
+      "file": "docs/08-Security-and-Operations.md",
+      "x": 985,
+      "y": 375,
+      "width": 390,
+      "height": 270,
+      "color": "6"
+    },
+    {
+      "id": "note-2-2",
+      "type": "file",
+      "file": "docs/09-Verification.md",
+      "x": 985,
+      "y": 695,
+      "width": 390,
+      "height": 270,
+      "color": "6"
+    },
+    {
+      "id": "note-2-3",
+      "type": "file",
+      "file": "docs/12-Knowledge-System.md",
+      "x": 985,
+      "y": 1015,
+      "width": 390,
+      "height": 270,
+      "color": "6"
+    },
+    {
+      "id": "group-3",
+      "type": "group",
+      "x": 1440,
+      "y": 0,
+      "width": 440,
+      "height": 1990,
+      "label": "04 · DELIVERY & EVIDENCE",
+      "color": "3"
+    },
+    {
+      "id": "note-3-0",
+      "type": "file",
+      "file": "docs/10-Delivery-Plan.md",
+      "x": 1465,
+      "y": 55,
+      "width": 390,
+      "height": 270,
+      "color": "3"
+    },
+    {
+      "id": "note-3-1",
+      "type": "file",
+      "file": "docs/11-Hackathon-and-License.md",
+      "x": 1465,
+      "y": 375,
+      "width": 390,
+      "height": 270,
+      "color": "3"
+    },
+    {
+      "id": "note-3-2",
+      "type": "file",
+      "file": "docs/16-Implementation-Handoff.md",
+      "x": 1465,
+      "y": 695,
+      "width": 390,
+      "height": 270,
+      "color": "3"
+    },
+    {
+      "id": "note-3-3",
+      "type": "file",
+      "file": "docs/13-Sources.md",
+      "x": 1465,
+      "y": 1015,
+      "width": 390,
+      "height": 270,
+      "color": "3"
+    },
+    {
+      "id": "note-3-4",
+      "type": "file",
+      "file": "AGENTS.md",
+      "x": 1465,
+      "y": 1335,
+      "width": 390,
+      "height": 270,
+      "color": "3"
+    },
+    {
+      "id": "note-3-5",
+      "type": "file",
+      "file": "docs/17-Verification-Record.md",
+      "x": 1465,
+      "y": 1655,
+      "width": 390,
+      "height": 270,
+      "color": "3"
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-0",
+      "fromNode": "note-0-1",
+      "toNode": "note-0-2",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "label": "continue"
+    },
+    {
+      "id": "edge-1",
+      "fromNode": "note-0-2",
+      "toNode": "note-1-0",
+      "fromSide": "right",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "label": "continue"
+    },
+    {
+      "id": "edge-2",
+      "fromNode": "note-1-0",
+      "toNode": "note-1-1",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "label": "continue"
+    },
+    {
+      "id": "edge-3",
+      "fromNode": "note-1-1",
+      "toNode": "note-1-2",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "label": "continue"
+    },
+    {
+      "id": "edge-4",
+      "fromNode": "note-1-2",
+      "toNode": "note-1-3",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "label": "continue"
+    },
+    {
+      "id": "edge-5",
+      "fromNode": "note-1-3",
+      "toNode": "note-2-0",
+      "fromSide": "right",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "label": "continue"
+    },
+    {
+      "id": "edge-6",
+      "fromNode": "note-2-0",
+      "toNode": "note-2-1",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "label": "continue"
+    },
+    {
+      "id": "edge-7",
+      "fromNode": "note-2-1",
+      "toNode": "note-2-2",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "label": "continue"
+    },
+    {
+      "id": "edge-8",
+      "fromNode": "note-2-2",
+      "toNode": "note-3-0",
+      "fromSide": "right",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "label": "continue"
+    },
+    {
+      "id": "edge-9",
+      "fromNode": "note-3-0",
+      "toNode": "note-3-1",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "label": "continue"
+    }
+  ]
+}

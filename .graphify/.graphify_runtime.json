@@ -1,0 +1,6 @@
+{
+  "runtime": "typescript",
+  "package": "@sentropic/graphify",
+  "version": "0.18.0",
+  "extraction": "deterministic headings, requirement rows and explicit links; no LLM calls"
+}

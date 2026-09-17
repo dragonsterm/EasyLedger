@@ -1,0 +1,61 @@
+{
+  "schema": "graphify_workspace_manifest_v1",
+  "schema_version": 1,
+  "contract": "workspace-bundle-contract-v1",
+  "generated_at": "2026-09-17T14:52:51.188Z",
+  "graph_hash": null,
+  "present_count": 4,
+  "counts": {
+    "graph_nodes": 117,
+    "scene_nodes": 117,
+    "entities": 117,
+    "coherent": true
+  },
+  "artifacts": [
+    {
+      "name": "entities",
+      "path": "entities.json",
+      "schema": null,
+      "present": true,
+      "sha256": "a1e284b84ea258ba853630a5dd718dadecca0c60ee1527882f74f073e4c425e5",
+      "size_bytes": 40638,
+      "role": "entities"
+    },
+    {
+      "name": "graph",
+      "path": "graph.json",
+      "schema": null,
+      "present": true,
+      "sha256": "7e1a715c02513182038088f8087773ec4de1b8542d744e6c5d60671dfc43921d",
+      "size_bytes": 332439,
+      "role": "graph"
+    },
+    {
+      "name": "reconciliation-candidates",
+      "path": "reconciliation-candidates.json",
+      "schema": "graphify_ontology_reconciliation_candidates_v1",
+      "present": true,
+      "sha256": "4bf7c8639bc34bbbae5aef4aba3c724f9a425cbdc0416ab6384f7745ae1acb96",
+      "size_bytes": 22,
+      "role": "reconciliation"
+    },
+    {
+      "name": "scene",
+      "path": "scene.json",
+      "schema": null,
+      "present": true,
+      "sha256": "7031421662e1c0fc7dd5eca061292e7972e0db25512775c905354663123f22c2",
+      "size_bytes": 81197,
+      "role": "scene"
+    },
+    {
+      "name": "scene-hierarchies",
+      "path": "scene-hierarchies.json",
+      "schema": "graphify_scene_hierarchies_v1",
+      "present": false,
+      "sha256": null,
+      "size_bytes": null,
+      "role": "hierarchy"
+    }
+  ]
+}

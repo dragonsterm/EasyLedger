@@ -1,0 +1,14 @@
+{
+  "name": "easyledger-documentation",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Documentation and knowledge graph tooling; application is not implemented yet.",
+  "scripts": {
+    "docs:sync": "node scripts/sync-docs.cjs",
+    "docs:check": "node scripts/sync-docs.cjs --check",
+    "docs:watch": "node scripts/watch-docs.cjs",
+    "graph:query": "graphify query",
+    "graph:serve": "node scripts/serve-graph.cjs"
+  },
+  "devDependencies": { "@sentropic/graphify": "0.18.0" }
+}
