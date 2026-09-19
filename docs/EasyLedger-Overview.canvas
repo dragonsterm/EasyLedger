@@ -175,7 +175,7 @@
       "x": 1440,
       "y": 0,
       "width": 440,
-      "height": 1990,
+      "height": 2310,
       "label": "04 · DELIVERY & EVIDENCE",
       "color": "3"
     },
@@ -235,6 +235,16 @@
       "file": "docs/17-Verification-Record.md",
       "x": 1465,
       "y": 1655,
+      "width": 390,
+      "height": 270,
+      "color": "3"
+    },
+    {
+      "id": "note-3-6",
+      "type": "file",
+      "file": "docs/18-Hackathon-Rules.md",
+      "x": 1465,
+      "y": 1975,
       "width": 390,
       "height": 270,
       "color": "3"

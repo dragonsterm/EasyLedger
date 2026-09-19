@@ -28,6 +28,7 @@ Start with [[docs/01-Product-Brief|the product brief]], then [[docs/02-SRS|the s
 | What happens in each user scenario? | [[docs/15-Use-Cases]] |
 | How does implementation begin? | [[docs/16-Implementation-Handoff]] |
 | What was actually verified? | [[docs/17-Verification-Record]] |
+| What are the hackathon rules, requirements, and judging criteria? | [[docs/18-Hackathon-Rules]] |
 
 Open [[docs/EasyLedger-Overview.canvas|the overview canvas]] for a guided map, or [[docs/EasyLedger-Knowledge.canvas|the complete document graph]]. Both are generated from the same notes as Graphify. The root README intentionally contains only `in progress`.
 

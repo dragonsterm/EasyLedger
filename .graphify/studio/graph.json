@@ -3,22 +3,23 @@
   "multigraph": false,
   "graph": {
     "community_labels": {
-      "0": "Delivery plan and risk register",
+      "0": "Agent workflow and API contracts",
       "1": "Manual access and accessibility",
       "2": "Architecture decisions and stack",
-      "3": "Agent workflow and API contracts",
+      "3": "Implementation handoff and runbook",
       "4": "Knowledge system maintenance",
-      "5": "Implementation handoff and runbook",
-      "6": "Corrections and undo",
-      "7": "Verification and release readiness",
+      "5": "Corrections and undo",
+      "6": "Verification and release readiness",
+      "7": "Delivery plan and risk register",
       "8": "System architecture",
       "9": "Atomic sales and retries",
       "10": "Analytics and missing data",
       "11": "Authorization and tool safety",
       "12": "Verification and release readiness"
-    }
+    },
+    "built_from_commit": "0eca96f69e2f840280b2739e77d6216ecaed6f74"
   },
-  "topology_signature": "n=117;e=239;AGENTS.md,AGENTS.md#section-20,AGENTS.md#section-7,docs/00-Home.md,docs/00-Home.md#section-34,docs/01-Product-Brief.md,docs/01-Product-Brief.md#section-12,docs/01-Product-Brief.md#section-22,docs/01-Product-Brief.md#section-30,docs/02-SRS.md,docs/02-SRS.md#FR-01,docs/02-SRS.md#FR-02,docs/02-SRS.md#FR-03,docs/02-SRS.md#FR-04,docs/02-SRS.md#FR-05,docs/02-SRS.md#FR-06,docs/02-SRS.md#FR-07,docs/02-SRS.md#FR-08,docs/02-SRS.md#FR-09,docs/02-SRS.md#FR-10,docs/02-SRS.md#FR-11,docs/02-SRS.md#FR-12,docs/02-SRS.md#FR-13,docs/02-SRS.md#FR-14,docs/02-SRS.md#FR-15,docs/02-SRS.md#FR-16,docs/02-SRS.md#FR-17,docs/02-SRS.md#FR-18,docs/02-SRS.md#FR-19,docs/02-SRS.md#NFR-01,docs/02-SRS.md#NFR-02,docs/02-SRS.md#NFR-03,docs/02-SRS.md#NFR-04,docs/02-SRS.md#NFR-05,docs/02-SRS.md#NFR-06,docs/02-SRS.md#NFR-07,docs/02-SRS.md#section-12,docs/02-SRS.md#section-36,docs/02-SRS.md#section-48,docs/02-SRS.md#section-8,docs/03-Architecture.md,docs/03-Architecture.md#section-27,docs/03-Architecture.md#section-35,docs/03-Architecture.md#section-41,docs/04-Decisions.md,docs/04-Decisions.md#ADR-001,docs/04-Decisions.md#ADR-002,docs/04-Decisions.md#ADR-003,docs/04-Decisions.md#ADR-004,docs/04-Decisions.md#ADR-005,docs/04-Decisions.md#ADR-006,docs/04-Decisions.md#ADR-007,docs/04-Decisions.md#ADR-008,docs/04-Decisions.md#ADR-009,docs/04-Decisions.md#section-22,docs/04-Decisions.md#section-26,docs/05-Data-Model.md,docs/05-Data-Model.md#section-35,docs/05-Data-Model.md#section-41,docs/05-Data-Model.md#section-47,docs/06-Agent-and-API.md,docs/06-Agent-and-API.md#section-10,docs/06-Agent-and-API.md#section-16,docs/06-Agent-and-API.md#section-38,docs/06-Agent-and-API.md#section-44,docs/07-Dashboard-and-UX.md,docs/07-Dashboard-and-UX.md#section-10,docs/07-Dashboard-and-UX.md#section-26,docs/08-Security-and-Operations.md,docs/08-Security-and-Operations.md#section-21,docs/08-Security-and-Operations.md#section-25,docs/08-Security-and-Operations.md#section-8,docs/09-Verification.md,docs/09-Verification.md#T-01,docs/09-Verification.md#T-02,docs/09-Verification.md#T-03,docs/09-Verification.md#T-04,docs/09-Verification.md#T-05,docs/09-Verification.md#T-06,docs/09-Verification.md#T-07,docs/09-Verification.md#T-08,docs/09-Verification.md#T-09,docs/09-Verification.md#T-10,docs/09-Verification.md#T-11,docs/09-Verification.md#T-12,docs/09-Verification.md#T-13,docs/09-Verification.md#T-14,docs/09-Verification.md#section-27,docs/09-Verification.md#section-33,docs/10-Delivery-Plan.md,docs/10-Delivery-Plan.md#P0,docs/10-Delivery-Plan.md#P1,docs/10-Delivery-Plan.md#P2,docs/10-Delivery-Plan.md#P3,docs/10-Delivery-Plan.md#P4,docs/10-Delivery-Plan.md#P5,docs/10-Delivery-Plan.md#P6,docs/10-Delivery-Plan.md#section-22,docs/11-Hackathon-and-License.md,docs/11-Hackathon-and-License.md#section-12,docs/11-Hackathon-and-License.md#section-18,docs/12-Knowledge-System.md,docs/12-Knowledge-System.md#section-10,docs/12-Knowledge-System.md#section-18,docs/12-Knowledge-System.md#section-31,docs/13-Sources.md,docs/14-Glossary.md,docs/15-Use-Cases.md,docs/15-Use-Cases.md#section-21,docs/16-Implementation-Handoff.md,docs/16-Implementation-Handoff.md#section-12,docs/16-Implementation-Handoff.md#section-18,docs/16-Implementation-Handoff.md#section-28,docs/16-Implementation-Handoff.md#section-38,docs/16-Implementation-Handoff.md#section-8,docs/17-Verification-Record.md,docs/17-Verification-Record.md#section-23|AGENTS.md\tAGENTS.md#section-20\tcontains;AGENTS.md\tAGENTS.md#section-7\tcontains;AGENTS.md\tdocs/00-Home.md\treferences;AGENTS.md\tdocs/02-SRS.md\treferences;AGENTS.md\tdocs/03-Architecture.md\treferences;AGENTS.md\tdocs/04-Decisions.md\treferences;AGENTS.md\tdocs/12-Knowledge-System.md\treferences;docs/00-Home.md\tdocs/00-Home.md#section-34\tcontains;docs/00-Home.md\tdocs/01-Product-Brief.md\treferences;docs/00-Home.md\tdocs/02-SRS.md\treferences;docs/00-Home.md\tdocs/03-Architecture.md\treferences;docs/00-Home.md\tdocs/04-Decisions.md\treferences;docs/00-Home.md\tdocs/05-Data-Model.md\treferences;docs/00-Home.md\tdocs/06-Agent-and-API.md\treferences;docs/00-Home.md\tdocs/07-Dashboard-and-UX.md\treferences;docs/00-Home.md\tdocs/08-Security-and-Operations.md\treferences;docs/00-Home.md\tdocs/09-Verification.md\treferences;docs/00-Home.md\tdocs/10-Delivery-Plan.md\treferences;docs/00-Home.md\tdocs/11-Hackathon-and-License.md\treferences;docs/00-Home.md\tdocs/12-Knowledge-System.md\treferences;docs/00-Home.md\tdocs/13-Sources.md\treferences;docs/00-Home.md\tdocs/14-Glossary.md\treferences;docs/00-Home.md\tdocs/15-Use-Cases.md\treferences;docs/00-Home.md\tdocs/16-Implementation-Handoff.md\treferences;docs/00-Home.md\tdocs/17-Verification-Record.md\treferences;docs/01-Product-Brief.md\tdocs/01-Product-Brief.md#section-12\tcontains;docs/01-Product-Brief.md\tdocs/01-Product-Brief.md#section-22\tcontains;docs/01-Product-Brief.md\tdocs/01-Product-Brief.md#section-30\tcontains;docs/01-Product-Brief.md\tdocs/02-SRS.md\treferences;docs/01-Product-Brief.md\tdocs/07-Dashboard-and-UX.md\treferences;docs/01-Product-Brief.md\tdocs/09-Verification.md\treferences;docs/01-Product-Brief.md\tdocs/10-Delivery-Plan.md\treferences;docs/01-Product-Brief.md\tdocs/13-Sources.md\treferences;docs/02-SRS.md\tdocs/02-SRS.md#FR-01\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-02\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-03\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-04\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-05\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-06\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-07\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-08\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-09\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-10\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-11\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-12\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-13\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-14\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-15\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-16\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-17\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-18\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-19\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#NFR-01\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#NFR-02\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#NFR-03\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#NFR-04\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#NFR-05\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#NFR-06\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#NFR-07\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#section-12\tcontains;docs/02-SRS.md\tdocs/02-SRS.md#section-36\tcontains;docs/02-SRS.md\tdocs/02-SRS.md#section-48\tcontains;docs/02-SRS.md\tdocs/02-SRS.md#section-8\tcontains;docs/02-SRS.md\tdocs/03-Architecture.md\treferences;docs/02-SRS.md\tdocs/04-Decisions.md\treferences;docs/02-SRS.md\tdocs/05-Data-Model.md\treferences;docs/02-SRS.md\tdocs/09-Verification.md\treferences;docs/02-SRS.md\tdocs/10-Delivery-Plan.md\treferences;docs/02-SRS.md\tdocs/12-Knowledge-System.md\treferences;docs/02-SRS.md\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-01\tdocs/09-Verification.md#T-07\tverifies;docs/02-SRS.md#FR-01\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-02\tdocs/09-Verification.md#T-08\tverifies;docs/02-SRS.md#FR-02\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-03\tdocs/09-Verification.md#T-01\tverifies;docs/02-SRS.md#FR-03\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-04\tdocs/09-Verification.md#T-02\tverifies;docs/02-SRS.md#FR-04\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-05\tdocs/09-Verification.md#T-04\tverifies;docs/02-SRS.md#FR-05\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-06\tdocs/09-Verification.md#T-04\tverifies;docs/02-SRS.md#FR-06\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-07\tdocs/09-Verification.md#T-09\tverifies;docs/02-SRS.md#FR-07\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-08\tdocs/09-Verification.md#T-01\tverifies;docs/02-SRS.md#FR-08\tdocs/09-Verification.md#T-02\tverifies;docs/02-SRS.md#FR-08\tdocs/09-Verification.md#T-05\tverifies;docs/02-SRS.md#FR-08\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-09\tdocs/09-Verification.md#T-05\tverifies;docs/02-SRS.md#FR-09\tdocs/09-Verification.md#T-06\tverifies;docs/02-SRS.md#FR-09\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-10\tdocs/09-Verification.md#T-05\tverifies;docs/02-SRS.md#FR-10\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-11\tdocs/09-Verification.md#T-05\tverifies;docs/02-SRS.md#FR-11\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-12\tdocs/09-Verification.md#T-06\tverifies;docs/02-SRS.md#FR-12\tdocs/09-Verification.md#T-09\tverifies;docs/02-SRS.md#FR-12\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-13\tdocs/09-Verification.md#T-06\tverifies;docs/02-SRS.md#FR-13\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-14\tdocs/09-Verification.md#T-03\tverifies;docs/02-SRS.md#FR-14\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-15\tdocs/09-Verification.md#T-01\tverifies;docs/02-SRS.md#FR-15\tdocs/09-Verification.md#T-03\tverifies;docs/02-SRS.md#FR-15\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-16\tdocs/09-Verification.md#T-10\tverifies;docs/02-SRS.md#FR-16\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-17\tdocs/09-Verification.md#T-08\tverifies;docs/02-SRS.md#FR-17\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-18\tdocs/09-Verification.md#T-13\tverifies;docs/02-SRS.md#FR-18\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-19\tdocs/09-Verification.md#T-14\tverifies;docs/02-SRS.md#FR-19\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#NFR-01\tdocs/09-Verification.md#T-01\tverifies;docs/02-SRS.md#NFR-02\tdocs/09-Verification.md#T-11\tverifies;docs/02-SRS.md#NFR-03\tdocs/09-Verification.md#T-11\tverifies;docs/02-SRS.md#NFR-04\tdocs/09-Verification.md#T-07\tverifies;docs/02-SRS.md#NFR-05\tdocs/09-Verification.md#T-09\tverifies;docs/02-SRS.md#NFR-06\tdocs/09-Verification.md#T-12\tverifies;docs/02-SRS.md#NFR-07\tdocs/09-Verification.md#T-10\tverifies;docs/03-Architecture.md\tdocs/03-Architecture.md#section-27\tcontains;docs/03-Architecture.md\tdocs/03-Architecture.md#section-35\tcontains;docs/03-Architecture.md\tdocs/03-Architecture.md#section-41\tcontains;docs/03-Architecture.md\tdocs/04-Decisions.md\treferences;docs/03-Architecture.md\tdocs/06-Agent-and-API.md\treferences;docs/03-Architecture.md\tdocs/08-Security-and-Operations.md\treferences;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-001\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-002\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-003\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-004\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-005\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-006\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-007\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-008\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-009\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#section-22\tcontains;docs/04-Decisions.md\tdocs/04-Decisions.md#section-26\tcontains;docs/04-Decisions.md\tdocs/08-Security-and-Operations.md\treferences;docs/04-Decisions.md\tdocs/10-Delivery-Plan.md\treferences;docs/04-Decisions.md\tdocs/11-Hackathon-and-License.md\treferences;docs/04-Decisions.md\tdocs/12-Knowledge-System.md\treferences;docs/04-Decisions.md\tdocs/13-Sources.md\treferences;docs/04-Decisions.md\tdocs/16-Implementation-Handoff.md\treferences;docs/04-Decisions.md\tdocs/17-Verification-Record.md\treferences;docs/05-Data-Model.md\tdocs/05-Data-Model.md#section-35\tcontains;docs/05-Data-Model.md\tdocs/05-Data-Model.md#section-41\tcontains;docs/05-Data-Model.md\tdocs/05-Data-Model.md#section-47\tcontains;docs/05-Data-Model.md\tdocs/06-Agent-and-API.md\treferences;docs/05-Data-Model.md\tdocs/07-Dashboard-and-UX.md\treferences;docs/05-Data-Model.md\tdocs/08-Security-and-Operations.md\treferences;docs/05-Data-Model.md\tdocs/14-Glossary.md\treferences;docs/05-Data-Model.md\tdocs/15-Use-Cases.md\treferences;docs/06-Agent-and-API.md\tdocs/06-Agent-and-API.md#section-10\tcontains;docs/06-Agent-and-API.md\tdocs/06-Agent-and-API.md#section-16\tcontains;docs/06-Agent-and-API.md\tdocs/06-Agent-and-API.md#section-38\tcontains;docs/06-Agent-and-API.md\tdocs/06-Agent-and-API.md#section-44\tcontains;docs/06-Agent-and-API.md\tdocs/07-Dashboard-and-UX.md\treferences;docs/06-Agent-and-API.md\tdocs/08-Security-and-Operations.md\treferences;docs/06-Agent-and-API.md\tdocs/09-Verification.md\treferences;docs/06-Agent-and-API.md\tdocs/13-Sources.md\treferences;docs/06-Agent-and-API.md\tdocs/15-Use-Cases.md\treferences;docs/07-Dashboard-and-UX.md\tdocs/07-Dashboard-and-UX.md#section-10\tcontains;docs/07-Dashboard-and-UX.md\tdocs/07-Dashboard-and-UX.md#section-26\tcontains;docs/07-Dashboard-and-UX.md\tdocs/09-Verification.md\treferences;docs/07-Dashboard-and-UX.md\tdocs/10-Delivery-Plan.md\treferences;docs/07-Dashboard-and-UX.md\tdocs/15-Use-Cases.md\treferences;docs/08-Security-and-Operations.md\tdocs/08-Security-and-Operations.md#section-21\tcontains;docs/08-Security-and-Operations.md\tdocs/08-Security-and-Operations.md#section-25\tcontains;docs/08-Security-and-Operations.md\tdocs/08-Security-and-Operations.md#section-8\tcontains;docs/08-Security-and-Operations.md\tdocs/09-Verification.md\treferences;docs/08-Security-and-Operations.md\tdocs/09-Verification.md#T-03\treferences;docs/08-Security-and-Operations.md\tdocs/09-Verification.md#T-04\treferences;docs/08-Security-and-Operations.md\tdocs/09-Verification.md#T-07\treferences;docs/08-Security-and-Operations.md\tdocs/09-Verification.md#T-10\treferences;docs/08-Security-and-Operations.md\tdocs/16-Implementation-Handoff.md\treferences;docs/09-Verification.md\tdocs/09-Verification.md#T-01\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-02\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-03\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-04\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-05\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-06\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-07\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-08\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-09\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-10\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-11\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-12\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-13\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-14\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#section-27\tcontains;docs/09-Verification.md\tdocs/09-Verification.md#section-33\tcontains;docs/09-Verification.md\tdocs/10-Delivery-Plan.md\treferences;docs/09-Verification.md\tdocs/11-Hackathon-and-License.md\treferences;docs/09-Verification.md\tdocs/12-Knowledge-System.md\treferences;docs/09-Verification.md\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md\tdocs/16-Implementation-Handoff.md\treferences;docs/09-Verification.md\tdocs/17-Verification-Record.md\treferences;docs/09-Verification.md#T-01\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-02\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-03\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-04\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-05\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-06\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-07\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-08\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-09\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-10\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-13\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-14\tdocs/15-Use-Cases.md\treferences;docs/10-Delivery-Plan.md\tdocs/10-Delivery-Plan.md#P0\tspecifies;docs/10-Delivery-Plan.md\tdocs/10-Delivery-Plan.md#P1\tspecifies;docs/10-Delivery-Plan.md\tdocs/10-Delivery-Plan.md#P2\tspecifies;docs/10-Delivery-Plan.md\tdocs/10-Delivery-Plan.md#P3\tspecifies;docs/10-Delivery-Plan.md\tdocs/10-Delivery-Plan.md#P4\tspecifies;docs/10-Delivery-Plan.md\tdocs/10-Delivery-Plan.md#P5\tspecifies;docs/10-Delivery-Plan.md\tdocs/10-Delivery-Plan.md#P6\tspecifies;docs/10-Delivery-Plan.md\tdocs/10-Delivery-Plan.md#section-22\tcontains;docs/10-Delivery-Plan.md\tdocs/11-Hackathon-and-License.md\treferences;docs/10-Delivery-Plan.md\tdocs/16-Implementation-Handoff.md\treferences;docs/10-Delivery-Plan.md\tdocs/17-Verification-Record.md\treferences;docs/11-Hackathon-and-License.md\tdocs/11-Hackathon-and-License.md#section-12\tcontains;docs/11-Hackathon-and-License.md\tdocs/11-Hackathon-and-License.md#section-18\tcontains;docs/11-Hackathon-and-License.md\tdocs/13-Sources.md\treferences;docs/11-Hackathon-and-License.md\tdocs/16-Implementation-Handoff.md\treferences;docs/11-Hackathon-and-License.md\tdocs/17-Verification-Record.md\treferences;docs/12-Knowledge-System.md\tdocs/12-Knowledge-System.md#section-10\tcontains;docs/12-Knowledge-System.md\tdocs/12-Knowledge-System.md#section-18\tcontains;docs/12-Knowledge-System.md\tdocs/12-Knowledge-System.md#section-31\tcontains;docs/12-Knowledge-System.md\tdocs/13-Sources.md\treferences;docs/12-Knowledge-System.md\tdocs/14-Glossary.md\treferences;docs/12-Knowledge-System.md\tdocs/17-Verification-Record.md\treferences;docs/15-Use-Cases.md\tdocs/15-Use-Cases.md#section-21\tcontains;docs/16-Implementation-Handoff.md\tdocs/16-Implementation-Handoff.md#section-12\tcontains;docs/16-Implementation-Handoff.md\tdocs/16-Implementation-Handoff.md#section-18\tcontains;docs/16-Implementation-Handoff.md\tdocs/16-Implementation-Handoff.md#section-28\tcontains;docs/16-Implementation-Handoff.md\tdocs/16-Implementation-Handoff.md#section-38\tcontains;docs/16-Implementation-Handoff.md\tdocs/16-Implementation-Handoff.md#section-8\tcontains;docs/16-Implementation-Handoff.md\tdocs/17-Verification-Record.md\treferences;docs/17-Verification-Record.md\tdocs/17-Verification-Record.md#section-23\tcontains",
+  "topology_signature": "n=122;e=255;AGENTS.md,AGENTS.md#section-20,AGENTS.md#section-7,docs/00-Home.md,docs/00-Home.md#section-35,docs/01-Product-Brief.md,docs/01-Product-Brief.md#section-12,docs/01-Product-Brief.md#section-22,docs/01-Product-Brief.md#section-30,docs/02-SRS.md,docs/02-SRS.md#FR-01,docs/02-SRS.md#FR-02,docs/02-SRS.md#FR-03,docs/02-SRS.md#FR-04,docs/02-SRS.md#FR-05,docs/02-SRS.md#FR-06,docs/02-SRS.md#FR-07,docs/02-SRS.md#FR-08,docs/02-SRS.md#FR-09,docs/02-SRS.md#FR-10,docs/02-SRS.md#FR-11,docs/02-SRS.md#FR-12,docs/02-SRS.md#FR-13,docs/02-SRS.md#FR-14,docs/02-SRS.md#FR-15,docs/02-SRS.md#FR-16,docs/02-SRS.md#FR-17,docs/02-SRS.md#FR-18,docs/02-SRS.md#FR-19,docs/02-SRS.md#NFR-01,docs/02-SRS.md#NFR-02,docs/02-SRS.md#NFR-03,docs/02-SRS.md#NFR-04,docs/02-SRS.md#NFR-05,docs/02-SRS.md#NFR-06,docs/02-SRS.md#NFR-07,docs/02-SRS.md#section-12,docs/02-SRS.md#section-36,docs/02-SRS.md#section-48,docs/02-SRS.md#section-8,docs/03-Architecture.md,docs/03-Architecture.md#section-27,docs/03-Architecture.md#section-35,docs/03-Architecture.md#section-41,docs/04-Decisions.md,docs/04-Decisions.md#ADR-001,docs/04-Decisions.md#ADR-002,docs/04-Decisions.md#ADR-003,docs/04-Decisions.md#ADR-004,docs/04-Decisions.md#ADR-005,docs/04-Decisions.md#ADR-006,docs/04-Decisions.md#ADR-007,docs/04-Decisions.md#ADR-008,docs/04-Decisions.md#ADR-009,docs/04-Decisions.md#section-22,docs/04-Decisions.md#section-26,docs/05-Data-Model.md,docs/05-Data-Model.md#section-35,docs/05-Data-Model.md#section-41,docs/05-Data-Model.md#section-47,docs/06-Agent-and-API.md,docs/06-Agent-and-API.md#section-10,docs/06-Agent-and-API.md#section-16,docs/06-Agent-and-API.md#section-38,docs/06-Agent-and-API.md#section-44,docs/07-Dashboard-and-UX.md,docs/07-Dashboard-and-UX.md#section-10,docs/07-Dashboard-and-UX.md#section-26,docs/08-Security-and-Operations.md,docs/08-Security-and-Operations.md#section-21,docs/08-Security-and-Operations.md#section-25,docs/08-Security-and-Operations.md#section-8,docs/09-Verification.md,docs/09-Verification.md#T-01,docs/09-Verification.md#T-02,docs/09-Verification.md#T-03,docs/09-Verification.md#T-04,docs/09-Verification.md#T-05,docs/09-Verification.md#T-06,docs/09-Verification.md#T-07,docs/09-Verification.md#T-08,docs/09-Verification.md#T-09,docs/09-Verification.md#T-10,docs/09-Verification.md#T-11,docs/09-Verification.md#T-12,docs/09-Verification.md#T-13,docs/09-Verification.md#T-14,docs/09-Verification.md#section-27,docs/09-Verification.md#section-33,docs/10-Delivery-Plan.md,docs/10-Delivery-Plan.md#P0,docs/10-Delivery-Plan.md#P1,docs/10-Delivery-Plan.md#P2,docs/10-Delivery-Plan.md#P3,docs/10-Delivery-Plan.md#P4,docs/10-Delivery-Plan.md#P5,docs/10-Delivery-Plan.md#P6,docs/10-Delivery-Plan.md#section-22,docs/11-Hackathon-and-License.md,docs/11-Hackathon-and-License.md#section-12,docs/11-Hackathon-and-License.md#section-18,docs/12-Knowledge-System.md,docs/12-Knowledge-System.md#section-10,docs/12-Knowledge-System.md#section-18,docs/12-Knowledge-System.md#section-31,docs/13-Sources.md,docs/14-Glossary.md,docs/15-Use-Cases.md,docs/15-Use-Cases.md#section-21,docs/16-Implementation-Handoff.md,docs/16-Implementation-Handoff.md#section-12,docs/16-Implementation-Handoff.md#section-18,docs/16-Implementation-Handoff.md#section-28,docs/16-Implementation-Handoff.md#section-38,docs/16-Implementation-Handoff.md#section-8,docs/17-Verification-Record.md,docs/17-Verification-Record.md#section-23,docs/18-Hackathon-Rules.md,docs/18-Hackathon-Rules.md#section-10,docs/18-Hackathon-Rules.md#section-22,docs/18-Hackathon-Rules.md#section-33,docs/18-Hackathon-Rules.md#section-57|AGENTS.md\tAGENTS.md#section-20\tcontains;AGENTS.md\tAGENTS.md#section-7\tcontains;AGENTS.md\tdocs/00-Home.md\treferences;AGENTS.md\tdocs/02-SRS.md\treferences;AGENTS.md\tdocs/03-Architecture.md\treferences;AGENTS.md\tdocs/04-Decisions.md\treferences;AGENTS.md\tdocs/12-Knowledge-System.md\treferences;docs/00-Home.md\tdocs/00-Home.md#section-35\tcontains;docs/00-Home.md\tdocs/01-Product-Brief.md\treferences;docs/00-Home.md\tdocs/02-SRS.md\treferences;docs/00-Home.md\tdocs/03-Architecture.md\treferences;docs/00-Home.md\tdocs/04-Decisions.md\treferences;docs/00-Home.md\tdocs/05-Data-Model.md\treferences;docs/00-Home.md\tdocs/06-Agent-and-API.md\treferences;docs/00-Home.md\tdocs/07-Dashboard-and-UX.md\treferences;docs/00-Home.md\tdocs/08-Security-and-Operations.md\treferences;docs/00-Home.md\tdocs/09-Verification.md\treferences;docs/00-Home.md\tdocs/10-Delivery-Plan.md\treferences;docs/00-Home.md\tdocs/11-Hackathon-and-License.md\treferences;docs/00-Home.md\tdocs/12-Knowledge-System.md\treferences;docs/00-Home.md\tdocs/13-Sources.md\treferences;docs/00-Home.md\tdocs/14-Glossary.md\treferences;docs/00-Home.md\tdocs/15-Use-Cases.md\treferences;docs/00-Home.md\tdocs/16-Implementation-Handoff.md\treferences;docs/00-Home.md\tdocs/17-Verification-Record.md\treferences;docs/00-Home.md\tdocs/18-Hackathon-Rules.md\treferences;docs/01-Product-Brief.md\tdocs/01-Product-Brief.md#section-12\tcontains;docs/01-Product-Brief.md\tdocs/01-Product-Brief.md#section-22\tcontains;docs/01-Product-Brief.md\tdocs/01-Product-Brief.md#section-30\tcontains;docs/01-Product-Brief.md\tdocs/02-SRS.md\treferences;docs/01-Product-Brief.md\tdocs/07-Dashboard-and-UX.md\treferences;docs/01-Product-Brief.md\tdocs/09-Verification.md\treferences;docs/01-Product-Brief.md\tdocs/10-Delivery-Plan.md\treferences;docs/01-Product-Brief.md\tdocs/13-Sources.md\treferences;docs/01-Product-Brief.md\tdocs/18-Hackathon-Rules.md\treferences;docs/02-SRS.md\tdocs/02-SRS.md#FR-01\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-02\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-03\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-04\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-05\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-06\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-07\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-08\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-09\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-10\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-11\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-12\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-13\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-14\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-15\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-16\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-17\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-18\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-19\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#NFR-01\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#NFR-02\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#NFR-03\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#NFR-04\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#NFR-05\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#NFR-06\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#NFR-07\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#section-12\tcontains;docs/02-SRS.md\tdocs/02-SRS.md#section-36\tcontains;docs/02-SRS.md\tdocs/02-SRS.md#section-48\tcontains;docs/02-SRS.md\tdocs/02-SRS.md#section-8\tcontains;docs/02-SRS.md\tdocs/03-Architecture.md\treferences;docs/02-SRS.md\tdocs/04-Decisions.md\treferences;docs/02-SRS.md\tdocs/05-Data-Model.md\treferences;docs/02-SRS.md\tdocs/09-Verification.md\treferences;docs/02-SRS.md\tdocs/10-Delivery-Plan.md\treferences;docs/02-SRS.md\tdocs/12-Knowledge-System.md\treferences;docs/02-SRS.md\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md\tdocs/18-Hackathon-Rules.md\treferences;docs/02-SRS.md#FR-01\tdocs/09-Verification.md#T-07\tverifies;docs/02-SRS.md#FR-01\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-02\tdocs/09-Verification.md#T-08\tverifies;docs/02-SRS.md#FR-02\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-02\tdocs/18-Hackathon-Rules.md\treferences;docs/02-SRS.md#FR-03\tdocs/09-Verification.md#T-01\tverifies;docs/02-SRS.md#FR-03\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-04\tdocs/09-Verification.md#T-02\tverifies;docs/02-SRS.md#FR-04\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-05\tdocs/09-Verification.md#T-04\tverifies;docs/02-SRS.md#FR-05\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-06\tdocs/09-Verification.md#T-04\tverifies;docs/02-SRS.md#FR-06\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-07\tdocs/09-Verification.md#T-09\tverifies;docs/02-SRS.md#FR-07\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-08\tdocs/09-Verification.md#T-01\tverifies;docs/02-SRS.md#FR-08\tdocs/09-Verification.md#T-02\tverifies;docs/02-SRS.md#FR-08\tdocs/09-Verification.md#T-05\tverifies;docs/02-SRS.md#FR-08\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-09\tdocs/09-Verification.md#T-05\tverifies;docs/02-SRS.md#FR-09\tdocs/09-Verification.md#T-06\tverifies;docs/02-SRS.md#FR-09\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-10\tdocs/09-Verification.md#T-05\tverifies;docs/02-SRS.md#FR-10\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-11\tdocs/09-Verification.md#T-05\tverifies;docs/02-SRS.md#FR-11\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-12\tdocs/09-Verification.md#T-06\tverifies;docs/02-SRS.md#FR-12\tdocs/09-Verification.md#T-09\tverifies;docs/02-SRS.md#FR-12\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-13\tdocs/09-Verification.md#T-06\tverifies;docs/02-SRS.md#FR-13\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-14\tdocs/09-Verification.md#T-03\tverifies;docs/02-SRS.md#FR-14\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-15\tdocs/09-Verification.md#T-01\tverifies;docs/02-SRS.md#FR-15\tdocs/09-Verification.md#T-03\tverifies;docs/02-SRS.md#FR-15\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-16\tdocs/09-Verification.md#T-10\tverifies;docs/02-SRS.md#FR-16\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-16\tdocs/18-Hackathon-Rules.md\treferences;docs/02-SRS.md#FR-17\tdocs/09-Verification.md#T-08\tverifies;docs/02-SRS.md#FR-17\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-18\tdocs/09-Verification.md#T-13\tverifies;docs/02-SRS.md#FR-18\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-19\tdocs/09-Verification.md#T-14\tverifies;docs/02-SRS.md#FR-19\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#NFR-01\tdocs/09-Verification.md#T-01\tverifies;docs/02-SRS.md#NFR-02\tdocs/09-Verification.md#T-11\tverifies;docs/02-SRS.md#NFR-03\tdocs/09-Verification.md#T-11\tverifies;docs/02-SRS.md#NFR-04\tdocs/09-Verification.md#T-07\tverifies;docs/02-SRS.md#NFR-05\tdocs/09-Verification.md#T-09\tverifies;docs/02-SRS.md#NFR-05\tdocs/18-Hackathon-Rules.md\treferences;docs/02-SRS.md#NFR-06\tdocs/09-Verification.md#T-12\tverifies;docs/02-SRS.md#NFR-07\tdocs/09-Verification.md#T-10\tverifies;docs/03-Architecture.md\tdocs/03-Architecture.md#section-27\tcontains;docs/03-Architecture.md\tdocs/03-Architecture.md#section-35\tcontains;docs/03-Architecture.md\tdocs/03-Architecture.md#section-41\tcontains;docs/03-Architecture.md\tdocs/04-Decisions.md\treferences;docs/03-Architecture.md\tdocs/06-Agent-and-API.md\treferences;docs/03-Architecture.md\tdocs/08-Security-and-Operations.md\treferences;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-001\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-002\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-003\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-004\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-005\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-006\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-007\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-008\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-009\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#section-22\tcontains;docs/04-Decisions.md\tdocs/04-Decisions.md#section-26\tcontains;docs/04-Decisions.md\tdocs/08-Security-and-Operations.md\treferences;docs/04-Decisions.md\tdocs/10-Delivery-Plan.md\treferences;docs/04-Decisions.md\tdocs/11-Hackathon-and-License.md\treferences;docs/04-Decisions.md\tdocs/12-Knowledge-System.md\treferences;docs/04-Decisions.md\tdocs/13-Sources.md\treferences;docs/04-Decisions.md\tdocs/16-Implementation-Handoff.md\treferences;docs/04-Decisions.md\tdocs/17-Verification-Record.md\treferences;docs/05-Data-Model.md\tdocs/05-Data-Model.md#section-35\tcontains;docs/05-Data-Model.md\tdocs/05-Data-Model.md#section-41\tcontains;docs/05-Data-Model.md\tdocs/05-Data-Model.md#section-47\tcontains;docs/05-Data-Model.md\tdocs/06-Agent-and-API.md\treferences;docs/05-Data-Model.md\tdocs/07-Dashboard-and-UX.md\treferences;docs/05-Data-Model.md\tdocs/08-Security-and-Operations.md\treferences;docs/05-Data-Model.md\tdocs/14-Glossary.md\treferences;docs/05-Data-Model.md\tdocs/15-Use-Cases.md\treferences;docs/05-Data-Model.md\tdocs/18-Hackathon-Rules.md\treferences;docs/06-Agent-and-API.md\tdocs/06-Agent-and-API.md#section-10\tcontains;docs/06-Agent-and-API.md\tdocs/06-Agent-and-API.md#section-16\tcontains;docs/06-Agent-and-API.md\tdocs/06-Agent-and-API.md#section-38\tcontains;docs/06-Agent-and-API.md\tdocs/06-Agent-and-API.md#section-44\tcontains;docs/06-Agent-and-API.md\tdocs/07-Dashboard-and-UX.md\treferences;docs/06-Agent-and-API.md\tdocs/08-Security-and-Operations.md\treferences;docs/06-Agent-and-API.md\tdocs/09-Verification.md\treferences;docs/06-Agent-and-API.md\tdocs/13-Sources.md\treferences;docs/06-Agent-and-API.md\tdocs/15-Use-Cases.md\treferences;docs/06-Agent-and-API.md\tdocs/18-Hackathon-Rules.md\treferences;docs/07-Dashboard-and-UX.md\tdocs/07-Dashboard-and-UX.md#section-10\tcontains;docs/07-Dashboard-and-UX.md\tdocs/07-Dashboard-and-UX.md#section-26\tcontains;docs/07-Dashboard-and-UX.md\tdocs/09-Verification.md\treferences;docs/07-Dashboard-and-UX.md\tdocs/10-Delivery-Plan.md\treferences;docs/07-Dashboard-and-UX.md\tdocs/15-Use-Cases.md\treferences;docs/08-Security-and-Operations.md\tdocs/08-Security-and-Operations.md#section-21\tcontains;docs/08-Security-and-Operations.md\tdocs/08-Security-and-Operations.md#section-25\tcontains;docs/08-Security-and-Operations.md\tdocs/08-Security-and-Operations.md#section-8\tcontains;docs/08-Security-and-Operations.md\tdocs/09-Verification.md\treferences;docs/08-Security-and-Operations.md\tdocs/09-Verification.md#T-03\treferences;docs/08-Security-and-Operations.md\tdocs/09-Verification.md#T-04\treferences;docs/08-Security-and-Operations.md\tdocs/09-Verification.md#T-07\treferences;docs/08-Security-and-Operations.md\tdocs/09-Verification.md#T-10\treferences;docs/08-Security-and-Operations.md\tdocs/16-Implementation-Handoff.md\treferences;docs/09-Verification.md\tdocs/09-Verification.md#T-01\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-02\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-03\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-04\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-05\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-06\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-07\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-08\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-09\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-10\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-11\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-12\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-13\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-14\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#section-27\tcontains;docs/09-Verification.md\tdocs/09-Verification.md#section-33\tcontains;docs/09-Verification.md\tdocs/10-Delivery-Plan.md\treferences;docs/09-Verification.md\tdocs/11-Hackathon-and-License.md\treferences;docs/09-Verification.md\tdocs/12-Knowledge-System.md\treferences;docs/09-Verification.md\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md\tdocs/16-Implementation-Handoff.md\treferences;docs/09-Verification.md\tdocs/17-Verification-Record.md\treferences;docs/09-Verification.md#T-01\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-02\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-03\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-04\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-05\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-06\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-07\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-08\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-09\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-10\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-13\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-14\tdocs/15-Use-Cases.md\treferences;docs/10-Delivery-Plan.md\tdocs/10-Delivery-Plan.md#P0\tspecifies;docs/10-Delivery-Plan.md\tdocs/10-Delivery-Plan.md#P1\tspecifies;docs/10-Delivery-Plan.md\tdocs/10-Delivery-Plan.md#P2\tspecifies;docs/10-Delivery-Plan.md\tdocs/10-Delivery-Plan.md#P3\tspecifies;docs/10-Delivery-Plan.md\tdocs/10-Delivery-Plan.md#P4\tspecifies;docs/10-Delivery-Plan.md\tdocs/10-Delivery-Plan.md#P5\tspecifies;docs/10-Delivery-Plan.md\tdocs/10-Delivery-Plan.md#P6\tspecifies;docs/10-Delivery-Plan.md\tdocs/10-Delivery-Plan.md#section-22\tcontains;docs/10-Delivery-Plan.md\tdocs/11-Hackathon-and-License.md\treferences;docs/10-Delivery-Plan.md\tdocs/16-Implementation-Handoff.md\treferences;docs/10-Delivery-Plan.md\tdocs/17-Verification-Record.md\treferences;docs/10-Delivery-Plan.md\tdocs/18-Hackathon-Rules.md\treferences;docs/11-Hackathon-and-License.md\tdocs/11-Hackathon-and-License.md#section-12\tcontains;docs/11-Hackathon-and-License.md\tdocs/11-Hackathon-and-License.md#section-18\tcontains;docs/11-Hackathon-and-License.md\tdocs/13-Sources.md\treferences;docs/11-Hackathon-and-License.md\tdocs/16-Implementation-Handoff.md\treferences;docs/11-Hackathon-and-License.md\tdocs/17-Verification-Record.md\treferences;docs/11-Hackathon-and-License.md\tdocs/18-Hackathon-Rules.md\treferences;docs/12-Knowledge-System.md\tdocs/12-Knowledge-System.md#section-10\tcontains;docs/12-Knowledge-System.md\tdocs/12-Knowledge-System.md#section-18\tcontains;docs/12-Knowledge-System.md\tdocs/12-Knowledge-System.md#section-31\tcontains;docs/12-Knowledge-System.md\tdocs/13-Sources.md\treferences;docs/12-Knowledge-System.md\tdocs/14-Glossary.md\treferences;docs/12-Knowledge-System.md\tdocs/17-Verification-Record.md\treferences;docs/13-Sources.md\tdocs/18-Hackathon-Rules.md\treferences;docs/15-Use-Cases.md\tdocs/15-Use-Cases.md#section-21\tcontains;docs/15-Use-Cases.md\tdocs/18-Hackathon-Rules.md\treferences;docs/16-Implementation-Handoff.md\tdocs/16-Implementation-Handoff.md#section-12\tcontains;docs/16-Implementation-Handoff.md\tdocs/16-Implementation-Handoff.md#section-18\tcontains;docs/16-Implementation-Handoff.md\tdocs/16-Implementation-Handoff.md#section-28\tcontains;docs/16-Implementation-Handoff.md\tdocs/16-Implementation-Handoff.md#section-38\tcontains;docs/16-Implementation-Handoff.md\tdocs/16-Implementation-Handoff.md#section-8\tcontains;docs/16-Implementation-Handoff.md\tdocs/17-Verification-Record.md\treferences;docs/17-Verification-Record.md\tdocs/17-Verification-Record.md#section-23\tcontains;docs/18-Hackathon-Rules.md\tdocs/18-Hackathon-Rules.md#section-10\tcontains;docs/18-Hackathon-Rules.md\tdocs/18-Hackathon-Rules.md#section-22\tcontains;docs/18-Hackathon-Rules.md\tdocs/18-Hackathon-Rules.md#section-33\tcontains;docs/18-Hackathon-Rules.md\tdocs/18-Hackathon-Rules.md#section-57\tcontains",
   "nodes": [
     {
       "id": "AGENTS.md",
@@ -97,19 +98,19 @@
       "community_name": "Knowledge system maintenance"
     },
     {
-      "id": "docs/00-Home.md#section-34",
+      "id": "docs/00-Home.md#section-35",
       "label": "Reading the plan",
       "node_type": "Section",
       "file_type": "document",
       "source_file": "docs/00-Home.md",
-      "source_location": "line 34",
+      "source_location": "line 35",
       "confidence": "EXTRACTED",
       "description": "## Reading the plan",
       "citations": [
         {
           "quote": "## Reading the plan",
           "source_file": "docs/00-Home.md",
-          "source_location": "line 34"
+          "source_location": "line 35"
         }
       ],
       "community": 4,
@@ -132,7 +133,7 @@
         }
       ],
       "community": 0,
-      "community_name": "Delivery plan and risk register"
+      "community_name": "Agent workflow and API contracts"
     },
     {
       "id": "docs/01-Product-Brief.md#section-12",
@@ -151,7 +152,7 @@
         }
       ],
       "community": 0,
-      "community_name": "Delivery plan and risk register"
+      "community_name": "Agent workflow and API contracts"
     },
     {
       "id": "docs/01-Product-Brief.md#section-22",
@@ -170,7 +171,7 @@
         }
       ],
       "community": 0,
-      "community_name": "Delivery plan and risk register"
+      "community_name": "Agent workflow and API contracts"
     },
     {
       "id": "docs/01-Product-Brief.md#section-30",
@@ -189,7 +190,7 @@
         }
       ],
       "community": 0,
-      "community_name": "Delivery plan and risk register"
+      "community_name": "Agent workflow and API contracts"
     },
     {
       "id": "docs/02-SRS.md",
@@ -283,7 +284,7 @@
           "source_location": "line 17"
         }
       ],
-      "community": 6,
+      "community": 5,
       "community_name": "Corrections and undo"
     },
     {
@@ -340,7 +341,7 @@
           "source_location": "line 20"
         }
       ],
-      "community": 6,
+      "community": 5,
       "community_name": "Corrections and undo"
     },
     {
@@ -359,7 +360,7 @@
           "source_location": "line 21"
         }
       ],
-      "community": 6,
+      "community": 5,
       "community_name": "Corrections and undo"
     },
     {
@@ -568,7 +569,7 @@
           "source_location": "line 32"
         }
       ],
-      "community": 6,
+      "community": 5,
       "community_name": "Corrections and undo"
     },
     {
@@ -587,7 +588,7 @@
           "source_location": "line 33"
         }
       ],
-      "community": 6,
+      "community": 5,
       "community_name": "Corrections and undo"
     },
     {
@@ -606,7 +607,7 @@
           "source_location": "line 34"
         }
       ],
-      "community": 7,
+      "community": 6,
       "community_name": "Verification and release readiness"
     },
     {
@@ -663,7 +664,7 @@
           "source_location": "line 41"
         }
       ],
-      "community": 7,
+      "community": 6,
       "community_name": "Verification and release readiness"
     },
     {
@@ -682,7 +683,7 @@
           "source_location": "line 42"
         }
       ],
-      "community": 7,
+      "community": 6,
       "community_name": "Verification and release readiness"
     },
     {
@@ -739,7 +740,7 @@
           "source_location": "line 45"
         }
       ],
-      "community": 7,
+      "community": 6,
       "community_name": "Verification and release readiness"
     },
     {
@@ -1100,7 +1101,7 @@
           "source_location": "line 6"
         }
       ],
-      "community": 3,
+      "community": 0,
       "community_name": "Agent workflow and API contracts"
     },
     {
@@ -1119,7 +1120,7 @@
           "source_location": "line 35"
         }
       ],
-      "community": 3,
+      "community": 0,
       "community_name": "Agent workflow and API contracts"
     },
     {
@@ -1138,7 +1139,7 @@
           "source_location": "line 41"
         }
       ],
-      "community": 3,
+      "community": 0,
       "community_name": "Agent workflow and API contracts"
     },
     {
@@ -1157,7 +1158,7 @@
           "source_location": "line 47"
         }
       ],
-      "community": 3,
+      "community": 0,
       "community_name": "Agent workflow and API contracts"
     },
     {
@@ -1176,7 +1177,7 @@
           "source_location": "line 6"
         }
       ],
-      "community": 3,
+      "community": 0,
       "community_name": "Agent workflow and API contracts"
     },
     {
@@ -1195,7 +1196,7 @@
           "source_location": "line 10"
         }
       ],
-      "community": 3,
+      "community": 0,
       "community_name": "Agent workflow and API contracts"
     },
     {
@@ -1214,7 +1215,7 @@
           "source_location": "line 16"
         }
       ],
-      "community": 3,
+      "community": 0,
       "community_name": "Agent workflow and API contracts"
     },
     {
@@ -1233,7 +1234,7 @@
           "source_location": "line 38"
         }
       ],
-      "community": 3,
+      "community": 0,
       "community_name": "Agent workflow and API contracts"
     },
     {
@@ -1252,7 +1253,7 @@
           "source_location": "line 44"
         }
       ],
-      "community": 3,
+      "community": 0,
       "community_name": "Agent workflow and API contracts"
     },
     {
@@ -1271,7 +1272,7 @@
           "source_location": "line 6"
         }
       ],
-      "community": 3,
+      "community": 0,
       "community_name": "Agent workflow and API contracts"
     },
     {
@@ -1290,7 +1291,7 @@
           "source_location": "line 10"
         }
       ],
-      "community": 3,
+      "community": 0,
       "community_name": "Agent workflow and API contracts"
     },
     {
@@ -1309,7 +1310,7 @@
           "source_location": "line 26"
         }
       ],
-      "community": 3,
+      "community": 0,
       "community_name": "Agent workflow and API contracts"
     },
     {
@@ -1404,7 +1405,7 @@
           "source_location": "line 6"
         }
       ],
-      "community": 7,
+      "community": 6,
       "community_name": "Verification and release readiness"
     },
     {
@@ -1480,7 +1481,7 @@
           "source_location": "line 15"
         }
       ],
-      "community": 6,
+      "community": 5,
       "community_name": "Corrections and undo"
     },
     {
@@ -1556,7 +1557,7 @@
           "source_location": "line 19"
         }
       ],
-      "community": 6,
+      "community": 5,
       "community_name": "Corrections and undo"
     },
     {
@@ -1613,7 +1614,7 @@
           "source_location": "line 22"
         }
       ],
-      "community": 7,
+      "community": 6,
       "community_name": "Verification and release readiness"
     },
     {
@@ -1632,7 +1633,7 @@
           "source_location": "line 23"
         }
       ],
-      "community": 7,
+      "community": 6,
       "community_name": "Verification and release readiness"
     },
     {
@@ -1651,7 +1652,7 @@
           "source_location": "line 24"
         }
       ],
-      "community": 6,
+      "community": 5,
       "community_name": "Corrections and undo"
     },
     {
@@ -1670,7 +1671,7 @@
           "source_location": "line 25"
         }
       ],
-      "community": 7,
+      "community": 6,
       "community_name": "Verification and release readiness"
     },
     {
@@ -1689,7 +1690,7 @@
           "source_location": "line 27"
         }
       ],
-      "community": 7,
+      "community": 6,
       "community_name": "Verification and release readiness"
     },
     {
@@ -1708,7 +1709,7 @@
           "source_location": "line 33"
         }
       ],
-      "community": 7,
+      "community": 6,
       "community_name": "Verification and release readiness"
     },
     {
@@ -1727,7 +1728,7 @@
           "source_location": "line 6"
         }
       ],
-      "community": 0,
+      "community": 7,
       "community_name": "Delivery plan and risk register"
     },
     {
@@ -1746,7 +1747,7 @@
           "source_location": "line 12"
         }
       ],
-      "community": 0,
+      "community": 7,
       "community_name": "Delivery plan and risk register"
     },
     {
@@ -1765,7 +1766,7 @@
           "source_location": "line 13"
         }
       ],
-      "community": 0,
+      "community": 7,
       "community_name": "Delivery plan and risk register"
     },
     {
@@ -1784,7 +1785,7 @@
           "source_location": "line 14"
         }
       ],
-      "community": 0,
+      "community": 7,
       "community_name": "Delivery plan and risk register"
     },
     {
@@ -1803,7 +1804,7 @@
           "source_location": "line 15"
         }
       ],
-      "community": 0,
+      "community": 7,
       "community_name": "Delivery plan and risk register"
     },
     {
@@ -1822,7 +1823,7 @@
           "source_location": "line 16"
         }
       ],
-      "community": 0,
+      "community": 7,
       "community_name": "Delivery plan and risk register"
     },
     {
@@ -1841,7 +1842,7 @@
           "source_location": "line 17"
         }
       ],
-      "community": 0,
+      "community": 7,
       "community_name": "Delivery plan and risk register"
     },
     {
@@ -1860,7 +1861,7 @@
           "source_location": "line 18"
         }
       ],
-      "community": 0,
+      "community": 7,
       "community_name": "Delivery plan and risk register"
     },
     {
@@ -1879,7 +1880,7 @@
           "source_location": "line 22"
         }
       ],
-      "community": 0,
+      "community": 7,
       "community_name": "Delivery plan and risk register"
     },
     {
@@ -1898,7 +1899,7 @@
           "source_location": "line 6"
         }
       ],
-      "community": 5,
+      "community": 3,
       "community_name": "Implementation handoff and runbook"
     },
     {
@@ -1917,7 +1918,7 @@
           "source_location": "line 12"
         }
       ],
-      "community": 5,
+      "community": 3,
       "community_name": "Implementation handoff and runbook"
     },
     {
@@ -1936,7 +1937,7 @@
           "source_location": "line 18"
         }
       ],
-      "community": 5,
+      "community": 3,
       "community_name": "Implementation handoff and runbook"
     },
     {
@@ -2031,8 +2032,8 @@
           "source_location": "line 6"
         }
       ],
-      "community": 4,
-      "community_name": "Knowledge system maintenance"
+      "community": 0,
+      "community_name": "Agent workflow and API contracts"
     },
     {
       "id": "docs/14-Glossary.md",
@@ -2069,7 +2070,7 @@
           "source_location": "line 6"
         }
       ],
-      "community": 6,
+      "community": 5,
       "community_name": "Corrections and undo"
     },
     {
@@ -2088,7 +2089,7 @@
           "source_location": "line 21"
         }
       ],
-      "community": 6,
+      "community": 5,
       "community_name": "Corrections and undo"
     },
     {
@@ -2107,7 +2108,7 @@
           "source_location": "line 6"
         }
       ],
-      "community": 5,
+      "community": 3,
       "community_name": "Implementation handoff and runbook"
     },
     {
@@ -2126,7 +2127,7 @@
           "source_location": "line 8"
         }
       ],
-      "community": 5,
+      "community": 3,
       "community_name": "Implementation handoff and runbook"
     },
     {
@@ -2145,7 +2146,7 @@
           "source_location": "line 12"
         }
       ],
-      "community": 5,
+      "community": 3,
       "community_name": "Implementation handoff and runbook"
     },
     {
@@ -2164,7 +2165,7 @@
           "source_location": "line 18"
         }
       ],
-      "community": 5,
+      "community": 3,
       "community_name": "Implementation handoff and runbook"
     },
     {
@@ -2183,7 +2184,7 @@
           "source_location": "line 28"
         }
       ],
-      "community": 5,
+      "community": 3,
       "community_name": "Implementation handoff and runbook"
     },
     {
@@ -2202,7 +2203,7 @@
           "source_location": "line 38"
         }
       ],
-      "community": 5,
+      "community": 3,
       "community_name": "Implementation handoff and runbook"
     },
     {
@@ -2221,7 +2222,7 @@
           "source_location": "line 6"
         }
       ],
-      "community": 5,
+      "community": 3,
       "community_name": "Implementation handoff and runbook"
     },
     {
@@ -2240,8 +2241,103 @@
           "source_location": "line 23"
         }
       ],
-      "community": 5,
+      "community": 3,
       "community_name": "Implementation handoff and runbook"
+    },
+    {
+      "id": "docs/18-Hackathon-Rules.md",
+      "label": "AssemblyAI Voice Agent Hackathon rules, requirements, and judging",
+      "node_type": "Document",
+      "file_type": "document",
+      "source_file": "docs/18-Hackathon-Rules.md",
+      "source_location": "line 6",
+      "confidence": "EXTRACTED",
+      "description": "# AssemblyAI Voice Agent Hackathon rules, requirements, and judging",
+      "citations": [
+        {
+          "quote": "# AssemblyAI Voice Agent Hackathon rules, requirements, and judging",
+          "source_file": "docs/18-Hackathon-Rules.md",
+          "source_location": "line 6"
+        }
+      ],
+      "community": 0,
+      "community_name": "Agent workflow and API contracts"
+    },
+    {
+      "id": "docs/18-Hackathon-Rules.md#section-10",
+      "label": "Event overview",
+      "node_type": "Section",
+      "file_type": "document",
+      "source_file": "docs/18-Hackathon-Rules.md",
+      "source_location": "line 10",
+      "confidence": "EXTRACTED",
+      "description": "## Event overview",
+      "citations": [
+        {
+          "quote": "## Event overview",
+          "source_file": "docs/18-Hackathon-Rules.md",
+          "source_location": "line 10"
+        }
+      ],
+      "community": 0,
+      "community_name": "Agent workflow and API contracts"
+    },
+    {
+      "id": "docs/18-Hackathon-Rules.md#section-22",
+      "label": "Judging criteria",
+      "node_type": "Section",
+      "file_type": "document",
+      "source_file": "docs/18-Hackathon-Rules.md",
+      "source_location": "line 22",
+      "confidence": "EXTRACTED",
+      "description": "## Judging criteria",
+      "citations": [
+        {
+          "quote": "## Judging criteria",
+          "source_file": "docs/18-Hackathon-Rules.md",
+          "source_location": "line 22"
+        }
+      ],
+      "community": 0,
+      "community_name": "Agent workflow and API contracts"
+    },
+    {
+      "id": "docs/18-Hackathon-Rules.md#section-33",
+      "label": "Submission requirements",
+      "node_type": "Section",
+      "file_type": "document",
+      "source_file": "docs/18-Hackathon-Rules.md",
+      "source_location": "line 33",
+      "confidence": "EXTRACTED",
+      "description": "## Submission requirements",
+      "citations": [
+        {
+          "quote": "## Submission requirements",
+          "source_file": "docs/18-Hackathon-Rules.md",
+          "source_location": "line 33"
+        }
+      ],
+      "community": 0,
+      "community_name": "Agent workflow and API contracts"
+    },
+    {
+      "id": "docs/18-Hackathon-Rules.md#section-57",
+      "label": "Hackathon rules & compliance checklist",
+      "node_type": "Section",
+      "file_type": "document",
+      "source_file": "docs/18-Hackathon-Rules.md",
+      "source_location": "line 57",
+      "confidence": "EXTRACTED",
+      "description": "## Hackathon rules & compliance checklist",
+      "citations": [
+        {
+          "quote": "## Hackathon rules & compliance checklist",
+          "source_file": "docs/18-Hackathon-Rules.md",
+          "source_location": "line 57"
+        }
+      ],
+      "community": 0,
+      "community_name": "Agent workflow and API contracts"
     }
   ],
   "links": [
@@ -2387,22 +2483,22 @@
     },
     {
       "source": "docs/00-Home.md",
-      "target": "docs/00-Home.md#section-34",
+      "target": "docs/00-Home.md#section-35",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/00-Home.md",
-      "source_location": "line 34",
+      "source_location": "line 35",
       "evidence_text": "## Reading the plan",
       "citations": [
         {
           "quote": "## Reading the plan",
           "source_file": "docs/00-Home.md",
-          "source_location": "line 34"
+          "source_location": "line 35"
         }
       ],
       "weight": 1,
       "_src": "docs/00-Home.md",
-      "_tgt": "docs/00-Home.md#section-34",
+      "_tgt": "docs/00-Home.md#section-35",
       "confidence_score": 1
     },
     {
@@ -2743,6 +2839,26 @@
       "weight": 2,
       "_src": "docs/00-Home.md",
       "_tgt": "docs/17-Verification-Record.md",
+      "confidence_score": 1
+    },
+    {
+      "source": "docs/00-Home.md",
+      "target": "docs/18-Hackathon-Rules.md",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/00-Home.md",
+      "source_location": "line 31",
+      "evidence_text": "| What are the hackathon rules, requirements, and judging criteria? | [[docs/18-Hackathon-Rules]] |",
+      "citations": [
+        {
+          "quote": "| What are the hackathon rules, requirements, and judging criteria? | [[docs/18-Hackathon-Rules]] |",
+          "source_file": "docs/00-Home.md",
+          "source_location": "line 31"
+        }
+      ],
+      "weight": 2,
+      "_src": "docs/00-Home.md",
+      "_tgt": "docs/18-Hackathon-Rules.md",
       "confidence_score": 1
     },
     {
@@ -5772,10 +5888,10 @@
       "confidence": "EXTRACTED",
       "source_file": "docs/11-Hackathon-and-License.md",
       "source_location": "line 31",
-      "evidence_text": "The README remains only `in progress` at the user's request. Before submission, the owner may choose to authorize a richer README; until then use [[docs/00-Home]] for setup/navigation. Source register: [[docs/13-Sources]]. Delivery: [[docs/10-Delivery-Plan]].",
+      "evidence_text": "The README remains only `in progress` at the user's request. Before submission, the owner may choose to authorize a richer README; until then use [[docs/00-Home]] for setup/navigation. Detailed event rules and judging criteria are in [[docs/18-Hackathon-Rules]]. Source register: [[docs/13-Sources]]. Delivery: [[docs/10-Delivery-Plan]].",
       "citations": [
         {
-          "quote": "The README remains only `in progress` at the user's request. Before submission, the owner may choose to authorize a richer README; until then use [[docs/00-Home]] for setup/navigation. Source register: [[docs/13-Sources]]. Delivery: [[docs/10-Delivery-Plan]].",
+          "quote": "The README remains only `in progress` at the user's request. Before submission, the owner may choose to authorize a richer README; until then use [[docs/00-Home]] for setup/navigation. Detailed event rules and judging criteria are in [[docs/18-Hackathon-Rules]]. Source register: [[docs/13-Sources]]. Delivery: [[docs/10-Delivery-Plan]].",
           "source_file": "docs/11-Hackathon-and-License.md",
           "source_location": "line 31"
         }
@@ -5783,6 +5899,26 @@
       "weight": 2,
       "_src": "docs/11-Hackathon-and-License.md",
       "_tgt": "docs/13-Sources.md",
+      "confidence_score": 1
+    },
+    {
+      "source": "docs/11-Hackathon-and-License.md",
+      "target": "docs/18-Hackathon-Rules.md",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/11-Hackathon-and-License.md",
+      "source_location": "line 31",
+      "evidence_text": "The README remains only `in progress` at the user's request. Before submission, the owner may choose to authorize a richer README; until then use [[docs/00-Home]] for setup/navigation. Detailed event rules and judging criteria are in [[docs/18-Hackathon-Rules]]. Source register: [[docs/13-Sources]]. Delivery: [[docs/10-Delivery-Plan]].",
+      "citations": [
+        {
+          "quote": "The README remains only `in progress` at the user's request. Before submission, the owner may choose to authorize a richer README; until then use [[docs/00-Home]] for setup/navigation. Detailed event rules and judging criteria are in [[docs/18-Hackathon-Rules]]. Source register: [[docs/13-Sources]]. Delivery: [[docs/10-Delivery-Plan]].",
+          "source_file": "docs/11-Hackathon-and-License.md",
+          "source_location": "line 31"
+        }
+      ],
+      "weight": 2,
+      "_src": "docs/11-Hackathon-and-License.md",
+      "_tgt": "docs/18-Hackathon-Rules.md",
       "confidence_score": 1
     },
     {
@@ -5903,6 +6039,26 @@
       "weight": 2,
       "_src": "docs/12-Knowledge-System.md",
       "_tgt": "docs/13-Sources.md",
+      "confidence_score": 1
+    },
+    {
+      "source": "docs/13-Sources.md",
+      "target": "docs/18-Hackathon-Rules.md",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/13-Sources.md",
+      "source_location": "line 30",
+      "evidence_text": "Evidence flows into [[docs/01-Product-Brief]], [[docs/04-Decisions]], [[docs/06-Agent-and-API]], [[docs/11-Hackathon-and-License]] and [[docs/18-Hackathon-Rules]].",
+      "citations": [
+        {
+          "quote": "Evidence flows into [[docs/01-Product-Brief]], [[docs/04-Decisions]], [[docs/06-Agent-and-API]], [[docs/11-Hackathon-and-License]] and [[docs/18-Hackathon-Rules]].",
+          "source_file": "docs/13-Sources.md",
+          "source_location": "line 30"
+        }
+      ],
+      "weight": 2,
+      "_src": "docs/13-Sources.md",
+      "_tgt": "docs/18-Hackathon-Rules.md",
       "confidence_score": 1
     },
     {
@@ -7023,6 +7179,266 @@
       "weight": 1,
       "_src": "docs/17-Verification-Record.md",
       "_tgt": "docs/17-Verification-Record.md#section-23",
+      "confidence_score": 1
+    },
+    {
+      "source": "docs/18-Hackathon-Rules.md",
+      "target": "docs/01-Product-Brief.md",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/18-Hackathon-Rules.md",
+      "source_location": "line 29",
+      "evidence_text": "| **Business Value & Practical Utility** | Real-world problem solving for a defined audience with tangible utility. Clear product rationale and domain fit. | Focus on micro-merchants (food stalls, kiosks) who struggle with manual ledgers. Provides instant voice sales logging, mistake correction, and visual profit/revenue clarity ([[docs/01-Product-Brief]]). |",
+      "citations": [
+        {
+          "quote": "| **Business Value & Practical Utility** | Real-world problem solving for a defined audience with tangible utility. Clear product rationale and domain fit. | Focus on micro-merchants (food stalls, kiosks) who struggle with manual ledgers. Provides instant voice sales logging, mistake correction, and visual profit/revenue clarity ([[docs/01-Product-Brief]]). |",
+          "source_file": "docs/18-Hackathon-Rules.md",
+          "source_location": "line 29"
+        }
+      ],
+      "weight": 2,
+      "_src": "docs/18-Hackathon-Rules.md",
+      "_tgt": "docs/01-Product-Brief.md",
+      "confidence_score": 1
+    },
+    {
+      "source": "docs/18-Hackathon-Rules.md",
+      "target": "docs/02-SRS.md",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/18-Hackathon-Rules.md",
+      "source_location": "line 62",
+      "evidence_text": "- [ ] Deploy a functional online prototype with labeled synthetic data ([[docs/02-SRS]] FR-16).",
+      "citations": [
+        {
+          "quote": "- [ ] Deploy a functional online prototype with labeled synthetic data ([[docs/02-SRS]] FR-16).",
+          "source_file": "docs/18-Hackathon-Rules.md",
+          "source_location": "line 62"
+        }
+      ],
+      "weight": 2,
+      "_src": "docs/18-Hackathon-Rules.md",
+      "_tgt": "docs/02-SRS.md",
+      "confidence_score": 1
+    },
+    {
+      "source": "docs/18-Hackathon-Rules.md",
+      "target": "docs/02-SRS.md#FR-02",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/18-Hackathon-Rules.md",
+      "source_location": "line 63",
+      "evidence_text": "- [ ] Verify that manual keyboard/touch alternatives work if microphone access is denied ([[docs/02-SRS]] FR-02, NFR-05).",
+      "citations": [
+        {
+          "quote": "- [ ] Verify that manual keyboard/touch alternatives work if microphone access is denied ([[docs/02-SRS]] FR-02, NFR-05).",
+          "source_file": "docs/18-Hackathon-Rules.md",
+          "source_location": "line 63"
+        }
+      ],
+      "weight": 2,
+      "_src": "docs/18-Hackathon-Rules.md",
+      "_tgt": "docs/02-SRS.md#FR-02",
+      "confidence_score": 1
+    },
+    {
+      "source": "docs/18-Hackathon-Rules.md",
+      "target": "docs/02-SRS.md#FR-16",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/18-Hackathon-Rules.md",
+      "source_location": "line 62",
+      "evidence_text": "- [ ] Deploy a functional online prototype with labeled synthetic data ([[docs/02-SRS]] FR-16).",
+      "citations": [
+        {
+          "quote": "- [ ] Deploy a functional online prototype with labeled synthetic data ([[docs/02-SRS]] FR-16).",
+          "source_file": "docs/18-Hackathon-Rules.md",
+          "source_location": "line 62"
+        }
+      ],
+      "weight": 2,
+      "_src": "docs/18-Hackathon-Rules.md",
+      "_tgt": "docs/02-SRS.md#FR-16",
+      "confidence_score": 1
+    },
+    {
+      "source": "docs/18-Hackathon-Rules.md",
+      "target": "docs/02-SRS.md#NFR-05",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/18-Hackathon-Rules.md",
+      "source_location": "line 63",
+      "evidence_text": "- [ ] Verify that manual keyboard/touch alternatives work if microphone access is denied ([[docs/02-SRS]] FR-02, NFR-05).",
+      "citations": [
+        {
+          "quote": "- [ ] Verify that manual keyboard/touch alternatives work if microphone access is denied ([[docs/02-SRS]] FR-02, NFR-05).",
+          "source_file": "docs/18-Hackathon-Rules.md",
+          "source_location": "line 63"
+        }
+      ],
+      "weight": 2,
+      "_src": "docs/18-Hackathon-Rules.md",
+      "_tgt": "docs/02-SRS.md#NFR-05",
+      "confidence_score": 1
+    },
+    {
+      "source": "docs/18-Hackathon-Rules.md",
+      "target": "docs/05-Data-Model.md",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/18-Hackathon-Rules.md",
+      "source_location": "line 31",
+      "evidence_text": "| **Technical Execution & Completeness** | System stability, architecture robustness, deterministic data handling, error resilience, and working online prototype. | Exact IDR integer arithmetic (no floating point errors, [[docs/05-Data-Model]]), server-enforced idempotency, two-phase mutation receipts, and full manual fallback when voice is unavailable. |",
+      "citations": [
+        {
+          "quote": "| **Technical Execution & Completeness** | System stability, architecture robustness, deterministic data handling, error resilience, and working online prototype. | Exact IDR integer arithmetic (no floating point errors, [[docs/05-Data-Model]]), server-enforced idempotency, two-phase mutation receipts, and full manual fallback when voice is unavailable. |",
+          "source_file": "docs/18-Hackathon-Rules.md",
+          "source_location": "line 31"
+        }
+      ],
+      "weight": 2,
+      "_src": "docs/18-Hackathon-Rules.md",
+      "_tgt": "docs/05-Data-Model.md",
+      "confidence_score": 1
+    },
+    {
+      "source": "docs/18-Hackathon-Rules.md",
+      "target": "docs/06-Agent-and-API.md",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/18-Hackathon-Rules.md",
+      "source_location": "line 28",
+      "evidence_text": "| **Application of Technology** | Effective, deep, and correct integration of AssemblyAI Voice Agent API. Use of voice streaming, registered tools, turn-taking, and speech-to-dashboard capabilities. | Single voice agent registering bounded EasyLedger tools ([[docs/06-Agent-and-API]]). Voice-driven sale proposals, corrections, queries, and layout adjustments. |",
+      "citations": [
+        {
+          "quote": "| **Application of Technology** | Effective, deep, and correct integration of AssemblyAI Voice Agent API. Use of voice streaming, registered tools, turn-taking, and speech-to-dashboard capabilities. | Single voice agent registering bounded EasyLedger tools ([[docs/06-Agent-and-API]]). Voice-driven sale proposals, corrections, queries, and layout adjustments. |",
+          "source_file": "docs/18-Hackathon-Rules.md",
+          "source_location": "line 28"
+        }
+      ],
+      "weight": 2,
+      "_src": "docs/18-Hackathon-Rules.md",
+      "_tgt": "docs/06-Agent-and-API.md",
+      "confidence_score": 1
+    },
+    {
+      "source": "docs/18-Hackathon-Rules.md",
+      "target": "docs/10-Delivery-Plan.md",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/18-Hackathon-Rules.md",
+      "source_location": "line 66",
+      "evidence_text": "Related documentation: [[docs/00-Home]], [[docs/01-Product-Brief]], [[docs/02-SRS]], [[docs/06-Agent-and-API]], [[docs/10-Delivery-Plan]], [[docs/11-Hackathon-and-License]], [[docs/13-Sources]].",
+      "citations": [
+        {
+          "quote": "Related documentation: [[docs/00-Home]], [[docs/01-Product-Brief]], [[docs/02-SRS]], [[docs/06-Agent-and-API]], [[docs/10-Delivery-Plan]], [[docs/11-Hackathon-and-License]], [[docs/13-Sources]].",
+          "source_file": "docs/18-Hackathon-Rules.md",
+          "source_location": "line 66"
+        }
+      ],
+      "weight": 2,
+      "_src": "docs/18-Hackathon-Rules.md",
+      "_tgt": "docs/10-Delivery-Plan.md",
+      "confidence_score": 1
+    },
+    {
+      "source": "docs/18-Hackathon-Rules.md",
+      "target": "docs/15-Use-Cases.md",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/18-Hackathon-Rules.md",
+      "source_location": "line 30",
+      "evidence_text": "| **Presentation & Demo** | Pitch clarity, storytelling, communication of technical nuance, quality of video demo, and slide deck. | Max 5-minute crisp walkthrough demonstrating the golden journey ([[docs/15-Use-Cases]] UC-02 & UC-03): voice logging → instant receipt → voice correction → visual chart update → saved dashboard. |",
+      "citations": [
+        {
+          "quote": "| **Presentation & Demo** | Pitch clarity, storytelling, communication of technical nuance, quality of video demo, and slide deck. | Max 5-minute crisp walkthrough demonstrating the golden journey ([[docs/15-Use-Cases]] UC-02 & UC-03): voice logging → instant receipt → voice correction → visual chart update → saved dashboard. |",
+          "source_file": "docs/18-Hackathon-Rules.md",
+          "source_location": "line 30"
+        }
+      ],
+      "weight": 2,
+      "_src": "docs/18-Hackathon-Rules.md",
+      "_tgt": "docs/15-Use-Cases.md",
+      "confidence_score": 1
+    },
+    {
+      "source": "docs/18-Hackathon-Rules.md",
+      "target": "docs/18-Hackathon-Rules.md#section-10",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/18-Hackathon-Rules.md",
+      "source_location": "line 10",
+      "evidence_text": "## Event overview",
+      "citations": [
+        {
+          "quote": "## Event overview",
+          "source_file": "docs/18-Hackathon-Rules.md",
+          "source_location": "line 10"
+        }
+      ],
+      "weight": 1,
+      "_src": "docs/18-Hackathon-Rules.md",
+      "_tgt": "docs/18-Hackathon-Rules.md#section-10",
+      "confidence_score": 1
+    },
+    {
+      "source": "docs/18-Hackathon-Rules.md",
+      "target": "docs/18-Hackathon-Rules.md#section-22",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/18-Hackathon-Rules.md",
+      "source_location": "line 22",
+      "evidence_text": "## Judging criteria",
+      "citations": [
+        {
+          "quote": "## Judging criteria",
+          "source_file": "docs/18-Hackathon-Rules.md",
+          "source_location": "line 22"
+        }
+      ],
+      "weight": 1,
+      "_src": "docs/18-Hackathon-Rules.md",
+      "_tgt": "docs/18-Hackathon-Rules.md#section-22",
+      "confidence_score": 1
+    },
+    {
+      "source": "docs/18-Hackathon-Rules.md",
+      "target": "docs/18-Hackathon-Rules.md#section-33",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/18-Hackathon-Rules.md",
+      "source_location": "line 33",
+      "evidence_text": "## Submission requirements",
+      "citations": [
+        {
+          "quote": "## Submission requirements",
+          "source_file": "docs/18-Hackathon-Rules.md",
+          "source_location": "line 33"
+        }
+      ],
+      "weight": 1,
+      "_src": "docs/18-Hackathon-Rules.md",
+      "_tgt": "docs/18-Hackathon-Rules.md#section-33",
+      "confidence_score": 1
+    },
+    {
+      "source": "docs/18-Hackathon-Rules.md",
+      "target": "docs/18-Hackathon-Rules.md#section-57",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/18-Hackathon-Rules.md",
+      "source_location": "line 57",
+      "evidence_text": "## Hackathon rules & compliance checklist",
+      "citations": [
+        {
+          "quote": "## Hackathon rules & compliance checklist",
+          "source_file": "docs/18-Hackathon-Rules.md",
+          "source_location": "line 57"
+        }
+      ],
+      "weight": 1,
+      "_src": "docs/18-Hackathon-Rules.md",
+      "_tgt": "docs/18-Hackathon-Rules.md#section-57",
       "confidence_score": 1
     }
   ],

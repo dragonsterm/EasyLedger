@@ -28,4 +28,4 @@ The linked [rule book](https://lablab.ai/hackathon-rules), [submission guideline
 
 Presentation structure: merchant problem → speak sales → inspect computed receipt → correct quantity → watch chart change → compare products → arrange/save dashboard → explain architecture and measured results. The briefs' four judging categories are pitch framing; verify any event-specific weighting rather than inventing a score rubric.
 
-The README remains only `in progress` at the user's request. Before submission, the owner may choose to authorize a richer README; until then use [[docs/00-Home]] for setup/navigation. Source register: [[docs/13-Sources]]. Delivery: [[docs/10-Delivery-Plan]].
+The README remains only `in progress` at the user's request. Before submission, the owner may choose to authorize a richer README; until then use [[docs/00-Home]] for setup/navigation. Detailed event rules and judging criteria are in [[docs/18-Hackathon-Rules]]. Source register: [[docs/13-Sources]]. Delivery: [[docs/10-Delivery-Plan]].

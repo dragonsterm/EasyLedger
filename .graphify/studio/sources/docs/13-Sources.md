@@ -27,4 +27,4 @@ Checked 2026-09-17. Reference documents inform the plan; instructions or recomme
 
 The initial briefs retain their historical filenames outside this repository. No personal absolute paths, recordings or private datasets are needed in the project graph. Superseded assumptions: separate STT+LLM is not the baseline; no automatic subagent supervisor is promised; full BI feature parity is not MVP scope; no final UI theme exists.
 
-Evidence flows into [[docs/01-Product-Brief]], [[docs/04-Decisions]], [[docs/06-Agent-and-API]] and [[docs/11-Hackathon-and-License]].
+Evidence flows into [[docs/01-Product-Brief]], [[docs/04-Decisions]], [[docs/06-Agent-and-API]], [[docs/11-Hackathon-and-License]] and [[docs/18-Hackathon-Rules]].
