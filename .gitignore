@@ -2,30 +2,18 @@ node_modules/
 .env
 .env.*
 !.env.example
-.graphify/cache/
-.graphify/branch.json
-.graphify/worktree.json
-.graphify/needs_update
-.obsidian/workspace.json
-.obsidian/workspace-mobile.json
+.graphify/
+.obsidian/
 dist/
 coverage/
 
 # Local state, credentials and generated caches
-.obsidian/cache/
-.obsidian/plugins/
-.obsidian/appearance.json
 .trash/
 .DS_Store
 Thumbs.db
 *.log
 *.pem
 *.key
-.graphify/backups/
-.graphify/.graphify_detect.json
-.graphify/.graphify_extract.json
-.graphify/.graphify_analysis.json
-.graphify/cost.json
 recordings/
 private-data/
 tmp/
