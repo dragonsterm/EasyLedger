@@ -5,7 +5,7 @@ tags: [easyledger, architecture, decisions]
 ---
 # Architecture decisions and stack
 
-Decisions dated 2026-09-17 are planning recommendations. Pin compatible package versions and verify licenses during implementation; only documentation tooling is installed now. Official references are catalogued in [[docs/13-Sources]].
+Decisions dated 2026-09-17 are planning recommendations. The Day 20 PostgreSQL and exact-money foundation is implemented; the remaining stack still requires compatibility and integration spikes. Pin compatible package versions and verify licenses during implementation. Official references are catalogued in [[docs/13-Sources]].
 
 | ADR | Decision | Rationale and tradeoff |
 | --- | --- | --- |
@@ -18,6 +18,7 @@ Decisions dated 2026-09-17 are planning recommendations. Pin compatible package 
 | ADR-007 | Repository-root Obsidian vault; canonical docs generate Graphify and canvases | One editable knowledge source avoids conflicting copies. Generated outputs are one-way projections; changes must be made in the notes. |
 | ADR-008 | Simple functional UI; theme deferred | Prioritize backend and complete journeys. Basic focus, responsive controls and readable states are required now; branding and polish follow usability testing. |
 | ADR-009 | MIT license for original project work | Permissive open-source baseline aligned with published lablab precedent. This event's complete license clause is not verified; see [[docs/11-Hackathon-and-License]]. |
+| ADR-010 | One immutable business currency, IDR or USD, stored as exact minor units | IDR uses whole rupiah and USD uses cents. This supports user currency choice without floating point, conversion, or mixed-currency totals; changing currency requires a separate migration rather than rewriting ledger history. |
 
 ## Alternatives considered
 

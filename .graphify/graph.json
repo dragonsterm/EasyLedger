@@ -3,23 +3,22 @@
   "multigraph": false,
   "graph": {
     "community_labels": {
-      "0": "Agent workflow and API contracts",
-      "1": "Manual access and accessibility",
-      "2": "Architecture decisions and stack",
-      "3": "Implementation handoff and runbook",
-      "4": "Knowledge system maintenance",
-      "5": "Corrections and undo",
-      "6": "Verification and release readiness",
+      "0": "Data model and calculation rules",
+      "1": "Authorization and tool safety",
+      "2": "System architecture",
+      "3": "Architecture decisions and stack",
+      "4": "Corrections and undo",
+      "5": "Manual access and accessibility",
+      "6": "Implementation handoff and runbook",
       "7": "Delivery plan and risk register",
-      "8": "System architecture",
-      "9": "Atomic sales and retries",
-      "10": "Analytics and missing data",
-      "11": "Authorization and tool safety",
-      "12": "Verification and release readiness"
+      "8": "Analytics and missing data",
+      "9": "Verification and release readiness",
+      "10": "Knowledge system maintenance",
+      "11": "Atomic sales and retries"
     },
-    "built_from_commit": "0eca96f69e2f840280b2739e77d6216ecaed6f74"
+    "built_from_commit": "95c9da7d731c0a7653721f9f3a0201721c85ce8b"
   },
-  "topology_signature": "n=122;e=255;AGENTS.md,AGENTS.md#section-20,AGENTS.md#section-7,docs/00-Home.md,docs/00-Home.md#section-35,docs/01-Product-Brief.md,docs/01-Product-Brief.md#section-12,docs/01-Product-Brief.md#section-22,docs/01-Product-Brief.md#section-30,docs/02-SRS.md,docs/02-SRS.md#FR-01,docs/02-SRS.md#FR-02,docs/02-SRS.md#FR-03,docs/02-SRS.md#FR-04,docs/02-SRS.md#FR-05,docs/02-SRS.md#FR-06,docs/02-SRS.md#FR-07,docs/02-SRS.md#FR-08,docs/02-SRS.md#FR-09,docs/02-SRS.md#FR-10,docs/02-SRS.md#FR-11,docs/02-SRS.md#FR-12,docs/02-SRS.md#FR-13,docs/02-SRS.md#FR-14,docs/02-SRS.md#FR-15,docs/02-SRS.md#FR-16,docs/02-SRS.md#FR-17,docs/02-SRS.md#FR-18,docs/02-SRS.md#FR-19,docs/02-SRS.md#NFR-01,docs/02-SRS.md#NFR-02,docs/02-SRS.md#NFR-03,docs/02-SRS.md#NFR-04,docs/02-SRS.md#NFR-05,docs/02-SRS.md#NFR-06,docs/02-SRS.md#NFR-07,docs/02-SRS.md#section-12,docs/02-SRS.md#section-36,docs/02-SRS.md#section-48,docs/02-SRS.md#section-8,docs/03-Architecture.md,docs/03-Architecture.md#section-27,docs/03-Architecture.md#section-35,docs/03-Architecture.md#section-41,docs/04-Decisions.md,docs/04-Decisions.md#ADR-001,docs/04-Decisions.md#ADR-002,docs/04-Decisions.md#ADR-003,docs/04-Decisions.md#ADR-004,docs/04-Decisions.md#ADR-005,docs/04-Decisions.md#ADR-006,docs/04-Decisions.md#ADR-007,docs/04-Decisions.md#ADR-008,docs/04-Decisions.md#ADR-009,docs/04-Decisions.md#section-22,docs/04-Decisions.md#section-26,docs/05-Data-Model.md,docs/05-Data-Model.md#section-35,docs/05-Data-Model.md#section-41,docs/05-Data-Model.md#section-47,docs/06-Agent-and-API.md,docs/06-Agent-and-API.md#section-10,docs/06-Agent-and-API.md#section-16,docs/06-Agent-and-API.md#section-38,docs/06-Agent-and-API.md#section-44,docs/07-Dashboard-and-UX.md,docs/07-Dashboard-and-UX.md#section-10,docs/07-Dashboard-and-UX.md#section-26,docs/08-Security-and-Operations.md,docs/08-Security-and-Operations.md#section-21,docs/08-Security-and-Operations.md#section-25,docs/08-Security-and-Operations.md#section-8,docs/09-Verification.md,docs/09-Verification.md#T-01,docs/09-Verification.md#T-02,docs/09-Verification.md#T-03,docs/09-Verification.md#T-04,docs/09-Verification.md#T-05,docs/09-Verification.md#T-06,docs/09-Verification.md#T-07,docs/09-Verification.md#T-08,docs/09-Verification.md#T-09,docs/09-Verification.md#T-10,docs/09-Verification.md#T-11,docs/09-Verification.md#T-12,docs/09-Verification.md#T-13,docs/09-Verification.md#T-14,docs/09-Verification.md#section-27,docs/09-Verification.md#section-33,docs/10-Delivery-Plan.md,docs/10-Delivery-Plan.md#P0,docs/10-Delivery-Plan.md#P1,docs/10-Delivery-Plan.md#P2,docs/10-Delivery-Plan.md#P3,docs/10-Delivery-Plan.md#P4,docs/10-Delivery-Plan.md#P5,docs/10-Delivery-Plan.md#P6,docs/10-Delivery-Plan.md#section-22,docs/11-Hackathon-and-License.md,docs/11-Hackathon-and-License.md#section-12,docs/11-Hackathon-and-License.md#section-18,docs/12-Knowledge-System.md,docs/12-Knowledge-System.md#section-10,docs/12-Knowledge-System.md#section-18,docs/12-Knowledge-System.md#section-31,docs/13-Sources.md,docs/14-Glossary.md,docs/15-Use-Cases.md,docs/15-Use-Cases.md#section-21,docs/16-Implementation-Handoff.md,docs/16-Implementation-Handoff.md#section-12,docs/16-Implementation-Handoff.md#section-18,docs/16-Implementation-Handoff.md#section-28,docs/16-Implementation-Handoff.md#section-38,docs/16-Implementation-Handoff.md#section-8,docs/17-Verification-Record.md,docs/17-Verification-Record.md#section-23,docs/18-Hackathon-Rules.md,docs/18-Hackathon-Rules.md#section-10,docs/18-Hackathon-Rules.md#section-22,docs/18-Hackathon-Rules.md#section-33,docs/18-Hackathon-Rules.md#section-57|AGENTS.md\tAGENTS.md#section-20\tcontains;AGENTS.md\tAGENTS.md#section-7\tcontains;AGENTS.md\tdocs/00-Home.md\treferences;AGENTS.md\tdocs/02-SRS.md\treferences;AGENTS.md\tdocs/03-Architecture.md\treferences;AGENTS.md\tdocs/04-Decisions.md\treferences;AGENTS.md\tdocs/12-Knowledge-System.md\treferences;docs/00-Home.md\tdocs/00-Home.md#section-35\tcontains;docs/00-Home.md\tdocs/01-Product-Brief.md\treferences;docs/00-Home.md\tdocs/02-SRS.md\treferences;docs/00-Home.md\tdocs/03-Architecture.md\treferences;docs/00-Home.md\tdocs/04-Decisions.md\treferences;docs/00-Home.md\tdocs/05-Data-Model.md\treferences;docs/00-Home.md\tdocs/06-Agent-and-API.md\treferences;docs/00-Home.md\tdocs/07-Dashboard-and-UX.md\treferences;docs/00-Home.md\tdocs/08-Security-and-Operations.md\treferences;docs/00-Home.md\tdocs/09-Verification.md\treferences;docs/00-Home.md\tdocs/10-Delivery-Plan.md\treferences;docs/00-Home.md\tdocs/11-Hackathon-and-License.md\treferences;docs/00-Home.md\tdocs/12-Knowledge-System.md\treferences;docs/00-Home.md\tdocs/13-Sources.md\treferences;docs/00-Home.md\tdocs/14-Glossary.md\treferences;docs/00-Home.md\tdocs/15-Use-Cases.md\treferences;docs/00-Home.md\tdocs/16-Implementation-Handoff.md\treferences;docs/00-Home.md\tdocs/17-Verification-Record.md\treferences;docs/00-Home.md\tdocs/18-Hackathon-Rules.md\treferences;docs/01-Product-Brief.md\tdocs/01-Product-Brief.md#section-12\tcontains;docs/01-Product-Brief.md\tdocs/01-Product-Brief.md#section-22\tcontains;docs/01-Product-Brief.md\tdocs/01-Product-Brief.md#section-30\tcontains;docs/01-Product-Brief.md\tdocs/02-SRS.md\treferences;docs/01-Product-Brief.md\tdocs/07-Dashboard-and-UX.md\treferences;docs/01-Product-Brief.md\tdocs/09-Verification.md\treferences;docs/01-Product-Brief.md\tdocs/10-Delivery-Plan.md\treferences;docs/01-Product-Brief.md\tdocs/13-Sources.md\treferences;docs/01-Product-Brief.md\tdocs/18-Hackathon-Rules.md\treferences;docs/02-SRS.md\tdocs/02-SRS.md#FR-01\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-02\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-03\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-04\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-05\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-06\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-07\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-08\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-09\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-10\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-11\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-12\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-13\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-14\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-15\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-16\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-17\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-18\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-19\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#NFR-01\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#NFR-02\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#NFR-03\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#NFR-04\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#NFR-05\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#NFR-06\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#NFR-07\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#section-12\tcontains;docs/02-SRS.md\tdocs/02-SRS.md#section-36\tcontains;docs/02-SRS.md\tdocs/02-SRS.md#section-48\tcontains;docs/02-SRS.md\tdocs/02-SRS.md#section-8\tcontains;docs/02-SRS.md\tdocs/03-Architecture.md\treferences;docs/02-SRS.md\tdocs/04-Decisions.md\treferences;docs/02-SRS.md\tdocs/05-Data-Model.md\treferences;docs/02-SRS.md\tdocs/09-Verification.md\treferences;docs/02-SRS.md\tdocs/10-Delivery-Plan.md\treferences;docs/02-SRS.md\tdocs/12-Knowledge-System.md\treferences;docs/02-SRS.md\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md\tdocs/18-Hackathon-Rules.md\treferences;docs/02-SRS.md#FR-01\tdocs/09-Verification.md#T-07\tverifies;docs/02-SRS.md#FR-01\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-02\tdocs/09-Verification.md#T-08\tverifies;docs/02-SRS.md#FR-02\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-02\tdocs/18-Hackathon-Rules.md\treferences;docs/02-SRS.md#FR-03\tdocs/09-Verification.md#T-01\tverifies;docs/02-SRS.md#FR-03\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-04\tdocs/09-Verification.md#T-02\tverifies;docs/02-SRS.md#FR-04\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-05\tdocs/09-Verification.md#T-04\tverifies;docs/02-SRS.md#FR-05\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-06\tdocs/09-Verification.md#T-04\tverifies;docs/02-SRS.md#FR-06\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-07\tdocs/09-Verification.md#T-09\tverifies;docs/02-SRS.md#FR-07\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-08\tdocs/09-Verification.md#T-01\tverifies;docs/02-SRS.md#FR-08\tdocs/09-Verification.md#T-02\tverifies;docs/02-SRS.md#FR-08\tdocs/09-Verification.md#T-05\tverifies;docs/02-SRS.md#FR-08\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-09\tdocs/09-Verification.md#T-05\tverifies;docs/02-SRS.md#FR-09\tdocs/09-Verification.md#T-06\tverifies;docs/02-SRS.md#FR-09\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-10\tdocs/09-Verification.md#T-05\tverifies;docs/02-SRS.md#FR-10\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-11\tdocs/09-Verification.md#T-05\tverifies;docs/02-SRS.md#FR-11\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-12\tdocs/09-Verification.md#T-06\tverifies;docs/02-SRS.md#FR-12\tdocs/09-Verification.md#T-09\tverifies;docs/02-SRS.md#FR-12\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-13\tdocs/09-Verification.md#T-06\tverifies;docs/02-SRS.md#FR-13\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-14\tdocs/09-Verification.md#T-03\tverifies;docs/02-SRS.md#FR-14\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-15\tdocs/09-Verification.md#T-01\tverifies;docs/02-SRS.md#FR-15\tdocs/09-Verification.md#T-03\tverifies;docs/02-SRS.md#FR-15\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-16\tdocs/09-Verification.md#T-10\tverifies;docs/02-SRS.md#FR-16\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-16\tdocs/18-Hackathon-Rules.md\treferences;docs/02-SRS.md#FR-17\tdocs/09-Verification.md#T-08\tverifies;docs/02-SRS.md#FR-17\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-18\tdocs/09-Verification.md#T-13\tverifies;docs/02-SRS.md#FR-18\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-19\tdocs/09-Verification.md#T-14\tverifies;docs/02-SRS.md#FR-19\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#NFR-01\tdocs/09-Verification.md#T-01\tverifies;docs/02-SRS.md#NFR-02\tdocs/09-Verification.md#T-11\tverifies;docs/02-SRS.md#NFR-03\tdocs/09-Verification.md#T-11\tverifies;docs/02-SRS.md#NFR-04\tdocs/09-Verification.md#T-07\tverifies;docs/02-SRS.md#NFR-05\tdocs/09-Verification.md#T-09\tverifies;docs/02-SRS.md#NFR-05\tdocs/18-Hackathon-Rules.md\treferences;docs/02-SRS.md#NFR-06\tdocs/09-Verification.md#T-12\tverifies;docs/02-SRS.md#NFR-07\tdocs/09-Verification.md#T-10\tverifies;docs/03-Architecture.md\tdocs/03-Architecture.md#section-27\tcontains;docs/03-Architecture.md\tdocs/03-Architecture.md#section-35\tcontains;docs/03-Architecture.md\tdocs/03-Architecture.md#section-41\tcontains;docs/03-Architecture.md\tdocs/04-Decisions.md\treferences;docs/03-Architecture.md\tdocs/06-Agent-and-API.md\treferences;docs/03-Architecture.md\tdocs/08-Security-and-Operations.md\treferences;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-001\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-002\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-003\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-004\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-005\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-006\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-007\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-008\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-009\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#section-22\tcontains;docs/04-Decisions.md\tdocs/04-Decisions.md#section-26\tcontains;docs/04-Decisions.md\tdocs/08-Security-and-Operations.md\treferences;docs/04-Decisions.md\tdocs/10-Delivery-Plan.md\treferences;docs/04-Decisions.md\tdocs/11-Hackathon-and-License.md\treferences;docs/04-Decisions.md\tdocs/12-Knowledge-System.md\treferences;docs/04-Decisions.md\tdocs/13-Sources.md\treferences;docs/04-Decisions.md\tdocs/16-Implementation-Handoff.md\treferences;docs/04-Decisions.md\tdocs/17-Verification-Record.md\treferences;docs/05-Data-Model.md\tdocs/05-Data-Model.md#section-35\tcontains;docs/05-Data-Model.md\tdocs/05-Data-Model.md#section-41\tcontains;docs/05-Data-Model.md\tdocs/05-Data-Model.md#section-47\tcontains;docs/05-Data-Model.md\tdocs/06-Agent-and-API.md\treferences;docs/05-Data-Model.md\tdocs/07-Dashboard-and-UX.md\treferences;docs/05-Data-Model.md\tdocs/08-Security-and-Operations.md\treferences;docs/05-Data-Model.md\tdocs/14-Glossary.md\treferences;docs/05-Data-Model.md\tdocs/15-Use-Cases.md\treferences;docs/05-Data-Model.md\tdocs/18-Hackathon-Rules.md\treferences;docs/06-Agent-and-API.md\tdocs/06-Agent-and-API.md#section-10\tcontains;docs/06-Agent-and-API.md\tdocs/06-Agent-and-API.md#section-16\tcontains;docs/06-Agent-and-API.md\tdocs/06-Agent-and-API.md#section-38\tcontains;docs/06-Agent-and-API.md\tdocs/06-Agent-and-API.md#section-44\tcontains;docs/06-Agent-and-API.md\tdocs/07-Dashboard-and-UX.md\treferences;docs/06-Agent-and-API.md\tdocs/08-Security-and-Operations.md\treferences;docs/06-Agent-and-API.md\tdocs/09-Verification.md\treferences;docs/06-Agent-and-API.md\tdocs/13-Sources.md\treferences;docs/06-Agent-and-API.md\tdocs/15-Use-Cases.md\treferences;docs/06-Agent-and-API.md\tdocs/18-Hackathon-Rules.md\treferences;docs/07-Dashboard-and-UX.md\tdocs/07-Dashboard-and-UX.md#section-10\tcontains;docs/07-Dashboard-and-UX.md\tdocs/07-Dashboard-and-UX.md#section-26\tcontains;docs/07-Dashboard-and-UX.md\tdocs/09-Verification.md\treferences;docs/07-Dashboard-and-UX.md\tdocs/10-Delivery-Plan.md\treferences;docs/07-Dashboard-and-UX.md\tdocs/15-Use-Cases.md\treferences;docs/08-Security-and-Operations.md\tdocs/08-Security-and-Operations.md#section-21\tcontains;docs/08-Security-and-Operations.md\tdocs/08-Security-and-Operations.md#section-25\tcontains;docs/08-Security-and-Operations.md\tdocs/08-Security-and-Operations.md#section-8\tcontains;docs/08-Security-and-Operations.md\tdocs/09-Verification.md\treferences;docs/08-Security-and-Operations.md\tdocs/09-Verification.md#T-03\treferences;docs/08-Security-and-Operations.md\tdocs/09-Verification.md#T-04\treferences;docs/08-Security-and-Operations.md\tdocs/09-Verification.md#T-07\treferences;docs/08-Security-and-Operations.md\tdocs/09-Verification.md#T-10\treferences;docs/08-Security-and-Operations.md\tdocs/16-Implementation-Handoff.md\treferences;docs/09-Verification.md\tdocs/09-Verification.md#T-01\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-02\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-03\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-04\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-05\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-06\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-07\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-08\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-09\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-10\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-11\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-12\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-13\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-14\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#section-27\tcontains;docs/09-Verification.md\tdocs/09-Verification.md#section-33\tcontains;docs/09-Verification.md\tdocs/10-Delivery-Plan.md\treferences;docs/09-Verification.md\tdocs/11-Hackathon-and-License.md\treferences;docs/09-Verification.md\tdocs/12-Knowledge-System.md\treferences;docs/09-Verification.md\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md\tdocs/16-Implementation-Handoff.md\treferences;docs/09-Verification.md\tdocs/17-Verification-Record.md\treferences;docs/09-Verification.md#T-01\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-02\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-03\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-04\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-05\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-06\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-07\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-08\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-09\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-10\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-13\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-14\tdocs/15-Use-Cases.md\treferences;docs/10-Delivery-Plan.md\tdocs/10-Delivery-Plan.md#P0\tspecifies;docs/10-Delivery-Plan.md\tdocs/10-Delivery-Plan.md#P1\tspecifies;docs/10-Delivery-Plan.md\tdocs/10-Delivery-Plan.md#P2\tspecifies;docs/10-Delivery-Plan.md\tdocs/10-Delivery-Plan.md#P3\tspecifies;docs/10-Delivery-Plan.md\tdocs/10-Delivery-Plan.md#P4\tspecifies;docs/10-Delivery-Plan.md\tdocs/10-Delivery-Plan.md#P5\tspecifies;docs/10-Delivery-Plan.md\tdocs/10-Delivery-Plan.md#P6\tspecifies;docs/10-Delivery-Plan.md\tdocs/10-Delivery-Plan.md#section-22\tcontains;docs/10-Delivery-Plan.md\tdocs/11-Hackathon-and-License.md\treferences;docs/10-Delivery-Plan.md\tdocs/16-Implementation-Handoff.md\treferences;docs/10-Delivery-Plan.md\tdocs/17-Verification-Record.md\treferences;docs/10-Delivery-Plan.md\tdocs/18-Hackathon-Rules.md\treferences;docs/11-Hackathon-and-License.md\tdocs/11-Hackathon-and-License.md#section-12\tcontains;docs/11-Hackathon-and-License.md\tdocs/11-Hackathon-and-License.md#section-18\tcontains;docs/11-Hackathon-and-License.md\tdocs/13-Sources.md\treferences;docs/11-Hackathon-and-License.md\tdocs/16-Implementation-Handoff.md\treferences;docs/11-Hackathon-and-License.md\tdocs/17-Verification-Record.md\treferences;docs/11-Hackathon-and-License.md\tdocs/18-Hackathon-Rules.md\treferences;docs/12-Knowledge-System.md\tdocs/12-Knowledge-System.md#section-10\tcontains;docs/12-Knowledge-System.md\tdocs/12-Knowledge-System.md#section-18\tcontains;docs/12-Knowledge-System.md\tdocs/12-Knowledge-System.md#section-31\tcontains;docs/12-Knowledge-System.md\tdocs/13-Sources.md\treferences;docs/12-Knowledge-System.md\tdocs/14-Glossary.md\treferences;docs/12-Knowledge-System.md\tdocs/17-Verification-Record.md\treferences;docs/13-Sources.md\tdocs/18-Hackathon-Rules.md\treferences;docs/15-Use-Cases.md\tdocs/15-Use-Cases.md#section-21\tcontains;docs/15-Use-Cases.md\tdocs/18-Hackathon-Rules.md\treferences;docs/16-Implementation-Handoff.md\tdocs/16-Implementation-Handoff.md#section-12\tcontains;docs/16-Implementation-Handoff.md\tdocs/16-Implementation-Handoff.md#section-18\tcontains;docs/16-Implementation-Handoff.md\tdocs/16-Implementation-Handoff.md#section-28\tcontains;docs/16-Implementation-Handoff.md\tdocs/16-Implementation-Handoff.md#section-38\tcontains;docs/16-Implementation-Handoff.md\tdocs/16-Implementation-Handoff.md#section-8\tcontains;docs/16-Implementation-Handoff.md\tdocs/17-Verification-Record.md\treferences;docs/17-Verification-Record.md\tdocs/17-Verification-Record.md#section-23\tcontains;docs/18-Hackathon-Rules.md\tdocs/18-Hackathon-Rules.md#section-10\tcontains;docs/18-Hackathon-Rules.md\tdocs/18-Hackathon-Rules.md#section-22\tcontains;docs/18-Hackathon-Rules.md\tdocs/18-Hackathon-Rules.md#section-33\tcontains;docs/18-Hackathon-Rules.md\tdocs/18-Hackathon-Rules.md#section-57\tcontains",
+  "topology_signature": "n=127;e=265;AGENTS.md,AGENTS.md#section-20,AGENTS.md#section-7,docs/00-Home.md,docs/00-Home.md#section-35,docs/01-Product-Brief.md,docs/01-Product-Brief.md#section-12,docs/01-Product-Brief.md#section-22,docs/01-Product-Brief.md#section-30,docs/02-SRS.md,docs/02-SRS.md#FR-01,docs/02-SRS.md#FR-02,docs/02-SRS.md#FR-03,docs/02-SRS.md#FR-04,docs/02-SRS.md#FR-05,docs/02-SRS.md#FR-06,docs/02-SRS.md#FR-07,docs/02-SRS.md#FR-08,docs/02-SRS.md#FR-09,docs/02-SRS.md#FR-10,docs/02-SRS.md#FR-11,docs/02-SRS.md#FR-12,docs/02-SRS.md#FR-13,docs/02-SRS.md#FR-14,docs/02-SRS.md#FR-15,docs/02-SRS.md#FR-16,docs/02-SRS.md#FR-17,docs/02-SRS.md#FR-18,docs/02-SRS.md#FR-19,docs/02-SRS.md#FR-20,docs/02-SRS.md#NFR-01,docs/02-SRS.md#NFR-02,docs/02-SRS.md#NFR-03,docs/02-SRS.md#NFR-04,docs/02-SRS.md#NFR-05,docs/02-SRS.md#NFR-06,docs/02-SRS.md#NFR-07,docs/02-SRS.md#section-12,docs/02-SRS.md#section-37,docs/02-SRS.md#section-49,docs/02-SRS.md#section-8,docs/03-Architecture.md,docs/03-Architecture.md#section-27,docs/03-Architecture.md#section-35,docs/03-Architecture.md#section-41,docs/04-Decisions.md,docs/04-Decisions.md#ADR-001,docs/04-Decisions.md#ADR-002,docs/04-Decisions.md#ADR-003,docs/04-Decisions.md#ADR-004,docs/04-Decisions.md#ADR-005,docs/04-Decisions.md#ADR-006,docs/04-Decisions.md#ADR-007,docs/04-Decisions.md#ADR-008,docs/04-Decisions.md#ADR-009,docs/04-Decisions.md#ADR-010,docs/04-Decisions.md#section-23,docs/04-Decisions.md#section-27,docs/05-Data-Model.md,docs/05-Data-Model.md#section-35,docs/05-Data-Model.md#section-41,docs/05-Data-Model.md#section-45,docs/05-Data-Model.md#section-51,docs/06-Agent-and-API.md,docs/06-Agent-and-API.md#section-10,docs/06-Agent-and-API.md#section-16,docs/06-Agent-and-API.md#section-38,docs/06-Agent-and-API.md#section-44,docs/07-Dashboard-and-UX.md,docs/07-Dashboard-and-UX.md#section-10,docs/07-Dashboard-and-UX.md#section-26,docs/08-Security-and-Operations.md,docs/08-Security-and-Operations.md#section-21,docs/08-Security-and-Operations.md#section-25,docs/08-Security-and-Operations.md#section-8,docs/09-Verification.md,docs/09-Verification.md#T-01,docs/09-Verification.md#T-02,docs/09-Verification.md#T-03,docs/09-Verification.md#T-04,docs/09-Verification.md#T-05,docs/09-Verification.md#T-06,docs/09-Verification.md#T-07,docs/09-Verification.md#T-08,docs/09-Verification.md#T-09,docs/09-Verification.md#T-10,docs/09-Verification.md#T-11,docs/09-Verification.md#T-12,docs/09-Verification.md#T-13,docs/09-Verification.md#T-14,docs/09-Verification.md#T-15,docs/09-Verification.md#section-28,docs/09-Verification.md#section-34,docs/10-Delivery-Plan.md,docs/10-Delivery-Plan.md#P0,docs/10-Delivery-Plan.md#P1,docs/10-Delivery-Plan.md#P2,docs/10-Delivery-Plan.md#P3,docs/10-Delivery-Plan.md#P4,docs/10-Delivery-Plan.md#P5,docs/10-Delivery-Plan.md#P6,docs/10-Delivery-Plan.md#section-22,docs/11-Hackathon-and-License.md,docs/11-Hackathon-and-License.md#section-12,docs/11-Hackathon-and-License.md#section-18,docs/12-Knowledge-System.md,docs/12-Knowledge-System.md#section-10,docs/12-Knowledge-System.md#section-18,docs/12-Knowledge-System.md#section-31,docs/13-Sources.md,docs/14-Glossary.md,docs/15-Use-Cases.md,docs/15-Use-Cases.md#section-21,docs/16-Implementation-Handoff.md,docs/16-Implementation-Handoff.md#section-12,docs/16-Implementation-Handoff.md#section-18,docs/16-Implementation-Handoff.md#section-28,docs/16-Implementation-Handoff.md#section-38,docs/16-Implementation-Handoff.md#section-8,docs/17-Verification-Record.md,docs/17-Verification-Record.md#section-23,docs/17-Verification-Record.md#section-31,docs/18-Hackathon-Rules.md,docs/18-Hackathon-Rules.md#section-10,docs/18-Hackathon-Rules.md#section-22,docs/18-Hackathon-Rules.md#section-33,docs/18-Hackathon-Rules.md#section-57|AGENTS.md\tAGENTS.md#section-20\tcontains;AGENTS.md\tAGENTS.md#section-7\tcontains;AGENTS.md\tdocs/00-Home.md\treferences;AGENTS.md\tdocs/02-SRS.md\treferences;AGENTS.md\tdocs/03-Architecture.md\treferences;AGENTS.md\tdocs/04-Decisions.md\treferences;AGENTS.md\tdocs/12-Knowledge-System.md\treferences;docs/00-Home.md\tdocs/00-Home.md#section-35\tcontains;docs/00-Home.md\tdocs/01-Product-Brief.md\treferences;docs/00-Home.md\tdocs/02-SRS.md\treferences;docs/00-Home.md\tdocs/03-Architecture.md\treferences;docs/00-Home.md\tdocs/04-Decisions.md\treferences;docs/00-Home.md\tdocs/05-Data-Model.md\treferences;docs/00-Home.md\tdocs/06-Agent-and-API.md\treferences;docs/00-Home.md\tdocs/07-Dashboard-and-UX.md\treferences;docs/00-Home.md\tdocs/08-Security-and-Operations.md\treferences;docs/00-Home.md\tdocs/09-Verification.md\treferences;docs/00-Home.md\tdocs/10-Delivery-Plan.md\treferences;docs/00-Home.md\tdocs/11-Hackathon-and-License.md\treferences;docs/00-Home.md\tdocs/12-Knowledge-System.md\treferences;docs/00-Home.md\tdocs/13-Sources.md\treferences;docs/00-Home.md\tdocs/14-Glossary.md\treferences;docs/00-Home.md\tdocs/15-Use-Cases.md\treferences;docs/00-Home.md\tdocs/16-Implementation-Handoff.md\treferences;docs/00-Home.md\tdocs/17-Verification-Record.md\treferences;docs/00-Home.md\tdocs/18-Hackathon-Rules.md\treferences;docs/01-Product-Brief.md\tdocs/01-Product-Brief.md#section-12\tcontains;docs/01-Product-Brief.md\tdocs/01-Product-Brief.md#section-22\tcontains;docs/01-Product-Brief.md\tdocs/01-Product-Brief.md#section-30\tcontains;docs/01-Product-Brief.md\tdocs/02-SRS.md\treferences;docs/01-Product-Brief.md\tdocs/07-Dashboard-and-UX.md\treferences;docs/01-Product-Brief.md\tdocs/09-Verification.md\treferences;docs/01-Product-Brief.md\tdocs/10-Delivery-Plan.md\treferences;docs/01-Product-Brief.md\tdocs/13-Sources.md\treferences;docs/01-Product-Brief.md\tdocs/18-Hackathon-Rules.md\treferences;docs/02-SRS.md\tdocs/02-SRS.md#FR-01\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-02\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-03\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-04\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-05\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-06\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-07\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-08\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-09\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-10\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-11\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-12\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-13\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-14\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-15\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-16\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-17\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-18\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-19\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#FR-20\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#NFR-01\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#NFR-02\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#NFR-03\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#NFR-04\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#NFR-05\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#NFR-06\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#NFR-07\tspecifies;docs/02-SRS.md\tdocs/02-SRS.md#section-12\tcontains;docs/02-SRS.md\tdocs/02-SRS.md#section-37\tcontains;docs/02-SRS.md\tdocs/02-SRS.md#section-49\tcontains;docs/02-SRS.md\tdocs/02-SRS.md#section-8\tcontains;docs/02-SRS.md\tdocs/03-Architecture.md\treferences;docs/02-SRS.md\tdocs/04-Decisions.md\treferences;docs/02-SRS.md\tdocs/05-Data-Model.md\treferences;docs/02-SRS.md\tdocs/09-Verification.md\treferences;docs/02-SRS.md\tdocs/10-Delivery-Plan.md\treferences;docs/02-SRS.md\tdocs/12-Knowledge-System.md\treferences;docs/02-SRS.md\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md\tdocs/18-Hackathon-Rules.md\treferences;docs/02-SRS.md#FR-01\tdocs/09-Verification.md#T-07\tverifies;docs/02-SRS.md#FR-01\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-02\tdocs/09-Verification.md#T-08\tverifies;docs/02-SRS.md#FR-02\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-02\tdocs/18-Hackathon-Rules.md\treferences;docs/02-SRS.md#FR-03\tdocs/09-Verification.md#T-01\tverifies;docs/02-SRS.md#FR-03\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-04\tdocs/09-Verification.md#T-02\tverifies;docs/02-SRS.md#FR-04\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-05\tdocs/09-Verification.md#T-04\tverifies;docs/02-SRS.md#FR-05\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-06\tdocs/09-Verification.md#T-04\tverifies;docs/02-SRS.md#FR-06\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-07\tdocs/09-Verification.md#T-09\tverifies;docs/02-SRS.md#FR-07\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-08\tdocs/09-Verification.md#T-01\tverifies;docs/02-SRS.md#FR-08\tdocs/09-Verification.md#T-02\tverifies;docs/02-SRS.md#FR-08\tdocs/09-Verification.md#T-05\tverifies;docs/02-SRS.md#FR-08\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-09\tdocs/09-Verification.md#T-05\tverifies;docs/02-SRS.md#FR-09\tdocs/09-Verification.md#T-06\tverifies;docs/02-SRS.md#FR-09\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-10\tdocs/09-Verification.md#T-05\tverifies;docs/02-SRS.md#FR-10\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-11\tdocs/09-Verification.md#T-05\tverifies;docs/02-SRS.md#FR-11\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-12\tdocs/09-Verification.md#T-06\tverifies;docs/02-SRS.md#FR-12\tdocs/09-Verification.md#T-09\tverifies;docs/02-SRS.md#FR-12\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-13\tdocs/09-Verification.md#T-06\tverifies;docs/02-SRS.md#FR-13\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-14\tdocs/09-Verification.md#T-03\tverifies;docs/02-SRS.md#FR-14\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-15\tdocs/09-Verification.md#T-01\tverifies;docs/02-SRS.md#FR-15\tdocs/09-Verification.md#T-03\tverifies;docs/02-SRS.md#FR-15\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-16\tdocs/09-Verification.md#T-10\tverifies;docs/02-SRS.md#FR-16\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-16\tdocs/18-Hackathon-Rules.md\treferences;docs/02-SRS.md#FR-17\tdocs/09-Verification.md#T-08\tverifies;docs/02-SRS.md#FR-17\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-18\tdocs/09-Verification.md#T-13\tverifies;docs/02-SRS.md#FR-18\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-19\tdocs/09-Verification.md#T-14\tverifies;docs/02-SRS.md#FR-19\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#FR-20\tdocs/09-Verification.md#T-15\tverifies;docs/02-SRS.md#FR-20\tdocs/15-Use-Cases.md\treferences;docs/02-SRS.md#NFR-01\tdocs/09-Verification.md#T-01\tverifies;docs/02-SRS.md#NFR-01\tdocs/09-Verification.md#T-15\tverifies;docs/02-SRS.md#NFR-02\tdocs/09-Verification.md#T-11\tverifies;docs/02-SRS.md#NFR-03\tdocs/09-Verification.md#T-11\tverifies;docs/02-SRS.md#NFR-04\tdocs/09-Verification.md#T-07\tverifies;docs/02-SRS.md#NFR-05\tdocs/09-Verification.md#T-09\tverifies;docs/02-SRS.md#NFR-05\tdocs/18-Hackathon-Rules.md\treferences;docs/02-SRS.md#NFR-06\tdocs/09-Verification.md#T-12\tverifies;docs/02-SRS.md#NFR-07\tdocs/09-Verification.md#T-10\tverifies;docs/03-Architecture.md\tdocs/03-Architecture.md#section-27\tcontains;docs/03-Architecture.md\tdocs/03-Architecture.md#section-35\tcontains;docs/03-Architecture.md\tdocs/03-Architecture.md#section-41\tcontains;docs/03-Architecture.md\tdocs/04-Decisions.md\treferences;docs/03-Architecture.md\tdocs/06-Agent-and-API.md\treferences;docs/03-Architecture.md\tdocs/08-Security-and-Operations.md\treferences;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-001\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-002\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-003\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-004\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-005\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-006\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-007\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-008\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-009\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#ADR-010\tspecifies;docs/04-Decisions.md\tdocs/04-Decisions.md#section-23\tcontains;docs/04-Decisions.md\tdocs/04-Decisions.md#section-27\tcontains;docs/04-Decisions.md\tdocs/08-Security-and-Operations.md\treferences;docs/04-Decisions.md\tdocs/10-Delivery-Plan.md\treferences;docs/04-Decisions.md\tdocs/11-Hackathon-and-License.md\treferences;docs/04-Decisions.md\tdocs/12-Knowledge-System.md\treferences;docs/04-Decisions.md\tdocs/13-Sources.md\treferences;docs/04-Decisions.md\tdocs/16-Implementation-Handoff.md\treferences;docs/04-Decisions.md\tdocs/17-Verification-Record.md\treferences;docs/05-Data-Model.md\tdocs/05-Data-Model.md#section-35\tcontains;docs/05-Data-Model.md\tdocs/05-Data-Model.md#section-41\tcontains;docs/05-Data-Model.md\tdocs/05-Data-Model.md#section-45\tcontains;docs/05-Data-Model.md\tdocs/05-Data-Model.md#section-51\tcontains;docs/05-Data-Model.md\tdocs/06-Agent-and-API.md\treferences;docs/05-Data-Model.md\tdocs/07-Dashboard-and-UX.md\treferences;docs/05-Data-Model.md\tdocs/08-Security-and-Operations.md\treferences;docs/05-Data-Model.md\tdocs/14-Glossary.md\treferences;docs/05-Data-Model.md\tdocs/15-Use-Cases.md\treferences;docs/05-Data-Model.md\tdocs/17-Verification-Record.md\treferences;docs/05-Data-Model.md\tdocs/18-Hackathon-Rules.md\treferences;docs/06-Agent-and-API.md\tdocs/06-Agent-and-API.md#section-10\tcontains;docs/06-Agent-and-API.md\tdocs/06-Agent-and-API.md#section-16\tcontains;docs/06-Agent-and-API.md\tdocs/06-Agent-and-API.md#section-38\tcontains;docs/06-Agent-and-API.md\tdocs/06-Agent-and-API.md#section-44\tcontains;docs/06-Agent-and-API.md\tdocs/07-Dashboard-and-UX.md\treferences;docs/06-Agent-and-API.md\tdocs/08-Security-and-Operations.md\treferences;docs/06-Agent-and-API.md\tdocs/09-Verification.md\treferences;docs/06-Agent-and-API.md\tdocs/13-Sources.md\treferences;docs/06-Agent-and-API.md\tdocs/15-Use-Cases.md\treferences;docs/06-Agent-and-API.md\tdocs/18-Hackathon-Rules.md\treferences;docs/07-Dashboard-and-UX.md\tdocs/07-Dashboard-and-UX.md#section-10\tcontains;docs/07-Dashboard-and-UX.md\tdocs/07-Dashboard-and-UX.md#section-26\tcontains;docs/07-Dashboard-and-UX.md\tdocs/09-Verification.md\treferences;docs/07-Dashboard-and-UX.md\tdocs/10-Delivery-Plan.md\treferences;docs/07-Dashboard-and-UX.md\tdocs/15-Use-Cases.md\treferences;docs/08-Security-and-Operations.md\tdocs/08-Security-and-Operations.md#section-21\tcontains;docs/08-Security-and-Operations.md\tdocs/08-Security-and-Operations.md#section-25\tcontains;docs/08-Security-and-Operations.md\tdocs/08-Security-and-Operations.md#section-8\tcontains;docs/08-Security-and-Operations.md\tdocs/09-Verification.md\treferences;docs/08-Security-and-Operations.md\tdocs/09-Verification.md#T-03\treferences;docs/08-Security-and-Operations.md\tdocs/09-Verification.md#T-04\treferences;docs/08-Security-and-Operations.md\tdocs/09-Verification.md#T-07\treferences;docs/08-Security-and-Operations.md\tdocs/09-Verification.md#T-10\treferences;docs/08-Security-and-Operations.md\tdocs/16-Implementation-Handoff.md\treferences;docs/09-Verification.md\tdocs/09-Verification.md#T-01\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-02\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-03\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-04\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-05\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-06\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-07\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-08\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-09\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-10\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-11\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-12\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-13\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-14\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#T-15\tspecifies;docs/09-Verification.md\tdocs/09-Verification.md#section-28\tcontains;docs/09-Verification.md\tdocs/09-Verification.md#section-34\tcontains;docs/09-Verification.md\tdocs/10-Delivery-Plan.md\treferences;docs/09-Verification.md\tdocs/11-Hackathon-and-License.md\treferences;docs/09-Verification.md\tdocs/12-Knowledge-System.md\treferences;docs/09-Verification.md\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md\tdocs/16-Implementation-Handoff.md\treferences;docs/09-Verification.md\tdocs/17-Verification-Record.md\treferences;docs/09-Verification.md#T-01\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-02\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-03\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-04\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-05\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-06\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-07\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-08\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-09\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-10\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-13\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-14\tdocs/15-Use-Cases.md\treferences;docs/09-Verification.md#T-15\tdocs/15-Use-Cases.md\treferences;docs/10-Delivery-Plan.md\tdocs/10-Delivery-Plan.md#P0\tspecifies;docs/10-Delivery-Plan.md\tdocs/10-Delivery-Plan.md#P1\tspecifies;docs/10-Delivery-Plan.md\tdocs/10-Delivery-Plan.md#P2\tspecifies;docs/10-Delivery-Plan.md\tdocs/10-Delivery-Plan.md#P3\tspecifies;docs/10-Delivery-Plan.md\tdocs/10-Delivery-Plan.md#P4\tspecifies;docs/10-Delivery-Plan.md\tdocs/10-Delivery-Plan.md#P5\tspecifies;docs/10-Delivery-Plan.md\tdocs/10-Delivery-Plan.md#P6\tspecifies;docs/10-Delivery-Plan.md\tdocs/10-Delivery-Plan.md#section-22\tcontains;docs/10-Delivery-Plan.md\tdocs/11-Hackathon-and-License.md\treferences;docs/10-Delivery-Plan.md\tdocs/16-Implementation-Handoff.md\treferences;docs/10-Delivery-Plan.md\tdocs/17-Verification-Record.md\treferences;docs/10-Delivery-Plan.md\tdocs/18-Hackathon-Rules.md\treferences;docs/11-Hackathon-and-License.md\tdocs/11-Hackathon-and-License.md#section-12\tcontains;docs/11-Hackathon-and-License.md\tdocs/11-Hackathon-and-License.md#section-18\tcontains;docs/11-Hackathon-and-License.md\tdocs/13-Sources.md\treferences;docs/11-Hackathon-and-License.md\tdocs/16-Implementation-Handoff.md\treferences;docs/11-Hackathon-and-License.md\tdocs/17-Verification-Record.md\treferences;docs/11-Hackathon-and-License.md\tdocs/18-Hackathon-Rules.md\treferences;docs/12-Knowledge-System.md\tdocs/12-Knowledge-System.md#section-10\tcontains;docs/12-Knowledge-System.md\tdocs/12-Knowledge-System.md#section-18\tcontains;docs/12-Knowledge-System.md\tdocs/12-Knowledge-System.md#section-31\tcontains;docs/12-Knowledge-System.md\tdocs/13-Sources.md\treferences;docs/12-Knowledge-System.md\tdocs/14-Glossary.md\treferences;docs/12-Knowledge-System.md\tdocs/17-Verification-Record.md\treferences;docs/13-Sources.md\tdocs/18-Hackathon-Rules.md\treferences;docs/15-Use-Cases.md\tdocs/15-Use-Cases.md#section-21\tcontains;docs/15-Use-Cases.md\tdocs/18-Hackathon-Rules.md\treferences;docs/16-Implementation-Handoff.md\tdocs/16-Implementation-Handoff.md#section-12\tcontains;docs/16-Implementation-Handoff.md\tdocs/16-Implementation-Handoff.md#section-18\tcontains;docs/16-Implementation-Handoff.md\tdocs/16-Implementation-Handoff.md#section-28\tcontains;docs/16-Implementation-Handoff.md\tdocs/16-Implementation-Handoff.md#section-38\tcontains;docs/16-Implementation-Handoff.md\tdocs/16-Implementation-Handoff.md#section-8\tcontains;docs/16-Implementation-Handoff.md\tdocs/17-Verification-Record.md\treferences;docs/17-Verification-Record.md\tdocs/17-Verification-Record.md#section-23\tcontains;docs/17-Verification-Record.md\tdocs/17-Verification-Record.md#section-31\tcontains;docs/18-Hackathon-Rules.md\tdocs/18-Hackathon-Rules.md#section-10\tcontains;docs/18-Hackathon-Rules.md\tdocs/18-Hackathon-Rules.md#section-22\tcontains;docs/18-Hackathon-Rules.md\tdocs/18-Hackathon-Rules.md#section-33\tcontains;docs/18-Hackathon-Rules.md\tdocs/18-Hackathon-Rules.md#section-57\tcontains",
   "nodes": [
     {
       "id": "AGENTS.md",
@@ -37,8 +36,8 @@
           "source_location": "line 1"
         }
       ],
-      "community": 4,
-      "community_name": "Knowledge system maintenance"
+      "community": 2,
+      "community_name": "System architecture"
     },
     {
       "id": "AGENTS.md#section-7",
@@ -56,8 +55,8 @@
           "source_location": "line 7"
         }
       ],
-      "community": 4,
-      "community_name": "Knowledge system maintenance"
+      "community": 2,
+      "community_name": "System architecture"
     },
     {
       "id": "AGENTS.md#section-20",
@@ -75,8 +74,8 @@
           "source_location": "line 20"
         }
       ],
-      "community": 4,
-      "community_name": "Knowledge system maintenance"
+      "community": 2,
+      "community_name": "System architecture"
     },
     {
       "id": "docs/00-Home.md",
@@ -94,8 +93,8 @@
           "source_location": "line 6"
         }
       ],
-      "community": 4,
-      "community_name": "Knowledge system maintenance"
+      "community": 2,
+      "community_name": "System architecture"
     },
     {
       "id": "docs/00-Home.md#section-35",
@@ -113,8 +112,8 @@
           "source_location": "line 35"
         }
       ],
-      "community": 4,
-      "community_name": "Knowledge system maintenance"
+      "community": 2,
+      "community_name": "System architecture"
     },
     {
       "id": "docs/01-Product-Brief.md",
@@ -133,7 +132,7 @@
         }
       ],
       "community": 0,
-      "community_name": "Agent workflow and API contracts"
+      "community_name": "Data model and calculation rules"
     },
     {
       "id": "docs/01-Product-Brief.md#section-12",
@@ -152,7 +151,7 @@
         }
       ],
       "community": 0,
-      "community_name": "Agent workflow and API contracts"
+      "community_name": "Data model and calculation rules"
     },
     {
       "id": "docs/01-Product-Brief.md#section-22",
@@ -171,7 +170,7 @@
         }
       ],
       "community": 0,
-      "community_name": "Agent workflow and API contracts"
+      "community_name": "Data model and calculation rules"
     },
     {
       "id": "docs/01-Product-Brief.md#section-30",
@@ -190,7 +189,7 @@
         }
       ],
       "community": 0,
-      "community_name": "Agent workflow and API contracts"
+      "community_name": "Data model and calculation rules"
     },
     {
       "id": "docs/02-SRS.md",
@@ -208,7 +207,7 @@
           "source_location": "line 6"
         }
       ],
-      "community": 1,
+      "community": 5,
       "community_name": "Manual access and accessibility"
     },
     {
@@ -227,7 +226,7 @@
           "source_location": "line 8"
         }
       ],
-      "community": 1,
+      "community": 5,
       "community_name": "Manual access and accessibility"
     },
     {
@@ -246,7 +245,7 @@
           "source_location": "line 12"
         }
       ],
-      "community": 1,
+      "community": 5,
       "community_name": "Manual access and accessibility"
     },
     {
@@ -265,7 +264,7 @@
           "source_location": "line 16"
         }
       ],
-      "community": 11,
+      "community": 1,
       "community_name": "Authorization and tool safety"
     },
     {
@@ -284,7 +283,7 @@
           "source_location": "line 17"
         }
       ],
-      "community": 5,
+      "community": 4,
       "community_name": "Corrections and undo"
     },
     {
@@ -304,7 +303,7 @@
         }
       ],
       "community": 9,
-      "community_name": "Atomic sales and retries"
+      "community_name": "Verification and release readiness"
     },
     {
       "id": "docs/02-SRS.md#FR-04",
@@ -322,7 +321,7 @@
           "source_location": "line 19"
         }
       ],
-      "community": 10,
+      "community": 8,
       "community_name": "Analytics and missing data"
     },
     {
@@ -341,7 +340,7 @@
           "source_location": "line 20"
         }
       ],
-      "community": 5,
+      "community": 4,
       "community_name": "Corrections and undo"
     },
     {
@@ -360,7 +359,7 @@
           "source_location": "line 21"
         }
       ],
-      "community": 5,
+      "community": 4,
       "community_name": "Corrections and undo"
     },
     {
@@ -379,7 +378,7 @@
           "source_location": "line 22"
         }
       ],
-      "community": 1,
+      "community": 5,
       "community_name": "Manual access and accessibility"
     },
     {
@@ -398,7 +397,7 @@
           "source_location": "line 23"
         }
       ],
-      "community": 10,
+      "community": 8,
       "community_name": "Analytics and missing data"
     },
     {
@@ -417,7 +416,7 @@
           "source_location": "line 24"
         }
       ],
-      "community": 1,
+      "community": 5,
       "community_name": "Manual access and accessibility"
     },
     {
@@ -436,7 +435,7 @@
           "source_location": "line 25"
         }
       ],
-      "community": 10,
+      "community": 8,
       "community_name": "Analytics and missing data"
     },
     {
@@ -455,7 +454,7 @@
           "source_location": "line 26"
         }
       ],
-      "community": 10,
+      "community": 8,
       "community_name": "Analytics and missing data"
     },
     {
@@ -474,7 +473,7 @@
           "source_location": "line 27"
         }
       ],
-      "community": 1,
+      "community": 5,
       "community_name": "Manual access and accessibility"
     },
     {
@@ -493,7 +492,7 @@
           "source_location": "line 28"
         }
       ],
-      "community": 1,
+      "community": 5,
       "community_name": "Manual access and accessibility"
     },
     {
@@ -512,7 +511,7 @@
           "source_location": "line 29"
         }
       ],
-      "community": 9,
+      "community": 11,
       "community_name": "Atomic sales and retries"
     },
     {
@@ -531,7 +530,7 @@
           "source_location": "line 30"
         }
       ],
-      "community": 9,
+      "community": 11,
       "community_name": "Atomic sales and retries"
     },
     {
@@ -550,8 +549,8 @@
           "source_location": "line 31"
         }
       ],
-      "community": 12,
-      "community_name": "Verification and release readiness"
+      "community": 1,
+      "community_name": "Authorization and tool safety"
     },
     {
       "id": "docs/02-SRS.md#FR-17",
@@ -569,7 +568,7 @@
           "source_location": "line 32"
         }
       ],
-      "community": 5,
+      "community": 4,
       "community_name": "Corrections and undo"
     },
     {
@@ -588,7 +587,7 @@
           "source_location": "line 33"
         }
       ],
-      "community": 5,
+      "community": 4,
       "community_name": "Corrections and undo"
     },
     {
@@ -607,46 +606,65 @@
           "source_location": "line 34"
         }
       ],
-      "community": 6,
+      "community": 4,
+      "community_name": "Corrections and undo"
+    },
+    {
+      "id": "docs/02-SRS.md#FR-20",
+      "label": "FR-20 Each business uses either IDR or USD. IDR prices are exact whole rupiah; USD prices are exact cents. Inputs are normalized without floating point, every r",
+      "node_type": "Requirement",
+      "file_type": "document",
+      "source_file": "docs/02-SRS.md",
+      "source_location": "line 35",
+      "confidence": "EXTRACTED",
+      "description": "| FR-20 | Must | Each business uses either IDR or USD. IDR prices are exact whole rupiah; USD prices are exact cents. Inputs are normalized without floating point, every result displays its currency, ledgers never mix currencies, and no conversion is inferred. |",
+      "citations": [
+        {
+          "quote": "| FR-20 | Must | Each business uses either IDR or USD. IDR prices are exact whole rupiah; USD prices are exact cents. Inputs are normalized without floating point, every result displays its currency, ledgers never mix currencies, and no conversion is inferred. |",
+          "source_file": "docs/02-SRS.md",
+          "source_location": "line 35"
+        }
+      ],
+      "community": 9,
       "community_name": "Verification and release readiness"
     },
     {
-      "id": "docs/02-SRS.md#section-36",
+      "id": "docs/02-SRS.md#section-37",
       "label": "Nonfunctional requirements",
       "node_type": "Section",
       "file_type": "document",
       "source_file": "docs/02-SRS.md",
-      "source_location": "line 36",
+      "source_location": "line 37",
       "confidence": "EXTRACTED",
       "description": "## Nonfunctional requirements",
       "citations": [
         {
           "quote": "## Nonfunctional requirements",
           "source_file": "docs/02-SRS.md",
-          "source_location": "line 36"
+          "source_location": "line 37"
         }
       ],
-      "community": 1,
+      "community": 5,
       "community_name": "Manual access and accessibility"
     },
     {
       "id": "docs/02-SRS.md#NFR-01",
-      "label": "NFR-01 Exact IDR arithmetic and consistent totals",
+      "label": "NFR-01 Exact IDR/USD minor-unit arithmetic and consistent totals",
       "node_type": "Requirement",
       "file_type": "document",
       "source_file": "docs/02-SRS.md",
-      "source_location": "line 40",
+      "source_location": "line 41",
       "confidence": "EXTRACTED",
-      "description": "| NFR-01 | Exact IDR arithmetic and consistent totals | All deterministic fixtures pass with no floating-point rounding. |",
+      "description": "| NFR-01 | Exact IDR/USD minor-unit arithmetic and consistent totals | All deterministic fixtures pass with no floating-point rounding. |",
       "citations": [
         {
-          "quote": "| NFR-01 | Exact IDR arithmetic and consistent totals | All deterministic fixtures pass with no floating-point rounding. |",
+          "quote": "| NFR-01 | Exact IDR/USD minor-unit arithmetic and consistent totals | All deterministic fixtures pass with no floating-point rounding. |",
           "source_file": "docs/02-SRS.md",
-          "source_location": "line 40"
+          "source_location": "line 41"
         }
       ],
       "community": 9,
-      "community_name": "Atomic sales and retries"
+      "community_name": "Verification and release readiness"
     },
     {
       "id": "docs/02-SRS.md#NFR-02",
@@ -654,18 +672,18 @@
       "node_type": "Requirement",
       "file_type": "document",
       "source_file": "docs/02-SRS.md",
-      "source_location": "line 41",
+      "source_location": "line 42",
       "confidence": "EXTRACTED",
       "description": "| NFR-02 | Tool response p95 below 1 second for local business queries; visible refresh p95 below 2 seconds after commit | 100 operations over 10,000 seeded sales in the chosen deployment; excludes speech recognition and synthesis. Record environment and cold starts. |",
       "citations": [
         {
           "quote": "| NFR-02 | Tool response p95 below 1 second for local business queries; visible refresh p95 below 2 seconds after commit | 100 operations over 10,000 seeded sales in the chosen deployment; excludes speech recognition and synthesis. Record environment and cold starts. |",
           "source_file": "docs/02-SRS.md",
-          "source_location": "line 41"
+          "source_location": "line 42"
         }
       ],
-      "community": 6,
-      "community_name": "Verification and release readiness"
+      "community": 1,
+      "community_name": "Authorization and tool safety"
     },
     {
       "id": "docs/02-SRS.md#NFR-03",
@@ -673,18 +691,18 @@
       "node_type": "Requirement",
       "file_type": "document",
       "source_file": "docs/02-SRS.md",
-      "source_location": "line 42",
+      "source_location": "line 43",
       "confidence": "EXTRACTED",
       "description": "| NFR-03 | Voice turn completion to visible result p95 below 5 seconds | At least 30 scripted turns on a documented network; separate provider, tool and render timings. Target, not SLA. |",
       "citations": [
         {
           "quote": "| NFR-03 | Voice turn completion to visible result p95 below 5 seconds | At least 30 scripted turns on a documented network; separate provider, tool and render timings. Target, not SLA. |",
           "source_file": "docs/02-SRS.md",
-          "source_location": "line 42"
+          "source_location": "line 43"
         }
       ],
-      "community": 6,
-      "community_name": "Verification and release readiness"
+      "community": 1,
+      "community_name": "Authorization and tool safety"
     },
     {
       "id": "docs/02-SRS.md#NFR-04",
@@ -692,17 +710,17 @@
       "node_type": "Requirement",
       "file_type": "document",
       "source_file": "docs/02-SRS.md",
-      "source_location": "line 43",
+      "source_location": "line 44",
       "confidence": "EXTRACTED",
       "description": "| NFR-04 | Authorized, bounded tools; no credentials in browser bundles | Negative authorization, injection, rate-limit and bundle checks in [[docs/09-Verification]]. |",
       "citations": [
         {
           "quote": "| NFR-04 | Authorized, bounded tools; no credentials in browser bundles | Negative authorization, injection, rate-limit and bundle checks in [[docs/09-Verification]]. |",
           "source_file": "docs/02-SRS.md",
-          "source_location": "line 43"
+          "source_location": "line 44"
         }
       ],
-      "community": 11,
+      "community": 1,
       "community_name": "Authorization and tool safety"
     },
     {
@@ -711,17 +729,17 @@
       "node_type": "Requirement",
       "file_type": "document",
       "source_file": "docs/02-SRS.md",
-      "source_location": "line 44",
+      "source_location": "line 45",
       "confidence": "EXTRACTED",
       "description": "| NFR-05 | Keyboard/manual alternatives, visible focus, text equivalents for charts, readable errors | Complete the golden journey without voice or drag gestures at phone and desktop widths. |",
       "citations": [
         {
           "quote": "| NFR-05 | Keyboard/manual alternatives, visible focus, text equivalents for charts, readable errors | Complete the golden journey without voice or drag gestures at phone and desktop widths. |",
           "source_file": "docs/02-SRS.md",
-          "source_location": "line 44"
+          "source_location": "line 45"
         }
       ],
-      "community": 1,
+      "community": 5,
       "community_name": "Manual access and accessibility"
     },
     {
@@ -730,18 +748,18 @@
       "node_type": "Requirement",
       "file_type": "document",
       "source_file": "docs/02-SRS.md",
-      "source_location": "line 45",
+      "source_location": "line 46",
       "confidence": "EXTRACTED",
       "description": "| NFR-06 | Reproducible docs and portable knowledge outputs | `npm run docs:check` and Graphify portability check succeed after a clean install/sync. |",
       "citations": [
         {
           "quote": "| NFR-06 | Reproducible docs and portable knowledge outputs | `npm run docs:check` and Graphify portability check succeed after a clean install/sync. |",
           "source_file": "docs/02-SRS.md",
-          "source_location": "line 45"
+          "source_location": "line 46"
         }
       ],
-      "community": 6,
-      "community_name": "Verification and release readiness"
+      "community": 1,
+      "community_name": "Authorization and tool safety"
     },
     {
       "id": "docs/02-SRS.md#NFR-07",
@@ -749,36 +767,36 @@
       "node_type": "Requirement",
       "file_type": "document",
       "source_file": "docs/02-SRS.md",
-      "source_location": "line 46",
+      "source_location": "line 47",
       "confidence": "EXTRACTED",
       "description": "| NFR-07 | Recoverable acknowledged data | Database backup and restore rehearsal before public demo; audit references survive restoration. |",
       "citations": [
         {
           "quote": "| NFR-07 | Recoverable acknowledged data | Database backup and restore rehearsal before public demo; audit references survive restoration. |",
           "source_file": "docs/02-SRS.md",
-          "source_location": "line 46"
+          "source_location": "line 47"
         }
       ],
-      "community": 12,
-      "community_name": "Verification and release readiness"
+      "community": 1,
+      "community_name": "Authorization and tool safety"
     },
     {
-      "id": "docs/02-SRS.md#section-48",
+      "id": "docs/02-SRS.md#section-49",
       "label": "Exclusions and assumptions",
       "node_type": "Section",
       "file_type": "document",
       "source_file": "docs/02-SRS.md",
-      "source_location": "line 48",
+      "source_location": "line 49",
       "confidence": "EXTRACTED",
       "description": "## Exclusions and assumptions",
       "citations": [
         {
           "quote": "## Exclusions and assumptions",
           "source_file": "docs/02-SRS.md",
-          "source_location": "line 48"
+          "source_location": "line 49"
         }
       ],
-      "community": 1,
+      "community": 5,
       "community_name": "Manual access and accessibility"
     },
     {
@@ -797,7 +815,7 @@
           "source_location": "line 6"
         }
       ],
-      "community": 8,
+      "community": 2,
       "community_name": "System architecture"
     },
     {
@@ -816,7 +834,7 @@
           "source_location": "line 27"
         }
       ],
-      "community": 8,
+      "community": 2,
       "community_name": "System architecture"
     },
     {
@@ -835,7 +853,7 @@
           "source_location": "line 35"
         }
       ],
-      "community": 8,
+      "community": 2,
       "community_name": "System architecture"
     },
     {
@@ -854,7 +872,7 @@
           "source_location": "line 41"
         }
       ],
-      "community": 8,
+      "community": 2,
       "community_name": "System architecture"
     },
     {
@@ -873,7 +891,7 @@
           "source_location": "line 6"
         }
       ],
-      "community": 2,
+      "community": 3,
       "community_name": "Architecture decisions and stack"
     },
     {
@@ -892,7 +910,7 @@
           "source_location": "line 12"
         }
       ],
-      "community": 2,
+      "community": 3,
       "community_name": "Architecture decisions and stack"
     },
     {
@@ -911,7 +929,7 @@
           "source_location": "line 13"
         }
       ],
-      "community": 2,
+      "community": 3,
       "community_name": "Architecture decisions and stack"
     },
     {
@@ -930,7 +948,7 @@
           "source_location": "line 14"
         }
       ],
-      "community": 2,
+      "community": 3,
       "community_name": "Architecture decisions and stack"
     },
     {
@@ -949,7 +967,7 @@
           "source_location": "line 15"
         }
       ],
-      "community": 2,
+      "community": 3,
       "community_name": "Architecture decisions and stack"
     },
     {
@@ -968,7 +986,7 @@
           "source_location": "line 16"
         }
       ],
-      "community": 2,
+      "community": 3,
       "community_name": "Architecture decisions and stack"
     },
     {
@@ -987,7 +1005,7 @@
           "source_location": "line 17"
         }
       ],
-      "community": 2,
+      "community": 3,
       "community_name": "Architecture decisions and stack"
     },
     {
@@ -1006,7 +1024,7 @@
           "source_location": "line 18"
         }
       ],
-      "community": 2,
+      "community": 3,
       "community_name": "Architecture decisions and stack"
     },
     {
@@ -1025,7 +1043,7 @@
           "source_location": "line 19"
         }
       ],
-      "community": 2,
+      "community": 3,
       "community_name": "Architecture decisions and stack"
     },
     {
@@ -1044,45 +1062,64 @@
           "source_location": "line 20"
         }
       ],
-      "community": 2,
+      "community": 3,
       "community_name": "Architecture decisions and stack"
     },
     {
-      "id": "docs/04-Decisions.md#section-22",
+      "id": "docs/04-Decisions.md#ADR-010",
+      "label": "ADR-010 One immutable business currency, IDR or USD, stored as exact minor units",
+      "node_type": "Requirement",
+      "file_type": "document",
+      "source_file": "docs/04-Decisions.md",
+      "source_location": "line 21",
+      "confidence": "EXTRACTED",
+      "description": "| ADR-010 | One immutable business currency, IDR or USD, stored as exact minor units | IDR uses whole rupiah and USD uses cents. This supports user currency choice without floating point, conversion, or mixed-currency totals; changing currency requires a separate migration rather than rewriting ledger history. |",
+      "citations": [
+        {
+          "quote": "| ADR-010 | One immutable business currency, IDR or USD, stored as exact minor units | IDR uses whole rupiah and USD uses cents. This supports user currency choice without floating point, conversion, or mixed-currency totals; changing currency requires a separate migration rather than rewriting ledger history. |",
+          "source_file": "docs/04-Decisions.md",
+          "source_location": "line 21"
+        }
+      ],
+      "community": 3,
+      "community_name": "Architecture decisions and stack"
+    },
+    {
+      "id": "docs/04-Decisions.md#section-23",
       "label": "Alternatives considered",
       "node_type": "Section",
       "file_type": "document",
       "source_file": "docs/04-Decisions.md",
-      "source_location": "line 22",
+      "source_location": "line 23",
       "confidence": "EXTRACTED",
       "description": "## Alternatives considered",
       "citations": [
         {
           "quote": "## Alternatives considered",
           "source_file": "docs/04-Decisions.md",
-          "source_location": "line 22"
+          "source_location": "line 23"
         }
       ],
-      "community": 2,
+      "community": 3,
       "community_name": "Architecture decisions and stack"
     },
     {
-      "id": "docs/04-Decisions.md#section-26",
+      "id": "docs/04-Decisions.md#section-27",
       "label": "Open decisions with owners and gates",
       "node_type": "Section",
       "file_type": "document",
       "source_file": "docs/04-Decisions.md",
-      "source_location": "line 26",
+      "source_location": "line 27",
       "confidence": "EXTRACTED",
       "description": "## Open decisions with owners and gates",
       "citations": [
         {
           "quote": "## Open decisions with owners and gates",
           "source_file": "docs/04-Decisions.md",
-          "source_location": "line 26"
+          "source_location": "line 27"
         }
       ],
-      "community": 2,
+      "community": 3,
       "community_name": "Architecture decisions and stack"
     },
     {
@@ -1102,7 +1139,7 @@
         }
       ],
       "community": 0,
-      "community_name": "Agent workflow and API contracts"
+      "community_name": "Data model and calculation rules"
     },
     {
       "id": "docs/05-Data-Model.md#section-35",
@@ -1121,45 +1158,64 @@
         }
       ],
       "community": 0,
-      "community_name": "Agent workflow and API contracts"
+      "community_name": "Data model and calculation rules"
     },
     {
       "id": "docs/05-Data-Model.md#section-41",
-      "label": "Time and completeness",
+      "label": "Implemented Day 20 foundation",
       "node_type": "Section",
       "file_type": "document",
       "source_file": "docs/05-Data-Model.md",
       "source_location": "line 41",
+      "confidence": "EXTRACTED",
+      "description": "## Implemented Day 20 foundation",
+      "citations": [
+        {
+          "quote": "## Implemented Day 20 foundation",
+          "source_file": "docs/05-Data-Model.md",
+          "source_location": "line 41"
+        }
+      ],
+      "community": 0,
+      "community_name": "Data model and calculation rules"
+    },
+    {
+      "id": "docs/05-Data-Model.md#section-45",
+      "label": "Time and completeness",
+      "node_type": "Section",
+      "file_type": "document",
+      "source_file": "docs/05-Data-Model.md",
+      "source_location": "line 45",
       "confidence": "EXTRACTED",
       "description": "## Time and completeness",
       "citations": [
         {
           "quote": "## Time and completeness",
           "source_file": "docs/05-Data-Model.md",
-          "source_location": "line 41"
+          "source_location": "line 45"
         }
       ],
       "community": 0,
-      "community_name": "Agent workflow and API contracts"
+      "community_name": "Data model and calculation rules"
     },
     {
-      "id": "docs/05-Data-Model.md#section-47",
+      "id": "docs/05-Data-Model.md#section-51",
       "label": "Mutation transaction",
       "node_type": "Section",
       "file_type": "document",
       "source_file": "docs/05-Data-Model.md",
-      "source_location": "line 47",
+      "source_location": "line 51",
       "confidence": "EXTRACTED",
       "description": "## Mutation transaction",
       "citations": [
         {
           "quote": "## Mutation transaction",
           "source_file": "docs/05-Data-Model.md",
-          "source_location": "line 47"
+          "source_location": "line 51"
         }
       ],
       "community": 0,
-      "community_name": "Agent workflow and API contracts"
+      "community_name": "Data model and calculation rules"
     },
     {
       "id": "docs/06-Agent-and-API.md",
@@ -1178,7 +1234,7 @@
         }
       ],
       "community": 0,
-      "community_name": "Agent workflow and API contracts"
+      "community_name": "Data model and calculation rules"
     },
     {
       "id": "docs/06-Agent-and-API.md#section-10",
@@ -1197,7 +1253,7 @@
         }
       ],
       "community": 0,
-      "community_name": "Agent workflow and API contracts"
+      "community_name": "Data model and calculation rules"
     },
     {
       "id": "docs/06-Agent-and-API.md#section-16",
@@ -1216,7 +1272,7 @@
         }
       ],
       "community": 0,
-      "community_name": "Agent workflow and API contracts"
+      "community_name": "Data model and calculation rules"
     },
     {
       "id": "docs/06-Agent-and-API.md#section-38",
@@ -1235,7 +1291,7 @@
         }
       ],
       "community": 0,
-      "community_name": "Agent workflow and API contracts"
+      "community_name": "Data model and calculation rules"
     },
     {
       "id": "docs/06-Agent-and-API.md#section-44",
@@ -1254,7 +1310,7 @@
         }
       ],
       "community": 0,
-      "community_name": "Agent workflow and API contracts"
+      "community_name": "Data model and calculation rules"
     },
     {
       "id": "docs/07-Dashboard-and-UX.md",
@@ -1273,7 +1329,7 @@
         }
       ],
       "community": 0,
-      "community_name": "Agent workflow and API contracts"
+      "community_name": "Data model and calculation rules"
     },
     {
       "id": "docs/07-Dashboard-and-UX.md#section-10",
@@ -1292,7 +1348,7 @@
         }
       ],
       "community": 0,
-      "community_name": "Agent workflow and API contracts"
+      "community_name": "Data model and calculation rules"
     },
     {
       "id": "docs/07-Dashboard-and-UX.md#section-26",
@@ -1311,7 +1367,7 @@
         }
       ],
       "community": 0,
-      "community_name": "Agent workflow and API contracts"
+      "community_name": "Data model and calculation rules"
     },
     {
       "id": "docs/08-Security-and-Operations.md",
@@ -1329,7 +1385,7 @@
           "source_location": "line 6"
         }
       ],
-      "community": 8,
+      "community": 2,
       "community_name": "System architecture"
     },
     {
@@ -1348,7 +1404,7 @@
           "source_location": "line 8"
         }
       ],
-      "community": 8,
+      "community": 2,
       "community_name": "System architecture"
     },
     {
@@ -1367,7 +1423,7 @@
           "source_location": "line 21"
         }
       ],
-      "community": 8,
+      "community": 2,
       "community_name": "System architecture"
     },
     {
@@ -1386,7 +1442,7 @@
           "source_location": "line 25"
         }
       ],
-      "community": 8,
+      "community": 2,
       "community_name": "System architecture"
     },
     {
@@ -1405,8 +1461,8 @@
           "source_location": "line 6"
         }
       ],
-      "community": 6,
-      "community_name": "Verification and release readiness"
+      "community": 1,
+      "community_name": "Authorization and tool safety"
     },
     {
       "id": "docs/09-Verification.md#T-01",
@@ -1425,7 +1481,7 @@
         }
       ],
       "community": 9,
-      "community_name": "Atomic sales and retries"
+      "community_name": "Verification and release readiness"
     },
     {
       "id": "docs/09-Verification.md#T-02",
@@ -1443,7 +1499,7 @@
           "source_location": "line 13"
         }
       ],
-      "community": 10,
+      "community": 8,
       "community_name": "Analytics and missing data"
     },
     {
@@ -1462,7 +1518,7 @@
           "source_location": "line 14"
         }
       ],
-      "community": 9,
+      "community": 11,
       "community_name": "Atomic sales and retries"
     },
     {
@@ -1481,7 +1537,7 @@
           "source_location": "line 15"
         }
       ],
-      "community": 5,
+      "community": 4,
       "community_name": "Corrections and undo"
     },
     {
@@ -1500,7 +1556,7 @@
           "source_location": "line 16"
         }
       ],
-      "community": 10,
+      "community": 8,
       "community_name": "Analytics and missing data"
     },
     {
@@ -1519,7 +1575,7 @@
           "source_location": "line 17"
         }
       ],
-      "community": 1,
+      "community": 5,
       "community_name": "Manual access and accessibility"
     },
     {
@@ -1538,7 +1594,7 @@
           "source_location": "line 18"
         }
       ],
-      "community": 11,
+      "community": 1,
       "community_name": "Authorization and tool safety"
     },
     {
@@ -1557,7 +1613,7 @@
           "source_location": "line 19"
         }
       ],
-      "community": 5,
+      "community": 4,
       "community_name": "Corrections and undo"
     },
     {
@@ -1576,7 +1632,7 @@
           "source_location": "line 20"
         }
       ],
-      "community": 1,
+      "community": 5,
       "community_name": "Manual access and accessibility"
     },
     {
@@ -1595,8 +1651,8 @@
           "source_location": "line 21"
         }
       ],
-      "community": 12,
-      "community_name": "Verification and release readiness"
+      "community": 1,
+      "community_name": "Authorization and tool safety"
     },
     {
       "id": "docs/09-Verification.md#T-11",
@@ -1614,8 +1670,8 @@
           "source_location": "line 22"
         }
       ],
-      "community": 6,
-      "community_name": "Verification and release readiness"
+      "community": 1,
+      "community_name": "Authorization and tool safety"
     },
     {
       "id": "docs/09-Verification.md#T-12",
@@ -1633,8 +1689,8 @@
           "source_location": "line 23"
         }
       ],
-      "community": 6,
-      "community_name": "Verification and release readiness"
+      "community": 1,
+      "community_name": "Authorization and tool safety"
     },
     {
       "id": "docs/09-Verification.md#T-13",
@@ -1652,7 +1708,7 @@
           "source_location": "line 24"
         }
       ],
-      "community": 5,
+      "community": 4,
       "community_name": "Corrections and undo"
     },
     {
@@ -1671,46 +1727,65 @@
           "source_location": "line 25"
         }
       ],
-      "community": 6,
+      "community": 4,
+      "community_name": "Corrections and undo"
+    },
+    {
+      "id": "docs/09-Verification.md#T-15",
+      "label": "T-15 Currency exactness",
+      "node_type": "Requirement",
+      "file_type": "document",
+      "source_file": "docs/09-Verification.md",
+      "source_location": "line 26",
+      "confidence": "EXTRACTED",
+      "description": "| T-15 Currency exactness | FR-20; NFR-01 | Create separate IDR and USD businesses. Parse whole rupiah and dollar/cents inputs to exact minor units, reject fractional IDR and excess USD decimals, reject mixed currencies and currency changes, and display the correct currency without conversion. |",
+      "citations": [
+        {
+          "quote": "| T-15 Currency exactness | FR-20; NFR-01 | Create separate IDR and USD businesses. Parse whole rupiah and dollar/cents inputs to exact minor units, reject fractional IDR and excess USD decimals, reject mixed currencies and currency changes, and display the correct currency without conversion. |",
+          "source_file": "docs/09-Verification.md",
+          "source_location": "line 26"
+        }
+      ],
+      "community": 9,
       "community_name": "Verification and release readiness"
     },
     {
-      "id": "docs/09-Verification.md#section-27",
+      "id": "docs/09-Verification.md#section-28",
       "label": "Test layers and fixtures",
       "node_type": "Section",
       "file_type": "document",
       "source_file": "docs/09-Verification.md",
-      "source_location": "line 27",
+      "source_location": "line 28",
       "confidence": "EXTRACTED",
       "description": "## Test layers and fixtures",
       "citations": [
         {
           "quote": "## Test layers and fixtures",
           "source_file": "docs/09-Verification.md",
-          "source_location": "line 27"
+          "source_location": "line 28"
         }
       ],
-      "community": 6,
-      "community_name": "Verification and release readiness"
+      "community": 1,
+      "community_name": "Authorization and tool safety"
     },
     {
-      "id": "docs/09-Verification.md#section-33",
+      "id": "docs/09-Verification.md#section-34",
       "label": "Human validation",
       "node_type": "Section",
       "file_type": "document",
       "source_file": "docs/09-Verification.md",
-      "source_location": "line 33",
+      "source_location": "line 34",
       "confidence": "EXTRACTED",
       "description": "## Human validation",
       "citations": [
         {
           "quote": "## Human validation",
           "source_file": "docs/09-Verification.md",
-          "source_location": "line 33"
+          "source_location": "line 34"
         }
       ],
-      "community": 6,
-      "community_name": "Verification and release readiness"
+      "community": 1,
+      "community_name": "Authorization and tool safety"
     },
     {
       "id": "docs/10-Delivery-Plan.md",
@@ -1899,7 +1974,7 @@
           "source_location": "line 6"
         }
       ],
-      "community": 3,
+      "community": 6,
       "community_name": "Implementation handoff and runbook"
     },
     {
@@ -1918,7 +1993,7 @@
           "source_location": "line 12"
         }
       ],
-      "community": 3,
+      "community": 6,
       "community_name": "Implementation handoff and runbook"
     },
     {
@@ -1937,7 +2012,7 @@
           "source_location": "line 18"
         }
       ],
-      "community": 3,
+      "community": 6,
       "community_name": "Implementation handoff and runbook"
     },
     {
@@ -1956,7 +2031,7 @@
           "source_location": "line 6"
         }
       ],
-      "community": 4,
+      "community": 10,
       "community_name": "Knowledge system maintenance"
     },
     {
@@ -1975,7 +2050,7 @@
           "source_location": "line 10"
         }
       ],
-      "community": 4,
+      "community": 10,
       "community_name": "Knowledge system maintenance"
     },
     {
@@ -1994,7 +2069,7 @@
           "source_location": "line 18"
         }
       ],
-      "community": 4,
+      "community": 10,
       "community_name": "Knowledge system maintenance"
     },
     {
@@ -2013,7 +2088,7 @@
           "source_location": "line 31"
         }
       ],
-      "community": 4,
+      "community": 10,
       "community_name": "Knowledge system maintenance"
     },
     {
@@ -2033,7 +2108,7 @@
         }
       ],
       "community": 0,
-      "community_name": "Agent workflow and API contracts"
+      "community_name": "Data model and calculation rules"
     },
     {
       "id": "docs/14-Glossary.md",
@@ -2051,7 +2126,7 @@
           "source_location": "line 6"
         }
       ],
-      "community": 4,
+      "community": 10,
       "community_name": "Knowledge system maintenance"
     },
     {
@@ -2070,7 +2145,7 @@
           "source_location": "line 6"
         }
       ],
-      "community": 5,
+      "community": 4,
       "community_name": "Corrections and undo"
     },
     {
@@ -2089,7 +2164,7 @@
           "source_location": "line 21"
         }
       ],
-      "community": 5,
+      "community": 4,
       "community_name": "Corrections and undo"
     },
     {
@@ -2108,7 +2183,7 @@
           "source_location": "line 6"
         }
       ],
-      "community": 3,
+      "community": 6,
       "community_name": "Implementation handoff and runbook"
     },
     {
@@ -2127,7 +2202,7 @@
           "source_location": "line 8"
         }
       ],
-      "community": 3,
+      "community": 6,
       "community_name": "Implementation handoff and runbook"
     },
     {
@@ -2146,26 +2221,26 @@
           "source_location": "line 12"
         }
       ],
-      "community": 3,
+      "community": 6,
       "community_name": "Implementation handoff and runbook"
     },
     {
       "id": "docs/16-Implementation-Handoff.md#section-18",
-      "label": "Proposed application structure (not scaffolded)",
+      "label": "Implemented foundation and proposed structure",
       "node_type": "Section",
       "file_type": "document",
       "source_file": "docs/16-Implementation-Handoff.md",
       "source_location": "line 18",
       "confidence": "EXTRACTED",
-      "description": "## Proposed application structure (not scaffolded)",
+      "description": "## Implemented foundation and proposed structure",
       "citations": [
         {
-          "quote": "## Proposed application structure (not scaffolded)",
+          "quote": "## Implemented foundation and proposed structure",
           "source_file": "docs/16-Implementation-Handoff.md",
           "source_location": "line 18"
         }
       ],
-      "community": 3,
+      "community": 6,
       "community_name": "Implementation handoff and runbook"
     },
     {
@@ -2184,7 +2259,7 @@
           "source_location": "line 28"
         }
       ],
-      "community": 3,
+      "community": 6,
       "community_name": "Implementation handoff and runbook"
     },
     {
@@ -2203,7 +2278,7 @@
           "source_location": "line 38"
         }
       ],
-      "community": 3,
+      "community": 6,
       "community_name": "Implementation handoff and runbook"
     },
     {
@@ -2222,7 +2297,7 @@
           "source_location": "line 6"
         }
       ],
-      "community": 3,
+      "community": 6,
       "community_name": "Implementation handoff and runbook"
     },
     {
@@ -2241,7 +2316,26 @@
           "source_location": "line 23"
         }
       ],
-      "community": 3,
+      "community": 6,
+      "community_name": "Implementation handoff and runbook"
+    },
+    {
+      "id": "docs/17-Verification-Record.md#section-31",
+      "label": "Day 20 implementation verification — 2026-09-20",
+      "node_type": "Section",
+      "file_type": "document",
+      "source_file": "docs/17-Verification-Record.md",
+      "source_location": "line 31",
+      "confidence": "EXTRACTED",
+      "description": "## Day 20 implementation verification — 2026-09-20",
+      "citations": [
+        {
+          "quote": "## Day 20 implementation verification — 2026-09-20",
+          "source_file": "docs/17-Verification-Record.md",
+          "source_location": "line 31"
+        }
+      ],
+      "community": 6,
       "community_name": "Implementation handoff and runbook"
     },
     {
@@ -2261,7 +2355,7 @@
         }
       ],
       "community": 0,
-      "community_name": "Agent workflow and API contracts"
+      "community_name": "Data model and calculation rules"
     },
     {
       "id": "docs/18-Hackathon-Rules.md#section-10",
@@ -2280,7 +2374,7 @@
         }
       ],
       "community": 0,
-      "community_name": "Agent workflow and API contracts"
+      "community_name": "Data model and calculation rules"
     },
     {
       "id": "docs/18-Hackathon-Rules.md#section-22",
@@ -2299,7 +2393,7 @@
         }
       ],
       "community": 0,
-      "community_name": "Agent workflow and API contracts"
+      "community_name": "Data model and calculation rules"
     },
     {
       "id": "docs/18-Hackathon-Rules.md#section-33",
@@ -2318,7 +2412,7 @@
         }
       ],
       "community": 0,
-      "community_name": "Agent workflow and API contracts"
+      "community_name": "Data model and calculation rules"
     },
     {
       "id": "docs/18-Hackathon-Rules.md#section-57",
@@ -2337,7 +2431,7 @@
         }
       ],
       "community": 0,
-      "community_name": "Agent workflow and API contracts"
+      "community_name": "Data model and calculation rules"
     }
   ],
   "links": [
@@ -3403,17 +3497,37 @@
     },
     {
       "source": "docs/02-SRS.md",
+      "target": "docs/02-SRS.md#FR-20",
+      "relation": "specifies",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/02-SRS.md",
+      "source_location": "line 35",
+      "evidence_text": "| FR-20 | Must | Each business uses either IDR or USD. IDR prices are exact whole rupiah; USD prices are exact cents. Inputs are normalized without floating point, every result displays its currency, ledgers never mix currencies, and no conversion is inferred. |",
+      "citations": [
+        {
+          "quote": "| FR-20 | Must | Each business uses either IDR or USD. IDR prices are exact whole rupiah; USD prices are exact cents. Inputs are normalized without floating point, every result displays its currency, ledgers never mix currencies, and no conversion is inferred. |",
+          "source_file": "docs/02-SRS.md",
+          "source_location": "line 35"
+        }
+      ],
+      "weight": 2,
+      "_src": "docs/02-SRS.md",
+      "_tgt": "docs/02-SRS.md#FR-20",
+      "confidence_score": 1
+    },
+    {
+      "source": "docs/02-SRS.md",
       "target": "docs/02-SRS.md#NFR-01",
       "relation": "specifies",
       "confidence": "EXTRACTED",
       "source_file": "docs/02-SRS.md",
-      "source_location": "line 40",
-      "evidence_text": "| NFR-01 | Exact IDR arithmetic and consistent totals | All deterministic fixtures pass with no floating-point rounding. |",
+      "source_location": "line 41",
+      "evidence_text": "| NFR-01 | Exact IDR/USD minor-unit arithmetic and consistent totals | All deterministic fixtures pass with no floating-point rounding. |",
       "citations": [
         {
-          "quote": "| NFR-01 | Exact IDR arithmetic and consistent totals | All deterministic fixtures pass with no floating-point rounding. |",
+          "quote": "| NFR-01 | Exact IDR/USD minor-unit arithmetic and consistent totals | All deterministic fixtures pass with no floating-point rounding. |",
           "source_file": "docs/02-SRS.md",
-          "source_location": "line 40"
+          "source_location": "line 41"
         }
       ],
       "weight": 2,
@@ -3427,13 +3541,13 @@
       "relation": "specifies",
       "confidence": "EXTRACTED",
       "source_file": "docs/02-SRS.md",
-      "source_location": "line 41",
+      "source_location": "line 42",
       "evidence_text": "| NFR-02 | Tool response p95 below 1 second for local business queries; visible refresh p95 below 2 seconds after commit | 100 operations over 10,000 seeded sales in the chosen deployment; excludes speech recognition and synthesis. Record environment and cold starts. |",
       "citations": [
         {
           "quote": "| NFR-02 | Tool response p95 below 1 second for local business queries; visible refresh p95 below 2 seconds after commit | 100 operations over 10,000 seeded sales in the chosen deployment; excludes speech recognition and synthesis. Record environment and cold starts. |",
           "source_file": "docs/02-SRS.md",
-          "source_location": "line 41"
+          "source_location": "line 42"
         }
       ],
       "weight": 2,
@@ -3447,13 +3561,13 @@
       "relation": "specifies",
       "confidence": "EXTRACTED",
       "source_file": "docs/02-SRS.md",
-      "source_location": "line 42",
+      "source_location": "line 43",
       "evidence_text": "| NFR-03 | Voice turn completion to visible result p95 below 5 seconds | At least 30 scripted turns on a documented network; separate provider, tool and render timings. Target, not SLA. |",
       "citations": [
         {
           "quote": "| NFR-03 | Voice turn completion to visible result p95 below 5 seconds | At least 30 scripted turns on a documented network; separate provider, tool and render timings. Target, not SLA. |",
           "source_file": "docs/02-SRS.md",
-          "source_location": "line 42"
+          "source_location": "line 43"
         }
       ],
       "weight": 2,
@@ -3467,13 +3581,13 @@
       "relation": "specifies",
       "confidence": "EXTRACTED",
       "source_file": "docs/02-SRS.md",
-      "source_location": "line 43",
+      "source_location": "line 44",
       "evidence_text": "| NFR-04 | Authorized, bounded tools; no credentials in browser bundles | Negative authorization, injection, rate-limit and bundle checks in [[docs/09-Verification]]. |",
       "citations": [
         {
           "quote": "| NFR-04 | Authorized, bounded tools; no credentials in browser bundles | Negative authorization, injection, rate-limit and bundle checks in [[docs/09-Verification]]. |",
           "source_file": "docs/02-SRS.md",
-          "source_location": "line 43"
+          "source_location": "line 44"
         }
       ],
       "weight": 2,
@@ -3487,13 +3601,13 @@
       "relation": "specifies",
       "confidence": "EXTRACTED",
       "source_file": "docs/02-SRS.md",
-      "source_location": "line 44",
+      "source_location": "line 45",
       "evidence_text": "| NFR-05 | Keyboard/manual alternatives, visible focus, text equivalents for charts, readable errors | Complete the golden journey without voice or drag gestures at phone and desktop widths. |",
       "citations": [
         {
           "quote": "| NFR-05 | Keyboard/manual alternatives, visible focus, text equivalents for charts, readable errors | Complete the golden journey without voice or drag gestures at phone and desktop widths. |",
           "source_file": "docs/02-SRS.md",
-          "source_location": "line 44"
+          "source_location": "line 45"
         }
       ],
       "weight": 2,
@@ -3507,13 +3621,13 @@
       "relation": "specifies",
       "confidence": "EXTRACTED",
       "source_file": "docs/02-SRS.md",
-      "source_location": "line 45",
+      "source_location": "line 46",
       "evidence_text": "| NFR-06 | Reproducible docs and portable knowledge outputs | `npm run docs:check` and Graphify portability check succeed after a clean install/sync. |",
       "citations": [
         {
           "quote": "| NFR-06 | Reproducible docs and portable knowledge outputs | `npm run docs:check` and Graphify portability check succeed after a clean install/sync. |",
           "source_file": "docs/02-SRS.md",
-          "source_location": "line 45"
+          "source_location": "line 46"
         }
       ],
       "weight": 2,
@@ -3527,13 +3641,13 @@
       "relation": "specifies",
       "confidence": "EXTRACTED",
       "source_file": "docs/02-SRS.md",
-      "source_location": "line 46",
+      "source_location": "line 47",
       "evidence_text": "| NFR-07 | Recoverable acknowledged data | Database backup and restore rehearsal before public demo; audit references survive restoration. |",
       "citations": [
         {
           "quote": "| NFR-07 | Recoverable acknowledged data | Database backup and restore rehearsal before public demo; audit references survive restoration. |",
           "source_file": "docs/02-SRS.md",
-          "source_location": "line 46"
+          "source_location": "line 47"
         }
       ],
       "weight": 2,
@@ -3563,42 +3677,42 @@
     },
     {
       "source": "docs/02-SRS.md",
-      "target": "docs/02-SRS.md#section-36",
+      "target": "docs/02-SRS.md#section-37",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/02-SRS.md",
-      "source_location": "line 36",
+      "source_location": "line 37",
       "evidence_text": "## Nonfunctional requirements",
       "citations": [
         {
           "quote": "## Nonfunctional requirements",
           "source_file": "docs/02-SRS.md",
-          "source_location": "line 36"
+          "source_location": "line 37"
         }
       ],
       "weight": 1,
       "_src": "docs/02-SRS.md",
-      "_tgt": "docs/02-SRS.md#section-36",
+      "_tgt": "docs/02-SRS.md#section-37",
       "confidence_score": 1
     },
     {
       "source": "docs/02-SRS.md",
-      "target": "docs/02-SRS.md#section-48",
+      "target": "docs/02-SRS.md#section-49",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/02-SRS.md",
-      "source_location": "line 48",
+      "source_location": "line 49",
       "evidence_text": "## Exclusions and assumptions",
       "citations": [
         {
           "quote": "## Exclusions and assumptions",
           "source_file": "docs/02-SRS.md",
-          "source_location": "line 48"
+          "source_location": "line 49"
         }
       ],
       "weight": 1,
       "_src": "docs/02-SRS.md",
-      "_tgt": "docs/02-SRS.md#section-48",
+      "_tgt": "docs/02-SRS.md#section-49",
       "confidence_score": 1
     },
     {
@@ -3627,13 +3741,13 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "docs/02-SRS.md",
-      "source_location": "line 52",
+      "source_location": "line 53",
       "evidence_text": "System design: [[docs/03-Architecture]]. Data rules: [[docs/05-Data-Model]]. Acceptance coverage: [[docs/09-Verification]]. Delivery gates: [[docs/10-Delivery-Plan]].",
       "citations": [
         {
           "quote": "System design: [[docs/03-Architecture]]. Data rules: [[docs/05-Data-Model]]. Acceptance coverage: [[docs/09-Verification]]. Delivery gates: [[docs/10-Delivery-Plan]].",
           "source_file": "docs/02-SRS.md",
-          "source_location": "line 52"
+          "source_location": "line 53"
         }
       ],
       "weight": 2,
@@ -3647,13 +3761,13 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "docs/02-SRS.md",
-      "source_location": "line 52",
+      "source_location": "line 53",
       "evidence_text": "System design: [[docs/03-Architecture]]. Data rules: [[docs/05-Data-Model]]. Acceptance coverage: [[docs/09-Verification]]. Delivery gates: [[docs/10-Delivery-Plan]].",
       "citations": [
         {
           "quote": "System design: [[docs/03-Architecture]]. Data rules: [[docs/05-Data-Model]]. Acceptance coverage: [[docs/09-Verification]]. Delivery gates: [[docs/10-Delivery-Plan]].",
           "source_file": "docs/02-SRS.md",
-          "source_location": "line 52"
+          "source_location": "line 53"
         }
       ],
       "weight": 2,
@@ -3667,13 +3781,13 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "docs/02-SRS.md",
-      "source_location": "line 43",
+      "source_location": "line 44",
       "evidence_text": "| NFR-04 | Authorized, bounded tools; no credentials in browser bundles | Negative authorization, injection, rate-limit and bundle checks in [[docs/09-Verification]]. |",
       "citations": [
         {
           "quote": "| NFR-04 | Authorized, bounded tools; no credentials in browser bundles | Negative authorization, injection, rate-limit and bundle checks in [[docs/09-Verification]]. |",
           "source_file": "docs/02-SRS.md",
-          "source_location": "line 43"
+          "source_location": "line 44"
         }
       ],
       "weight": 2,
@@ -3687,13 +3801,13 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "docs/02-SRS.md",
-      "source_location": "line 52",
+      "source_location": "line 53",
       "evidence_text": "System design: [[docs/03-Architecture]]. Data rules: [[docs/05-Data-Model]]. Acceptance coverage: [[docs/09-Verification]]. Delivery gates: [[docs/10-Delivery-Plan]].",
       "citations": [
         {
           "quote": "System design: [[docs/03-Architecture]]. Data rules: [[docs/05-Data-Model]]. Acceptance coverage: [[docs/09-Verification]]. Delivery gates: [[docs/10-Delivery-Plan]].",
           "source_file": "docs/02-SRS.md",
-          "source_location": "line 52"
+          "source_location": "line 53"
         }
       ],
       "weight": 2,
@@ -3827,13 +3941,13 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "docs/04-Decisions.md",
-      "source_location": "line 38",
+      "source_location": "line 39",
       "evidence_text": "Roles are responsibilities, not assigned people. Record future changes as dated ADR entries with reason and consequences; update [[docs/02-SRS]], [[docs/03-Architecture]] and [[docs/10-Delivery-Plan]] when scope changes.",
       "citations": [
         {
           "quote": "Roles are responsibilities, not assigned people. Record future changes as dated ADR entries with reason and consequences; update [[docs/02-SRS]], [[docs/03-Architecture]] and [[docs/10-Delivery-Plan]] when scope changes.",
           "source_file": "docs/04-Decisions.md",
-          "source_location": "line 38"
+          "source_location": "line 39"
         }
       ],
       "weight": 2,
@@ -4023,42 +4137,62 @@
     },
     {
       "source": "docs/04-Decisions.md",
-      "target": "docs/04-Decisions.md#section-22",
+      "target": "docs/04-Decisions.md#ADR-010",
+      "relation": "specifies",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/04-Decisions.md",
+      "source_location": "line 21",
+      "evidence_text": "| ADR-010 | One immutable business currency, IDR or USD, stored as exact minor units | IDR uses whole rupiah and USD uses cents. This supports user currency choice without floating point, conversion, or mixed-currency totals; changing currency requires a separate migration rather than rewriting ledger history. |",
+      "citations": [
+        {
+          "quote": "| ADR-010 | One immutable business currency, IDR or USD, stored as exact minor units | IDR uses whole rupiah and USD uses cents. This supports user currency choice without floating point, conversion, or mixed-currency totals; changing currency requires a separate migration rather than rewriting ledger history. |",
+          "source_file": "docs/04-Decisions.md",
+          "source_location": "line 21"
+        }
+      ],
+      "weight": 2,
+      "_src": "docs/04-Decisions.md",
+      "_tgt": "docs/04-Decisions.md#ADR-010",
+      "confidence_score": 1
+    },
+    {
+      "source": "docs/04-Decisions.md",
+      "target": "docs/04-Decisions.md#section-23",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/04-Decisions.md",
-      "source_location": "line 22",
+      "source_location": "line 23",
       "evidence_text": "## Alternatives considered",
       "citations": [
         {
           "quote": "## Alternatives considered",
           "source_file": "docs/04-Decisions.md",
-          "source_location": "line 22"
+          "source_location": "line 23"
         }
       ],
       "weight": 1,
       "_src": "docs/04-Decisions.md",
-      "_tgt": "docs/04-Decisions.md#section-22",
+      "_tgt": "docs/04-Decisions.md#section-23",
       "confidence_score": 1
     },
     {
       "source": "docs/04-Decisions.md",
-      "target": "docs/04-Decisions.md#section-26",
+      "target": "docs/04-Decisions.md#section-27",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/04-Decisions.md",
-      "source_location": "line 26",
+      "source_location": "line 27",
       "evidence_text": "## Open decisions with owners and gates",
       "citations": [
         {
           "quote": "## Open decisions with owners and gates",
           "source_file": "docs/04-Decisions.md",
-          "source_location": "line 26"
+          "source_location": "line 27"
         }
       ],
       "weight": 1,
       "_src": "docs/04-Decisions.md",
-      "_tgt": "docs/04-Decisions.md#section-26",
+      "_tgt": "docs/04-Decisions.md#section-27",
       "confidence_score": 1
     },
     {
@@ -4067,13 +4201,13 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "docs/04-Decisions.md",
-      "source_location": "line 38",
+      "source_location": "line 39",
       "evidence_text": "Roles are responsibilities, not assigned people. Record future changes as dated ADR entries with reason and consequences; update [[docs/02-SRS]], [[docs/03-Architecture]] and [[docs/10-Delivery-Plan]] when scope changes.",
       "citations": [
         {
           "quote": "Roles are responsibilities, not assigned people. Record future changes as dated ADR entries with reason and consequences; update [[docs/02-SRS]], [[docs/03-Architecture]] and [[docs/10-Delivery-Plan]] when scope changes.",
           "source_file": "docs/04-Decisions.md",
-          "source_location": "line 38"
+          "source_location": "line 39"
         }
       ],
       "weight": 2,
@@ -4108,10 +4242,10 @@
       "confidence": "EXTRACTED",
       "source_file": "docs/04-Decisions.md",
       "source_location": "line 8",
-      "evidence_text": "Decisions dated 2026-09-17 are planning recommendations. Pin compatible package versions and verify licenses during implementation; only documentation tooling is installed now. Official references are catalogued in [[docs/13-Sources]].",
+      "evidence_text": "Decisions dated 2026-09-17 are planning recommendations. The Day 20 PostgreSQL and exact-money foundation is implemented; the remaining stack still requires compatibility and integration spikes. Pin compatible package versions and verify licenses during implementation. Official references are catalogued in [[docs/13-Sources]].",
       "citations": [
         {
-          "quote": "Decisions dated 2026-09-17 are planning recommendations. Pin compatible package versions and verify licenses during implementation; only documentation tooling is installed now. Official references are catalogued in [[docs/13-Sources]].",
+          "quote": "Decisions dated 2026-09-17 are planning recommendations. The Day 20 PostgreSQL and exact-money foundation is implemented; the remaining stack still requires compatibility and integration spikes. Pin compatible package versions and verify licenses during implementation. Official references are catalogued in [[docs/13-Sources]].",
           "source_file": "docs/04-Decisions.md",
           "source_location": "line 8"
         }
@@ -4148,10 +4282,10 @@
       "confidence": "EXTRACTED",
       "source_file": "docs/05-Data-Model.md",
       "source_location": "line 41",
-      "evidence_text": "## Time and completeness",
+      "evidence_text": "## Implemented Day 20 foundation",
       "citations": [
         {
-          "quote": "## Time and completeness",
+          "quote": "## Implemented Day 20 foundation",
           "source_file": "docs/05-Data-Model.md",
           "source_location": "line 41"
         }
@@ -4163,22 +4297,42 @@
     },
     {
       "source": "docs/05-Data-Model.md",
-      "target": "docs/05-Data-Model.md#section-47",
+      "target": "docs/05-Data-Model.md#section-45",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/05-Data-Model.md",
-      "source_location": "line 47",
+      "source_location": "line 45",
+      "evidence_text": "## Time and completeness",
+      "citations": [
+        {
+          "quote": "## Time and completeness",
+          "source_file": "docs/05-Data-Model.md",
+          "source_location": "line 45"
+        }
+      ],
+      "weight": 1,
+      "_src": "docs/05-Data-Model.md",
+      "_tgt": "docs/05-Data-Model.md#section-45",
+      "confidence_score": 1
+    },
+    {
+      "source": "docs/05-Data-Model.md",
+      "target": "docs/05-Data-Model.md#section-51",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/05-Data-Model.md",
+      "source_location": "line 51",
       "evidence_text": "## Mutation transaction",
       "citations": [
         {
           "quote": "## Mutation transaction",
           "source_file": "docs/05-Data-Model.md",
-          "source_location": "line 47"
+          "source_location": "line 51"
         }
       ],
       "weight": 1,
       "_src": "docs/05-Data-Model.md",
-      "_tgt": "docs/05-Data-Model.md#section-47",
+      "_tgt": "docs/05-Data-Model.md#section-51",
       "confidence_score": 1
     },
     {
@@ -4187,13 +4341,13 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "docs/05-Data-Model.md",
-      "source_location": "line 51",
+      "source_location": "line 55",
       "evidence_text": "Indexes: business/date and business/product/date for sales, unique operation key, dashboard business/ID and revision lookup. Charts and drilldown use the same normalized query and revision; if history has changed, refresh both rather than mixing snapshots. These rules implement [[docs/02-SRS]] and drive [[docs/06-Agent-and-API]].",
       "citations": [
         {
           "quote": "Indexes: business/date and business/product/date for sales, unique operation key, dashboard business/ID and revision lookup. Charts and drilldown use the same normalized query and revision; if history has changed, refresh both rather than mixing snapshots. These rules implement [[docs/02-SRS]] and drive [[docs/06-Agent-and-API]].",
           "source_file": "docs/05-Data-Model.md",
-          "source_location": "line 51"
+          "source_location": "line 55"
         }
       ],
       "weight": 2,
@@ -4208,10 +4362,10 @@
       "confidence": "EXTRACTED",
       "source_file": "docs/05-Data-Model.md",
       "source_location": "line 8",
-      "evidence_text": "This is a logical schema, not an applied database migration. Every business-owned relation carries `business_id`; ownership comes from authentication, never an LLM argument. See [[docs/08-Security-and-Operations]].",
+      "evidence_text": "The Day 20 portion of this logical schema is implemented in `db/migrations/001_initial_schema.sql`; mutation services remain planned. Every business-owned relation carries `business_id`; ownership comes from authentication, never an LLM argument. See [[docs/08-Security-and-Operations]].",
       "citations": [
         {
-          "quote": "This is a logical schema, not an applied database migration. Every business-owned relation carries `business_id`; ownership comes from authentication, never an LLM argument. See [[docs/08-Security-and-Operations]].",
+          "quote": "The Day 20 portion of this logical schema is implemented in `db/migrations/001_initial_schema.sql`; mutation services remain planned. Every business-owned relation carries `business_id`; ownership comes from authentication, never an LLM argument. See [[docs/08-Security-and-Operations]].",
           "source_file": "docs/05-Data-Model.md",
           "source_location": "line 8"
         }
@@ -4219,6 +4373,26 @@
       "weight": 2,
       "_src": "docs/05-Data-Model.md",
       "_tgt": "docs/08-Security-and-Operations.md",
+      "confidence_score": 1
+    },
+    {
+      "source": "docs/05-Data-Model.md",
+      "target": "docs/17-Verification-Record.md",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/05-Data-Model.md",
+      "source_location": "line 43",
+      "evidence_text": "The initial migration creates businesses, products, sales, sale revisions, day coverage and revisions, operations, proposals and dashboards. Composite foreign keys prevent cross-business references, audit revisions reject update/delete, and product normalization is unique within a business. The synthetic seed creates a labeled IDR juice-stall business with Orange Juice and Mango Juice. `packages/domain/money.ts` implements bounded bigint arithmetic, exact USD/IDR input parsing, unknown-versus-zero semantics and decimal-string serialization. PostgreSQL and domain verification results are recorded in [[docs/17-Verification-Record]].",
+      "citations": [
+        {
+          "quote": "The initial migration creates businesses, products, sales, sale revisions, day coverage and revisions, operations, proposals and dashboards. Composite foreign keys prevent cross-business references, audit revisions reject update/delete, and product normalization is unique within a business. The synthetic seed creates a labeled IDR juice-stall business with Orange Juice and Mango Juice. `packages/domain/money.ts` implements bounded bigint arithmetic, exact USD/IDR input parsing, unknown-versus-zero semantics and decimal-string serialization. PostgreSQL and domain verification results are recorded in [[docs/17-Verification-Record]].",
+          "source_file": "docs/05-Data-Model.md",
+          "source_location": "line 43"
+        }
+      ],
+      "weight": 2,
+      "_src": "docs/05-Data-Model.md",
+      "_tgt": "docs/17-Verification-Record.md",
       "confidence_score": 1
     },
     {
@@ -4943,42 +5117,62 @@
     },
     {
       "source": "docs/09-Verification.md",
-      "target": "docs/09-Verification.md#section-27",
+      "target": "docs/09-Verification.md#T-15",
+      "relation": "specifies",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/09-Verification.md",
+      "source_location": "line 26",
+      "evidence_text": "| T-15 Currency exactness | FR-20; NFR-01 | Create separate IDR and USD businesses. Parse whole rupiah and dollar/cents inputs to exact minor units, reject fractional IDR and excess USD decimals, reject mixed currencies and currency changes, and display the correct currency without conversion. |",
+      "citations": [
+        {
+          "quote": "| T-15 Currency exactness | FR-20; NFR-01 | Create separate IDR and USD businesses. Parse whole rupiah and dollar/cents inputs to exact minor units, reject fractional IDR and excess USD decimals, reject mixed currencies and currency changes, and display the correct currency without conversion. |",
+          "source_file": "docs/09-Verification.md",
+          "source_location": "line 26"
+        }
+      ],
+      "weight": 2,
+      "_src": "docs/09-Verification.md",
+      "_tgt": "docs/09-Verification.md#T-15",
+      "confidence_score": 1
+    },
+    {
+      "source": "docs/09-Verification.md",
+      "target": "docs/09-Verification.md#section-28",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/09-Verification.md",
-      "source_location": "line 27",
+      "source_location": "line 28",
       "evidence_text": "## Test layers and fixtures",
       "citations": [
         {
           "quote": "## Test layers and fixtures",
           "source_file": "docs/09-Verification.md",
-          "source_location": "line 27"
+          "source_location": "line 28"
         }
       ],
       "weight": 1,
       "_src": "docs/09-Verification.md",
-      "_tgt": "docs/09-Verification.md#section-27",
+      "_tgt": "docs/09-Verification.md#section-28",
       "confidence_score": 1
     },
     {
       "source": "docs/09-Verification.md",
-      "target": "docs/09-Verification.md#section-33",
+      "target": "docs/09-Verification.md#section-34",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/09-Verification.md",
-      "source_location": "line 33",
+      "source_location": "line 34",
       "evidence_text": "## Human validation",
       "citations": [
         {
           "quote": "## Human validation",
           "source_file": "docs/09-Verification.md",
-          "source_location": "line 33"
+          "source_location": "line 34"
         }
       ],
       "weight": 1,
       "_src": "docs/09-Verification.md",
-      "_tgt": "docs/09-Verification.md#section-33",
+      "_tgt": "docs/09-Verification.md#section-34",
       "confidence_score": 1
     },
     {
@@ -4987,13 +5181,13 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "docs/09-Verification.md",
-      "source_location": "line 37",
+      "source_location": "line 38",
       "evidence_text": "Release gate: all Must scenarios pass, no known unauthorized access or arithmetic/data-loss issue, performance measured with any shortfall disclosed, real provider smoke test completed, and [[docs/11-Hackathon-and-License]] checklist reviewed. Implementation order: [[docs/10-Delivery-Plan]].",
       "citations": [
         {
           "quote": "Release gate: all Must scenarios pass, no known unauthorized access or arithmetic/data-loss issue, performance measured with any shortfall disclosed, real provider smoke test completed, and [[docs/11-Hackathon-and-License]] checklist reviewed. Implementation order: [[docs/10-Delivery-Plan]].",
           "source_file": "docs/09-Verification.md",
-          "source_location": "line 37"
+          "source_location": "line 38"
         }
       ],
       "weight": 2,
@@ -5007,13 +5201,13 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "docs/09-Verification.md",
-      "source_location": "line 37",
+      "source_location": "line 38",
       "evidence_text": "Release gate: all Must scenarios pass, no known unauthorized access or arithmetic/data-loss issue, performance measured with any shortfall disclosed, real provider smoke test completed, and [[docs/11-Hackathon-and-License]] checklist reviewed. Implementation order: [[docs/10-Delivery-Plan]].",
       "citations": [
         {
           "quote": "Release gate: all Must scenarios pass, no known unauthorized access or arithmetic/data-loss issue, performance measured with any shortfall disclosed, real provider smoke test completed, and [[docs/11-Hackathon-and-License]] checklist reviewed. Implementation order: [[docs/10-Delivery-Plan]].",
           "source_file": "docs/09-Verification.md",
-          "source_location": "line 37"
+          "source_location": "line 38"
         }
       ],
       "weight": 2,
@@ -5028,10 +5222,10 @@
       "confidence": "EXTRACTED",
       "source_file": "docs/09-Verification.md",
       "source_location": "line 8",
-      "evidence_text": "This is the future application test plan; no product tests have run because no application exists. Documentation-tool checks are separate and reported in [[docs/12-Knowledge-System]]. Every Must requirement in [[docs/02-SRS]] maps to a scenario below.",
+      "evidence_text": "This remains the application acceptance plan. Day 20 domain and PostgreSQL component checks have run, while API, voice, browser, performance and recovery scenarios remain planned. Documentation-tool checks are separate and reported in [[docs/12-Knowledge-System]]. Every Must requirement in [[docs/02-SRS]] maps to a scenario below.",
       "citations": [
         {
-          "quote": "This is the future application test plan; no product tests have run because no application exists. Documentation-tool checks are separate and reported in [[docs/12-Knowledge-System]]. Every Must requirement in [[docs/02-SRS]] maps to a scenario below.",
+          "quote": "This remains the application acceptance plan. Day 20 domain and PostgreSQL component checks have run, while API, voice, browser, performance and recovery scenarios remain planned. Documentation-tool checks are separate and reported in [[docs/12-Knowledge-System]]. Every Must requirement in [[docs/02-SRS]] maps to a scenario below.",
           "source_file": "docs/09-Verification.md",
           "source_location": "line 8"
         }
@@ -5662,6 +5856,46 @@
       "confidence_score": 1
     },
     {
+      "source": "docs/09-Verification.md#T-15",
+      "target": "docs/02-SRS.md#FR-20",
+      "relation": "verifies",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/09-Verification.md",
+      "source_location": "line 26",
+      "evidence_text": "| T-15 Currency exactness | FR-20; NFR-01 | Create separate IDR and USD businesses. Parse whole rupiah and dollar/cents inputs to exact minor units, reject fractional IDR and excess USD decimals, reject mixed currencies and currency changes, and display the correct currency without conversion. |",
+      "citations": [
+        {
+          "quote": "| T-15 Currency exactness | FR-20; NFR-01 | Create separate IDR and USD businesses. Parse whole rupiah and dollar/cents inputs to exact minor units, reject fractional IDR and excess USD decimals, reject mixed currencies and currency changes, and display the correct currency without conversion. |",
+          "source_file": "docs/09-Verification.md",
+          "source_location": "line 26"
+        }
+      ],
+      "weight": 2,
+      "_src": "docs/09-Verification.md#T-15",
+      "_tgt": "docs/02-SRS.md#FR-20",
+      "confidence_score": 1
+    },
+    {
+      "source": "docs/09-Verification.md#T-15",
+      "target": "docs/02-SRS.md#NFR-01",
+      "relation": "verifies",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/09-Verification.md",
+      "source_location": "line 26",
+      "evidence_text": "| T-15 Currency exactness | FR-20; NFR-01 | Create separate IDR and USD businesses. Parse whole rupiah and dollar/cents inputs to exact minor units, reject fractional IDR and excess USD decimals, reject mixed currencies and currency changes, and display the correct currency without conversion. |",
+      "citations": [
+        {
+          "quote": "| T-15 Currency exactness | FR-20; NFR-01 | Create separate IDR and USD businesses. Parse whole rupiah and dollar/cents inputs to exact minor units, reject fractional IDR and excess USD decimals, reject mixed currencies and currency changes, and display the correct currency without conversion. |",
+          "source_file": "docs/09-Verification.md",
+          "source_location": "line 26"
+        }
+      ],
+      "weight": 2,
+      "_src": "docs/09-Verification.md#T-15",
+      "_tgt": "docs/02-SRS.md#NFR-01",
+      "confidence_score": 1
+    },
+    {
       "source": "docs/10-Delivery-Plan.md",
       "target": "docs/10-Delivery-Plan.md#P0",
       "relation": "specifies",
@@ -6067,13 +6301,13 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "docs/14-Glossary.md",
-      "source_location": "line 26",
+      "source_location": "line 28",
       "evidence_text": "Continue with [[docs/00-Home]], [[docs/05-Data-Model]] and [[docs/12-Knowledge-System]].",
       "citations": [
         {
           "quote": "Continue with [[docs/00-Home]], [[docs/05-Data-Model]] and [[docs/12-Knowledge-System]].",
           "source_file": "docs/14-Glossary.md",
-          "source_location": "line 26"
+          "source_location": "line 28"
         }
       ],
       "weight": 2,
@@ -6087,13 +6321,13 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "docs/14-Glossary.md",
-      "source_location": "line 26",
+      "source_location": "line 28",
       "evidence_text": "Continue with [[docs/00-Home]], [[docs/05-Data-Model]] and [[docs/12-Knowledge-System]].",
       "citations": [
         {
           "quote": "Continue with [[docs/00-Home]], [[docs/05-Data-Model]] and [[docs/12-Knowledge-System]].",
           "source_file": "docs/14-Glossary.md",
-          "source_location": "line 26"
+          "source_location": "line 28"
         }
       ],
       "weight": 2,
@@ -6128,10 +6362,10 @@
       "confidence": "EXTRACTED",
       "source_file": "docs/15-Use-Cases.md",
       "source_location": "line 12",
-      "evidence_text": "| UC-01 Prepare catalog | Owner creates orange/mango products and optional prices; entries become selectable | Duplicate normalized name rejected; deactivation preserves history | FR-01, FR-18; T-07, T-13 |",
+      "evidence_text": "| UC-01 Prepare catalog | Owner chooses IDR or USD for the business, then creates products and optional prices; entries become selectable | Duplicate normalized name rejected; fractional IDR, excess USD decimals and later currency changes are rejected; deactivation preserves history | FR-01, FR-18, FR-20; T-07, T-13, T-15 |",
       "citations": [
         {
-          "quote": "| UC-01 Prepare catalog | Owner creates orange/mango products and optional prices; entries become selectable | Duplicate normalized name rejected; deactivation preserves history | FR-01, FR-18; T-07, T-13 |",
+          "quote": "| UC-01 Prepare catalog | Owner chooses IDR or USD for the business, then creates products and optional prices; entries become selectable | Duplicate normalized name rejected; fractional IDR, excess USD decimals and later currency changes are rejected; deactivation preserves history | FR-01, FR-18, FR-20; T-07, T-13, T-15 |",
           "source_file": "docs/15-Use-Cases.md",
           "source_location": "line 12"
         }
@@ -6468,10 +6702,10 @@
       "confidence": "EXTRACTED",
       "source_file": "docs/15-Use-Cases.md",
       "source_location": "line 12",
-      "evidence_text": "| UC-01 Prepare catalog | Owner creates orange/mango products and optional prices; entries become selectable | Duplicate normalized name rejected; deactivation preserves history | FR-01, FR-18; T-07, T-13 |",
+      "evidence_text": "| UC-01 Prepare catalog | Owner chooses IDR or USD for the business, then creates products and optional prices; entries become selectable | Duplicate normalized name rejected; fractional IDR, excess USD decimals and later currency changes are rejected; deactivation preserves history | FR-01, FR-18, FR-20; T-07, T-13, T-15 |",
       "citations": [
         {
-          "quote": "| UC-01 Prepare catalog | Owner creates orange/mango products and optional prices; entries become selectable | Duplicate normalized name rejected; deactivation preserves history | FR-01, FR-18; T-07, T-13 |",
+          "quote": "| UC-01 Prepare catalog | Owner chooses IDR or USD for the business, then creates products and optional prices; entries become selectable | Duplicate normalized name rejected; fractional IDR, excess USD decimals and later currency changes are rejected; deactivation preserves history | FR-01, FR-18, FR-20; T-07, T-13, T-15 |",
           "source_file": "docs/15-Use-Cases.md",
           "source_location": "line 12"
         }
@@ -6499,6 +6733,26 @@
       "weight": 2,
       "_src": "docs/15-Use-Cases.md",
       "_tgt": "docs/02-SRS.md#FR-19",
+      "confidence_score": 1
+    },
+    {
+      "source": "docs/15-Use-Cases.md",
+      "target": "docs/02-SRS.md#FR-20",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/15-Use-Cases.md",
+      "source_location": "line 12",
+      "evidence_text": "| UC-01 Prepare catalog | Owner chooses IDR or USD for the business, then creates products and optional prices; entries become selectable | Duplicate normalized name rejected; fractional IDR, excess USD decimals and later currency changes are rejected; deactivation preserves history | FR-01, FR-18, FR-20; T-07, T-13, T-15 |",
+      "citations": [
+        {
+          "quote": "| UC-01 Prepare catalog | Owner chooses IDR or USD for the business, then creates products and optional prices; entries become selectable | Duplicate normalized name rejected; fractional IDR, excess USD decimals and later currency changes are rejected; deactivation preserves history | FR-01, FR-18, FR-20; T-07, T-13, T-15 |",
+          "source_file": "docs/15-Use-Cases.md",
+          "source_location": "line 12"
+        }
+      ],
+      "weight": 2,
+      "_src": "docs/15-Use-Cases.md",
+      "_tgt": "docs/02-SRS.md#FR-20",
       "confidence_score": 1
     },
     {
@@ -6708,10 +6962,10 @@
       "confidence": "EXTRACTED",
       "source_file": "docs/15-Use-Cases.md",
       "source_location": "line 12",
-      "evidence_text": "| UC-01 Prepare catalog | Owner creates orange/mango products and optional prices; entries become selectable | Duplicate normalized name rejected; deactivation preserves history | FR-01, FR-18; T-07, T-13 |",
+      "evidence_text": "| UC-01 Prepare catalog | Owner chooses IDR or USD for the business, then creates products and optional prices; entries become selectable | Duplicate normalized name rejected; fractional IDR, excess USD decimals and later currency changes are rejected; deactivation preserves history | FR-01, FR-18, FR-20; T-07, T-13, T-15 |",
       "citations": [
         {
-          "quote": "| UC-01 Prepare catalog | Owner creates orange/mango products and optional prices; entries become selectable | Duplicate normalized name rejected; deactivation preserves history | FR-01, FR-18; T-07, T-13 |",
+          "quote": "| UC-01 Prepare catalog | Owner chooses IDR or USD for the business, then creates products and optional prices; entries become selectable | Duplicate normalized name rejected; fractional IDR, excess USD decimals and later currency changes are rejected; deactivation preserves history | FR-01, FR-18, FR-20; T-07, T-13, T-15 |",
           "source_file": "docs/15-Use-Cases.md",
           "source_location": "line 12"
         }
@@ -6788,10 +7042,10 @@
       "confidence": "EXTRACTED",
       "source_file": "docs/15-Use-Cases.md",
       "source_location": "line 12",
-      "evidence_text": "| UC-01 Prepare catalog | Owner creates orange/mango products and optional prices; entries become selectable | Duplicate normalized name rejected; deactivation preserves history | FR-01, FR-18; T-07, T-13 |",
+      "evidence_text": "| UC-01 Prepare catalog | Owner chooses IDR or USD for the business, then creates products and optional prices; entries become selectable | Duplicate normalized name rejected; fractional IDR, excess USD decimals and later currency changes are rejected; deactivation preserves history | FR-01, FR-18, FR-20; T-07, T-13, T-15 |",
       "citations": [
         {
-          "quote": "| UC-01 Prepare catalog | Owner creates orange/mango products and optional prices; entries become selectable | Duplicate normalized name rejected; deactivation preserves history | FR-01, FR-18; T-07, T-13 |",
+          "quote": "| UC-01 Prepare catalog | Owner chooses IDR or USD for the business, then creates products and optional prices; entries become selectable | Duplicate normalized name rejected; fractional IDR, excess USD decimals and later currency changes are rejected; deactivation preserves history | FR-01, FR-18, FR-20; T-07, T-13, T-15 |",
           "source_file": "docs/15-Use-Cases.md",
           "source_location": "line 12"
         }
@@ -6819,6 +7073,26 @@
       "weight": 2,
       "_src": "docs/15-Use-Cases.md",
       "_tgt": "docs/09-Verification.md#T-14",
+      "confidence_score": 1
+    },
+    {
+      "source": "docs/15-Use-Cases.md",
+      "target": "docs/09-Verification.md#T-15",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/15-Use-Cases.md",
+      "source_location": "line 12",
+      "evidence_text": "| UC-01 Prepare catalog | Owner chooses IDR or USD for the business, then creates products and optional prices; entries become selectable | Duplicate normalized name rejected; fractional IDR, excess USD decimals and later currency changes are rejected; deactivation preserves history | FR-01, FR-18, FR-20; T-07, T-13, T-15 |",
+      "citations": [
+        {
+          "quote": "| UC-01 Prepare catalog | Owner chooses IDR or USD for the business, then creates products and optional prices; entries become selectable | Duplicate normalized name rejected; fractional IDR, excess USD decimals and later currency changes are rejected; deactivation preserves history | FR-01, FR-18, FR-20; T-07, T-13, T-15 |",
+          "source_file": "docs/15-Use-Cases.md",
+          "source_location": "line 12"
+        }
+      ],
+      "weight": 2,
+      "_src": "docs/15-Use-Cases.md",
+      "_tgt": "docs/09-Verification.md#T-15",
       "confidence_score": 1
     },
     {
@@ -6888,10 +7162,10 @@
       "confidence": "EXTRACTED",
       "source_file": "docs/16-Implementation-Handoff.md",
       "source_location": "line 24",
-      "evidence_text": "- `tests`: domain/integration/browser checks appropriate to [[docs/09-Verification]].",
+      "evidence_text": "- `tests/domain` and `tests/database`: implemented Day 20 unit/schema/PostgreSQL checks; broader integration/browser checks remain planned in [[docs/09-Verification]].",
       "citations": [
         {
-          "quote": "- `tests`: domain/integration/browser checks appropriate to [[docs/09-Verification]].",
+          "quote": "- `tests/domain` and `tests/database`: implemented Day 20 unit/schema/PostgreSQL checks; broader integration/browser checks remain planned in [[docs/09-Verification]].",
           "source_file": "docs/16-Implementation-Handoff.md",
           "source_location": "line 24"
         }
@@ -6968,10 +7242,10 @@
       "confidence": "EXTRACTED",
       "source_file": "docs/16-Implementation-Handoff.md",
       "source_location": "line 18",
-      "evidence_text": "## Proposed application structure (not scaffolded)",
+      "evidence_text": "## Implemented foundation and proposed structure",
       "citations": [
         {
-          "quote": "## Proposed application structure (not scaffolded)",
+          "quote": "## Implemented foundation and proposed structure",
           "source_file": "docs/16-Implementation-Handoff.md",
           "source_location": "line 18"
         }
@@ -7179,6 +7453,26 @@
       "weight": 1,
       "_src": "docs/17-Verification-Record.md",
       "_tgt": "docs/17-Verification-Record.md#section-23",
+      "confidence_score": 1
+    },
+    {
+      "source": "docs/17-Verification-Record.md",
+      "target": "docs/17-Verification-Record.md#section-31",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/17-Verification-Record.md",
+      "source_location": "line 31",
+      "evidence_text": "## Day 20 implementation verification — 2026-09-20",
+      "citations": [
+        {
+          "quote": "## Day 20 implementation verification — 2026-09-20",
+          "source_file": "docs/17-Verification-Record.md",
+          "source_location": "line 31"
+        }
+      ],
+      "weight": 1,
+      "_src": "docs/17-Verification-Record.md",
+      "_tgt": "docs/17-Verification-Record.md#section-31",
       "confidence_score": 1
     },
     {

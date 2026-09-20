@@ -11,7 +11,7 @@
 
 ### For AI Agents
 1. **Read-First Principle:** Before executing any task for a day, read the cited canonical documents under `docs/` and review the relevant test scenario in [`docs/09-Verification.md`](file:///C:/Project/EasyLedger/docs/09-Verification.md).
-2. **Deterministic Arithmetic:** Never compute or clamp financial sums using an LLM. Money calculations must execute in deterministic application or database code using whole IDR integers ([[docs/05-Data-Model]]).
+2. **Deterministic Arithmetic:** Never compute or clamp financial sums using an LLM. Money calculations must execute in deterministic application or database code using exact minor units: whole rupiah for IDR and cents for USD ([[docs/05-Data-Model]]).
 3. **Workspace Tooling Rules:**
    - Use `write_to_file` to create new files (NEVER pass `ArtifactMetadata` for workspace files).
    - Use `replace_file_content` to edit existing files.
@@ -33,7 +33,7 @@
 | **Day 1–17** | Sep 01–17 | **P0 Plan** | Problem brief, SRS, Architecture, ADRs, Data Model, Graphify setup | `[x] Completed` |
 | **Day 18** | Sep 18 | **P1 De-risk** | AssemblyAI Voice Agent API research, tool contract design, spike planning | `[x] Completed` |
 | **Day 19** | Sep 19 (Today) | **P1 Exit** | Hackathon rules alignment, daily task tracking system, spike prep | `[x] Completed` |
-| **Day 20** | Sep 20 | **P2 Data First** | PostgreSQL schema, migrations, product catalog & exact IDR arithmetic | `[ ] Pending` |
+| **Day 20** | Sep 20 | **P2 Data First** | PostgreSQL schema, migrations, product catalog & exact IDR/USD arithmetic | `[x] Completed` |
 | **Day 21** | Sep 21 | **P2 Data First** | Idempotency engine, two-phase mutation transactions & revision tracking | `[ ] Pending` |
 | **Day 22** | Sep 22 | **P2 Data First** | Manual ledger API (Fastify), tenant isolation & day-coverage semantics | `[ ] Pending` |
 | **Day 23** | Sep 23 | **P3 Voice Agent** | AssemblyAI session bootstrap, authenticated HTTP tool gateway | `[ ] Pending` |
@@ -93,20 +93,25 @@
 
 ### Day 20 · Sep 20, 2026: Phase P2 — Data First: Schema, Migrations & Arithmetic
 - **Role:** Database Engineer
-- **Status:** `[ ] Pending`
+- **Status:** `[x] Completed`
 - **What to Do:**
   - Set up PostgreSQL schema with strict tenant isolation (`business_id`) on all tables.
-  - Implement exact IDR integer arithmetic (whole rupiah, BIGINT/NUMERIC) with zero floating-point calculations.
+  - Implement exact IDR/USD integer arithmetic (whole rupiah or cents, BIGINT) with zero floating-point calculations.
   - Create database migrations and seed scripts for demonstration catalog (Orange Juice, Mango Juice).
 - **Tasks to Do:**
-  - [ ] **TASK-20-01**: Initialize `db/migrations` with table definitions: `businesses`, `products`, `sales`, `sale_revisions`, `day_coverages`, `coverage_revisions`, `operations`, `proposals`, `dashboards`.
-  - [ ] **TASK-20-02**: Implement database constraint checks: positive quantities (`quantity > 0`), non-negative prices, foreign keys, and unique normalized product names per business.
-  - [ ] **TASK-20-03**: Implement calculation engine functions: `calculate_revenue(quantity, unit_price)`, handling `null` prices as unknown revenue (not zero).
-  - [ ] **TASK-20-04**: Write unit tests for golden arithmetic: 10 orange juices @ 15,000 + 6 mango juices @ 18,000 = IDR 258,000; correcting orange to 8 yields IDR 228,000 (Test `T-01`).
+  - [x] **TASK-20-01**: Initialize `db/migrations` with table definitions: `businesses`, `products`, `sales`, `sale_revisions`, `day_coverages`, `coverage_revisions`, `operations`, `proposals`, `dashboards`.
+  - [x] **TASK-20-02**: Implement database constraint checks: positive quantities (`quantity > 0`), non-negative prices, tenant-safe foreign keys, append-only revisions, and unique normalized product names per business.
+  - [x] **TASK-20-03**: Implement exact calculation functions, handling `null` prices as unknown revenue and zero as known/free.
+  - [x] **TASK-20-04**: Write unit tests for golden arithmetic: 10 orange juices @ 15,000 + 6 mango juices @ 18,000 = IDR 258,000; correcting orange to 8 yields IDR 228,000 (Test `T-01`).
+  - [x] **TASK-20-05**: Add per-business IDR/USD currency selection, exact dollar-to-cent parsing, mixed-currency rejection and immutable ledger currency (Test `T-15`).
 - **Agent Execution Guidance:**
-  - Refer to [`docs/05-Data-Model.md`](file:///C:/Project/EasyLedger/docs/05-Data-Model.md) for table schemas and bounds (max 100 lines/request, quantity ≤ 1,000,000, price ≤ 1,000,000,000 IDR).
+  - Refer to [`docs/05-Data-Model.md`](file:///C:/Project/EasyLedger/docs/05-Data-Model.md) for table schemas and bounds (max 100 lines/request, quantity ≤ 1,000,000, price ≤ 1,000,000,000 minor units).
 - **Human Verification Checkpoint:**
-  - Run SQL migrations against a local/test PostgreSQL instance. Verify that floating-point numbers are rejected.
+  - Completed on PostgreSQL 17: migration, repeatable seed and database constraint script passed. Domain inputs reject fractional IDR, excess USD decimal places, unsafe numbers and out-of-bound values before persistence.
+- **Verification Evidence:**
+  - `npm test` passed all Day 20 domain and schema checks.
+  - PostgreSQL accepted null and zero as distinct prices and rejected cross-tenant references, invalid bounds, duplicate normalized products, invalid coverage, and currency changes.
+  - `npm run docs:sync`, `npm run docs:check`, Graphify portability, and the final diff review passed before commit.
 
 ---
 

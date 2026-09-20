@@ -9,7 +9,7 @@ All scenarios assume an authenticated owner and business timezone. They expand [
 
 | Use case | Preconditions and main flow | Alternate/failure flow | Coverage |
 | --- | --- | --- | --- |
-| UC-01 Prepare catalog | Owner creates orange/mango products and optional prices; entries become selectable | Duplicate normalized name rejected; deactivation preserves history | FR-01, FR-18; T-07, T-13 |
+| UC-01 Prepare catalog | Owner chooses IDR or USD for the business, then creates products and optional prices; entries become selectable | Duplicate normalized name rejected; fractional IDR, excess USD decimals and later currency changes are rejected; deactivation preserves history | FR-01, FR-18, FR-20; T-07, T-13, T-15 |
 | UC-02 Record a batch | Voice or manual input → structured proposal → owner review → confirmation → atomic receipt → chart refresh | Unknown product/date/price clarified; cancellation before execution writes nothing; timeout checks operation status | FR-02, FR-03, FR-04, FR-14, FR-15, FR-17; T-01, T-02, T-03, T-08 |
 | UC-03 Correct/undo | Owner selects sale/receipt → before/after preview → confirm → new audited revision → refresh | Ambiguous target asks a question; stale version conflicts; undo after intervening edits requires re-evaluation | FR-05, FR-06; T-04 |
 | UC-04 Explore sales | Choose metric/date/product → deterministic query → chart → tap point → matching records | Missing prices/days flagged; zero denominator suppresses percentage; stale result refetched | FR-07, FR-08, FR-09, FR-10, FR-11; T-05 |

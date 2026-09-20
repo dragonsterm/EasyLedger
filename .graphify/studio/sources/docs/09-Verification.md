@@ -5,7 +5,7 @@ tags: [easyledger, verification]
 ---
 # Verification and traceability
 
-This is the future application test plan; no product tests have run because no application exists. Documentation-tool checks are separate and reported in [[docs/12-Knowledge-System]]. Every Must requirement in [[docs/02-SRS]] maps to a scenario below.
+This remains the application acceptance plan. Day 20 domain and PostgreSQL component checks have run, while API, voice, browser, performance and recovery scenarios remain planned. Documentation-tool checks are separate and reported in [[docs/12-Knowledge-System]]. Every Must requirement in [[docs/02-SRS]] maps to a scenario below.
 
 | Test | Requirements | Scenario and pass condition |
 | --- | --- | --- |
@@ -23,10 +23,11 @@ This is the future application test plan; no product tests have run because no a
 | T-12 Knowledge | NFR-06 | Sync, link/canvas checks, freshness and portable graph checks pass; a changed note causes check failure until regenerated. |
 | T-13 Catalog | FR-18 | Create a product, change its default price, rename and deactivate it. Old sales retain price snapshots and product identity; inactive products cannot receive new sales without reactivation. |
 | T-14 Day coverage | FR-19 | Confirm a no-sale day as complete: gap becomes zero. Reopen it: zero becomes unknown. Duplicate calls create one audited change; another owner cannot change coverage. |
+| T-15 Currency exactness | FR-20; NFR-01 | Create separate IDR and USD businesses. Parse whole rupiah and dollar/cents inputs to exact minor units, reject fractional IDR and excess USD decimals, reject mixed currencies and currency changes, and display the correct currency without conversion. |
 
 ## Test layers and fixtures
 
-Unit tests cover arithmetic, date ranges, completeness, validation and chart-spec conversion. Database integration tests use real PostgreSQL constraints/transactions for retries, rollback, ownership and version conflicts. Browser end-to-end tests cover the golden journey, responsive/manual controls and dashboard persistence. Contract tests mock tool failures and delays; one real AssemblyAI smoke session verifies the actual integration.
+Unit tests cover arithmetic, currency parsing, date ranges, completeness, validation and chart-spec conversion. Database integration tests use real PostgreSQL constraints/transactions for retries, rollback, ownership and version conflicts. Browser end-to-end tests cover the golden journey, responsive/manual controls and dashboard persistence. Contract tests mock tool failures and delays; one real AssemblyAI smoke session verifies the actual integration.
 
 Fixtures include two business owners, orange/mango catalog entries, known and missing prices, explicitly free sales, open/complete days, dates around local midnight, and concurrent dashboard edits. Fixtures are synthetic and labeled. Record actual tool calls and resulting IDs for demo evidence without recording secrets.
 

@@ -9,7 +9,7 @@ The builder is a core product capability alongside the agentic workflow. Aim for
 
 ## First usable interface
 
-A simple application shell contains Ledger, Dashboard and Catalog views plus an always-available voice control. Dashboard has a widget area, selected-widget settings and an Add widget action. Show the selected widget title, effective date range, currency, last refresh, data completeness and saved/unsaved status. A plain neutral layout is sufficient. Microphone/listening state must be explicit; transcripts and tool receipts remain readable after audio stops.
+A simple application shell contains Ledger, Dashboard and Catalog views plus an always-available voice control. Dashboard has a widget area, selected-widget settings and an Add widget action. Show the selected widget title, effective date range, business currency (IDR or USD), last refresh, data completeness and saved/unsaved status. A plain neutral layout is sufficient. Microphone/listening state must be explicit; transcripts and tool receipts remain readable after audio stops.
 
 Widgets are first-class objects: `id`, `type`, `title`, `metric`, `dimension`, `filters`, `comparison`, `format`, `layout`, `schema_version`. Supported metric choices are units and known-price revenue. Do not store chart results as the canonical widget; store a query specification and re-fetch current data. The renderer maps validated specifications to ECharts options; it does not execute model-produced code.
 

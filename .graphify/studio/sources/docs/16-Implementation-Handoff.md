@@ -1,13 +1,13 @@
 ---
 title: Implementation handoff and runbook
-status: planning-only
+status: implementation-started
 tags: [easyledger, operations, delivery]
 ---
 # Implementation handoff and runbook
 
 ## What exists today
 
-Only planning notes, the existing Obsidian vault, Graphify artifacts, and documentation maintenance scripts exist. No application server, migrations, authentication, provider session, user interface or deployment exists. `npm run graph:serve` opens documentation visualization, not EasyLedger. App implementation needs a subsequent user request.
+Planning notes, the existing Obsidian vault, Graphify artifacts and documentation maintenance scripts exist alongside the implemented Day 20 foundation: the initial PostgreSQL migration, synthetic catalog seed, exact IDR/USD money module, and domain/database checks. No application server, authentication, provider session, user interface or deployment exists. `npm run graph:serve` opens documentation visualization, not EasyLedger.
 
 ## Documentation setup
 
@@ -15,13 +15,13 @@ Use Node.js 24 (the verification environment is 24.19.0) and npm. From the repos
 
 For the browser graph, run `npm run graph:serve`, then open `http://127.0.0.1:4173`. Stop with Ctrl+C. If the port is occupied, stop the previous graph server or choose a different local port in the maintenance script. `npm run docs:watch` regenerates after canonical note changes while running. If checking reports stale artifacts, regenerate; if links are broken, fix canonical paths first. Do not edit generated graph JSON to conceal a failing check.
 
-## Proposed application structure (not scaffolded)
+## Implemented foundation and proposed structure
 
 - `apps/web`: React frontend, ledger/history, dashboard builder, microphone/session adapter.
 - `apps/api`: Fastify routes, authenticated tool gateway, ledger/dashboard/query services.
-- `packages/contracts`: validated request/response and widget specifications shared with browser code.
-- `db/migrations`: reviewed PostgreSQL schema changes and synthetic development fixtures.
-- `tests`: domain/integration/browser checks appropriate to [[docs/09-Verification]].
+- `packages/domain`: implemented exact money parsing, validation and aggregation; `packages/contracts` remains proposed for shared API/widget schemas.
+- `db/migrations` and `db/seed`: implemented initial PostgreSQL schema and labeled synthetic catalog.
+- `tests/domain` and `tests/database`: implemented Day 20 unit/schema/PostgreSQL checks; broader integration/browser checks remain planned in [[docs/09-Verification]].
 
 Choose final package manager layout and compatible versions during P1. Do not install the entire application stack merely because it appears here. Frontend and backend can remain in one repository without microservices.
 

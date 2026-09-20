@@ -2,13 +2,16 @@
   "name": "easyledger-documentation",
   "private": true,
   "version": "0.1.0",
-  "description": "Documentation and knowledge graph tooling; application is not implemented yet.",
+  "description": "EasyLedger documentation plus the implemented Day 20 data and money foundation.",
+  "type": "module",
   "scripts": {
+    "test": "npm run test:domain",
     "docs:sync": "node scripts/sync-docs.cjs",
     "docs:check": "node scripts/sync-docs.cjs --check",
     "docs:watch": "node scripts/watch-docs.cjs",
     "graph:query": "graphify query",
-    "graph:serve": "node scripts/serve-graph.cjs"
+    "graph:serve": "node scripts/serve-graph.cjs",
+    "test:domain": "node --test tests/domain/*.test.mjs"
   },
   "devDependencies": { "@sentropic/graphify": "0.18.0" }
 }

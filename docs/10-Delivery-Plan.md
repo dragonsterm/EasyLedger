@@ -5,7 +5,7 @@ tags: [easyledger, delivery]
 ---
 # Delivery plan and risk register
 
-Planning baseline: 2026-09-17. The event advertises September 1–30, 2026; exact submission cutoff/timezone must be confirmed. Suggested dates below are estimates, not commitments. No application work is completed by this documentation task.
+Planning baseline: 2026-09-17. The event advertises September 1–30, 2026; exact submission cutoff/timezone must be confirmed. Suggested dates below are estimates, not commitments. Day 20 schema, seed and exact-money work is complete; the rest of P2 and all later application phases remain pending.
 
 | Phase | Suggested window | Deliverable and exit gate | Dependency |
 | --- | --- | --- | --- |

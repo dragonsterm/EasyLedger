@@ -17,8 +17,8 @@ Read-only questions may go directly from interpreting to executing. Ledger mutat
 
 | Tool | Essential arguments | Result / restrictions |
 | --- | --- | --- |
-| get_context | optional dashboard_id | Authorized catalog, timezone, selection and versions; bounded results |
-| propose_sales | lines(product_id, quantity, unit_price?, sale_date), intent=additional | Validated proposal, computed totals, warnings; no write to ledger |
+| get_context | optional dashboard_id | Authorized catalog, currency, timezone, selection and versions; bounded results |
+| propose_sales | lines(product_id, quantity, unit_price?, sale_date), intent=additional | Validated proposal in the business currency, computed totals, warnings; no write to ledger |
 | commit_sales | proposal_id, confirmation_token, idempotency_key | Atomic receipt for confirmed exact payload |
 | propose_correction | sale_id, expected_version, changed fields, reason | Before/after proposal; ambiguous sale ID requires clarification |
 | commit_correction | proposal_id, confirmation_token, idempotency_key | Corrected receipt, not an extra sale |
@@ -37,7 +37,7 @@ The confirmation token is server-issued only after an authenticated UI or unambi
 
 ## Common response envelope
 
-Success: `request_id`, `operation_id?`, `status`, `data`, `ledger_revision?`, `dashboard_version?`, `warnings[]`, `undo_available`. Error: `request_id`, `code`, `message`, `retryable`, `field_errors?`, `current_version?`. Codes include UNAUTHORIZED, FORBIDDEN, VALIDATION_ERROR, NEEDS_CLARIFICATION, CONFLICT, IDEMPOTENCY_CONFLICT, PROPOSAL_EXPIRED, RATE_LIMITED and PROVIDER_UNAVAILABLE. Return minimal safe messages; retain correlation IDs rather than secrets in diagnostics.
+Success: `request_id`, `operation_id?`, `status`, `data`, `currency?`, `ledger_revision?`, `dashboard_version?`, `warnings[]`, `undo_available`. Monetary values use decimal strings in exact business minor units. Error: `request_id`, `code`, `message`, `retryable`, `field_errors?`, `current_version?`. Codes include UNAUTHORIZED, FORBIDDEN, VALIDATION_ERROR, NEEDS_CLARIFICATION, CONFLICT, IDEMPOTENCY_CONFLICT, PROPOSAL_EXPIRED, RATE_LIMITED and PROVIDER_UNAVAILABLE. Return minimal safe messages; retain correlation IDs rather than secrets in diagnostics.
 
 Suggested application routes: `POST /api/voice/sessions`, `POST /api/proposals`, `POST /api/proposals/:id/commit`, `POST /api/operations/:id/undo`, `GET /api/operations/:id`, `GET /api/sales`, `POST /api/analytics/query`, `GET /api/dashboards/:id`, `PUT /api/dashboards/:id`. Version these under an API prefix before implementation. HTTP semantics: 401/403 for authentication/authorization, 422 for validation, 409 for version/key conflicts, 429 for limits, 503 for unavailable dependencies. Mutating requests use a stable idempotency header plus expected versions.
 

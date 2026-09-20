@@ -1,15 +1,14 @@
 {
-  "0": "Agent workflow and API contracts",
-  "1": "Manual access and accessibility",
-  "2": "Architecture decisions and stack",
-  "3": "Implementation handoff and runbook",
-  "4": "Knowledge system maintenance",
-  "5": "Corrections and undo",
-  "6": "Verification and release readiness",
+  "0": "Data model and calculation rules",
+  "1": "Authorization and tool safety",
+  "2": "System architecture",
+  "3": "Architecture decisions and stack",
+  "4": "Corrections and undo",
+  "5": "Manual access and accessibility",
+  "6": "Implementation handoff and runbook",
   "7": "Delivery plan and risk register",
-  "8": "System architecture",
-  "9": "Atomic sales and retries",
-  "10": "Analytics and missing data",
-  "11": "Authorization and tool safety",
-  "12": "Verification and release readiness"
+  "8": "Analytics and missing data",
+  "9": "Verification and release readiness",
+  "10": "Knowledge system maintenance",
+  "11": "Atomic sales and retries"
 }

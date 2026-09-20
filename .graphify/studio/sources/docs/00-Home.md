@@ -5,7 +5,7 @@ tags: [easyledger, navigation]
 ---
 # EasyLedger documentation home
 
-EasyLedger is a planned voice-first sales ledger and interactive dashboard builder for small merchants. **No application is implemented.** This documentation replaces SayLedger as the active product name while retaining the briefs' useful requirements.
+EasyLedger is a voice-first sales ledger and interactive dashboard builder for small merchants. The Day 20 data foundation is implemented: a PostgreSQL migration and seed plus exact IDR/USD money arithmetic and tests. The API, authentication, voice workflow, dashboard UI and deployment remain planned. This documentation replaces SayLedger as the active product name while retaining the briefs' useful requirements.
 
 Start with [[docs/01-Product-Brief|the product brief]], then [[docs/02-SRS|the software requirements specification]]. Developers and agents should continue through [[docs/03-Architecture|architecture]], [[docs/04-Decisions|stack decisions]], [[docs/05-Data-Model|data semantics]], and [[docs/06-Agent-and-API|agent and API contracts]].
 
@@ -34,4 +34,4 @@ Open [[docs/EasyLedger-Overview.canvas|the overview canvas]] for a guided map, o
 
 ## Reading the plan
 
-“Shall” is a proposed acceptance requirement, not a claim of delivery. MVP is the bounded hackathon scope; later features are the intended product direction. All performance numbers are targets awaiting measurement. Stack choices are a recommended baseline, subject to a short implementation spike. UI/UX will remain simple until backend and end-to-end behavior work; no theme has been selected.
+“Shall” is a proposed acceptance requirement unless a note explicitly marks part of it implemented and verified. MVP is the bounded hackathon scope; later features are the intended product direction. All performance numbers are targets awaiting measurement. Stack choices are a recommended baseline, subject to a short implementation spike. UI/UX will remain simple until backend and end-to-end behavior work; no theme has been selected.

@@ -21,7 +21,7 @@ The initial persona is a merchant who maintains their own records on a phone. Th
 
 ## Scope and success
 
-MVP: one business per owner, English voice interaction, IDR demonstration data, a product catalog, transactional entry/correction/undo, manual history, line/bar/KPI widgets, date/product filters, drilldown, layout editing, and persistence. The database still carries business ownership on every record to avoid unsafe assumptions when multiple users try the demo.
+MVP: one business per owner, English voice interaction, an IDR demonstration dataset, per-business IDR or USD selection, a product catalog, transactional entry/correction/undo, manual history, line/bar/KPI widgets, date/product filters, drilldown, layout editing, and persistence. The database still carries business ownership on every record to avoid unsafe assumptions when multiple users try the demo. Currency is exact and fixed per business; no conversion or mixed-currency ledger is provided.
 
 The long-term aim is a capable but understandable visualization builder: tables, additional chart families, reusable metrics, import, connectors, collaboration, exports, and templates. These are staged in [[docs/07-Dashboard-and-UX]], not promised as hackathon delivery. Complex statistical work may later need an analytics service; it is unnecessary for sums and grouped sales queries.
 

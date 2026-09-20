@@ -1,17 +1,17 @@
 ---
 title: Data model and calculation rules
-status: proposed
+status: partially-implemented
 tags: [easyledger, data]
 ---
 # Data model and calculation rules
 
-This is a logical schema, not an applied database migration. Every business-owned relation carries `business_id`; ownership comes from authentication, never an LLM argument. See [[docs/08-Security-and-Operations]].
+The Day 20 portion of this logical schema is implemented in `db/migrations/001_initial_schema.sql`; mutation services remain planned. Every business-owned relation carries `business_id`; ownership comes from authentication, never an LLM argument. See [[docs/08-Security-and-Operations]].
 
 | Entity | Key fields and invariants |
 | --- | --- |
-| Business | UUID, owner_user_id, name, currency=IDR, timezone=Asia/Jakarta, ledger_revision |
+| Business | UUID, owner_user_id, name, immutable currency=IDR or USD, timezone=Asia/Jakarta, ledger_revision |
 | Product | UUID, business_id, name, aliases, active, optional default_unit_price; unique normalized name per business |
-| Sale | UUID, business_id, product_id, quantity integer >0, unit_price nullable nonnegative integer rupiah, sale_date local date, version, voided flag, created_at UTC |
+| Sale | UUID, business_id, product_id, quantity integer >0, unit_price nullable nonnegative integer minor units, sale_date local date, version, voided flag, created_at UTC |
 | SaleRevision | UUID, sale_id, operation_id, before/after values, actor, reason, timestamp; append-only |
 | DayCoverage | business_id + local date unique, state=open/complete, version; complete means user has confirmed all that day's records |
 | CoverageRevision | UUID, business_id, local date, operation_id, before/after state, actor, timestamp; append-only |
@@ -34,9 +34,13 @@ erDiagram
 
 ## Exact calculations
 
-For MVP IDR use whole rupiah amounts, not a guessed universal “cents” scale. Store amounts as BIGINT or constrained exact NUMERIC; serialize large values as decimal strings in JSON. Quantity is a whole count. Revenue is quantity × unit price over active, known-price records. Unknown prices are null, never zero, and reduce reported revenue completeness. Product defaults are snapshotted at entry; a later catalog change must not rewrite historical revenue.
+Money uses the selected business currency's exact minor unit: whole rupiah for IDR and cents for USD. Store amounts as BIGINT; serialize large values as decimal strings in JSON. User-facing USD decimal input is parsed to cents before calculation, while IDR rejects fractional rupiah. Quantity is a whole count. Revenue is quantity × unit price over active, known-price records. Unknown prices are null, never zero, and reduce reported revenue completeness. Product defaults are snapshotted at entry; a later catalog change must not rewrite historical revenue. A ledger never mixes currencies and EasyLedger performs no currency conversion.
 
-Golden arithmetic: 10 × 15,000 + 6 × 18,000 = 258,000. Correcting the first quantity to eight yields 228,000. A zero price is a known free sale and differs from unknown price. Validate upper bounds and overflow before committing. Proposed limits: 100 lines per request, quantity at most 1,000,000 per line, price at most IDR 1,000,000,000; reject rather than clamp.
+Golden IDR arithmetic: 10 × 15,000 + 6 × 18,000 = 258,000. Correcting the first quantity to eight yields 228,000. USD 12.50 is stored as 1,250 cents. A zero price is a known free sale and differs from unknown price. Validate upper bounds and overflow before committing. Implemented limits: 100 lines per request, quantity at most 1,000,000 per line, price at most 1,000,000,000 minor units; reject rather than clamp.
+
+## Implemented Day 20 foundation
+
+The initial migration creates businesses, products, sales, sale revisions, day coverage and revisions, operations, proposals and dashboards. Composite foreign keys prevent cross-business references, audit revisions reject update/delete, and product normalization is unique within a business. The synthetic seed creates a labeled IDR juice-stall business with Orange Juice and Mango Juice. `packages/domain/money.ts` implements bounded bigint arithmetic, exact USD/IDR input parsing, unknown-versus-zero semantics and decimal-string serialization. PostgreSQL and domain verification results are recorded in [[docs/17-Verification-Record]].
 
 ## Time and completeness
 

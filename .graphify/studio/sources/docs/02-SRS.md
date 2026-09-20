@@ -32,12 +32,13 @@ Specify the hackathon MVP from [[docs/01-Product-Brief]]. Actors are an authenti
 | FR-17 | Should | Cancel a pending proposal or disconnect safely without losing an acknowledged commit; reconnect refreshes authoritative state before another change. |
 | FR-18 | Must | Owner can create, rename and deactivate catalog products and set an optional default price through manual controls. Deactivation preserves historical sales; changing a default price never changes recorded prices. |
 | FR-19 | Must | Owner explicitly confirms or reopens a business day's completeness. Show its date and consequences before applying; the action is authorized, idempotent and audited. |
+| FR-20 | Must | Each business uses either IDR or USD. IDR prices are exact whole rupiah; USD prices are exact cents. Inputs are normalized without floating point, every result displays its currency, ledgers never mix currencies, and no conversion is inferred. |
 
 ## Nonfunctional requirements
 
 | ID | Target / constraint | Measurement |
 | --- | --- | --- |
-| NFR-01 | Exact IDR arithmetic and consistent totals | All deterministic fixtures pass with no floating-point rounding. |
+| NFR-01 | Exact IDR/USD minor-unit arithmetic and consistent totals | All deterministic fixtures pass with no floating-point rounding. |
 | NFR-02 | Tool response p95 below 1 second for local business queries; visible refresh p95 below 2 seconds after commit | 100 operations over 10,000 seeded sales in the chosen deployment; excludes speech recognition and synthesis. Record environment and cold starts. |
 | NFR-03 | Voice turn completion to visible result p95 below 5 seconds | At least 30 scripted turns on a documented network; separate provider, tool and render timings. Target, not SLA. |
 | NFR-04 | Authorized, bounded tools; no credentials in browser bundles | Negative authorization, injection, rate-limit and bundle checks in [[docs/09-Verification]]. |
@@ -47,6 +48,6 @@ Specify the hackathon MVP from [[docs/01-Product-Brief]]. Actors are an authenti
 
 ## Exclusions and assumptions
 
-No payment processing, accounting compliance, inventory forecasting, multi-currency conversion, arbitrary datasets, custom JavaScript, collaborative editing, or autonomous bulk writes in MVP. English voice is the baseline; Indonesian speech requires a separate verified path. Currency and timezone are independent of voice language. Assume online access and an available AssemblyAI account; validate quotas and session behavior before implementation.
+No payment processing, accounting compliance, currency conversion, mixed-currency ledger, inventory forecasting, arbitrary datasets, custom JavaScript, collaborative editing, or autonomous bulk writes in MVP. A business chooses IDR or USD and stores one currency only. English voice is the baseline; Indonesian speech requires a separate verified path. Currency and timezone are independent of voice language. Assume online access and an available AssemblyAI account; validate quotas and session behavior before implementation.
 
 System design: [[docs/03-Architecture]]. Data rules: [[docs/05-Data-Model]]. Acceptance coverage: [[docs/09-Verification]]. Delivery gates: [[docs/10-Delivery-Plan]].
