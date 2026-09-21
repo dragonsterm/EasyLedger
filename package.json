@@ -5,6 +5,7 @@
   "description": "EasyLedger documentation plus the implemented Day 20 data foundation, Day 21 mutation service, and Day 22 manual API.",
   "type": "module",
   "scripts": {
+    "start": "node apps/api/server.ts",
     "test": "npm run test:domain && npm run test:api",
     "docs:sync": "node scripts/sync-docs.cjs",
     "docs:check": "node scripts/sync-docs.cjs --check",
