@@ -2,22 +2,25 @@
   "name": "easyledger-documentation",
   "private": true,
   "version": "0.1.0",
-  "description": "EasyLedger documentation plus the implemented Day 20 data foundation and Day 21 mutation service.",
+  "description": "EasyLedger documentation plus the implemented Day 20 data foundation, Day 21 mutation service, and Day 22 manual API.",
   "type": "module",
   "scripts": {
-    "test": "npm run test:domain",
+    "test": "npm run test:domain && npm run test:api",
     "docs:sync": "node scripts/sync-docs.cjs",
     "docs:check": "node scripts/sync-docs.cjs --check",
     "docs:watch": "node scripts/watch-docs.cjs",
     "graph:query": "graphify query",
     "graph:serve": "node scripts/serve-graph.cjs",
     "test:domain": "node --test tests/domain/*.test.mjs",
-    "test:database:day21": "node --test tests/database/day21_integration.mjs"
+    "test:database:day21": "node --test tests/database/day21_integration.mjs",
+    "test:api": "node --test tests/api/*.test.mjs",
+    "test:database:day22": "node --test tests/database/day22_integration.mjs"
   },
   "devDependencies": {
     "@sentropic/graphify": "0.18.0"
   },
   "dependencies": {
+    "fastify": "5.12.5",
     "pg": "8.16.3"
   }
 }

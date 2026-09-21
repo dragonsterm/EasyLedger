@@ -5,7 +5,7 @@ tags: [easyledger, architecture]
 ---
 # System architecture
 
-Use one TypeScript application stack with a separately deployable browser and API, and a PostgreSQL database. This limits language and deployment overhead while supporting a rich custom dashboard. See [[docs/04-Decisions]] for alternatives.
+Use one TypeScript application stack with a separately deployable browser and API, and a PostgreSQL database. This limits language and deployment overhead while supporting a rich custom dashboard. The verified implementation currently includes the Fastify API v1 manual ledger adapter and PostgreSQL-backed domain services; the browser, voice gateway and deployment remain planned. See [[docs/04-Decisions]] for alternatives.
 
 ```mermaid
 flowchart LR

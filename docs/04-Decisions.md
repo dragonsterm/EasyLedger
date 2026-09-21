@@ -5,7 +5,7 @@ tags: [easyledger, architecture, decisions]
 ---
 # Architecture decisions and stack
 
-Decisions dated 2026-09-17 are planning recommendations. The Day 20 PostgreSQL and exact-money foundation is implemented; the remaining stack still requires compatibility and integration spikes. Pin compatible package versions and verify licenses during implementation. Official references are catalogued in [[docs/13-Sources]].
+Decisions dated 2026-09-17 are planning recommendations. The Day 20 PostgreSQL and exact-money foundation, Day 21 mutation pipeline, and Day 22 Fastify manual API baseline are implemented and verified. The frontend, voice provider session and deployment still require compatibility and integration spikes. Pin compatible package versions and verify licenses during implementation. Official references are catalogued in [[docs/13-Sources]].
 
 | ADR | Decision | Rationale and tradeoff |
 | --- | --- | --- |

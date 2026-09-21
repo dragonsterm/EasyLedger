@@ -35,7 +35,7 @@
 | **Day 19** | Sep 19 (Today) | **P1 Exit** | Hackathon rules alignment, daily task tracking system, spike prep | `[x] Completed` |
 | **Day 20** | Sep 20 | **P2 Data First** | PostgreSQL schema, migrations, product catalog & exact IDR/USD arithmetic | `[x] Completed` |
 | **Day 21** | Sep 21 | **P2 Data First** | Idempotency engine, two-phase mutation transactions & revision tracking | `[x] Completed` |
-| **Day 22** | Sep 22 | **P2 Data First** | Manual ledger API (Fastify), tenant isolation & day-coverage semantics | `[ ] Pending` |
+| **Day 22** | Sep 22 | **P2 Data First** | Manual ledger API (Fastify), tenant isolation & day-coverage semantics | `[x] Completed` |
 | **Day 23** | Sep 23 | **P3 Voice Agent** | AssemblyAI session bootstrap, authenticated HTTP tool gateway | `[ ] Pending` |
 | **Day 24** | Sep 24 | **P3 Voice Agent** | Two-phase proposal state machine, ambiguity clarification & receipts | `[ ] Pending` |
 | **Day 25** | Sep 25 | **P4 Builder** | ECharts widget renderer, deterministic query engine (line/bar/KPI) | `[ ] Pending` |
@@ -140,21 +140,26 @@
 
 ### Day 22 · Sep 22, 2026: Phase P2 — Data First: Manual Ledger API & Isolation
 - **Role:** Backend Engineer
-- **Status:** `[ ] Pending`
+- **Status:** `[x] Completed`
 - **What to Do:**
   - Build Fastify REST API routes for manual ledger management (sales history, pagination, filtering, catalog management).
   - Implement day-coverage semantics (open = gap/null, complete = confirmed zero).
   - Enforce tenant authorization boundaries across all endpoints.
 - **Tasks to Do:**
-  - [ ] **TASK-22-01**: Build Fastify API shell (`apps/api`) with JSON Schema validation and error envelope (`docs/06-Agent-and-API`).
-  - [ ] **TASK-22-02**: Implement manual sales routes: `GET /api/sales` (paginated, date/product filters), `POST /api/sales` (manual entry), `PUT /api/sales/:id` (manual edit).
-  - [ ] **TASK-22-03**: Implement catalog routes: `GET /api/products`, `POST /api/products`, `PATCH /api/products/:id` (rename, deactivate, update default price).
-  - [ ] **TASK-22-04**: Implement day-coverage routes: `POST /api/days/:date/coverage` (confirm complete or reopen).
-  - [ ] **TASK-22-05**: Implement multi-tenant isolation tests: verify User B cannot read or mutate User A's records (Test `T-07`).
+  - [x] **TASK-22-01**: Build Fastify API shell (`apps/api`) with JSON Schema validation and error envelope (`docs/06-Agent-and-API`).
+  - [x] **TASK-22-02**: Implement manual sales routes under the `api/v1` prefix: `GET/POST /sales` and `PUT /sales/:id` (paginated/filterable history, manual entry and edit).
+  - [x] **TASK-22-03**: Implement catalog routes under the `api/v1` prefix: `GET/POST /products` and `PATCH /products/:id` (rename, deactivate, update default price), with product version migration and idempotency.
+  - [x] **TASK-22-04**: Implement day-coverage route under the `api/v1` prefix: `POST /days/:date/coverage` (confirm complete or reopen), with audited idempotent transitions and automatic sales reopening.
+  - [x] **TASK-22-05**: Implement multi-tenant isolation tests: verify User B cannot read or mutate User A's records (Test `T-07`).
 - **Agent Execution Guidance:**
   - Route schemas must reject extra properties and enforce `Asia/Jakarta` timezone handling.
 - **Human Verification Checkpoint:**
-  - Verify that cross-tenant access returns 403/404 with zero data leaked.
+  - Verified that cross-tenant access returns 404 with zero data leaked; missing authentication returns 401 and an authenticated user without a business returns 403.
+
+- **Verification Evidence:**
+  - `npm test` passed 11 domain/schema tests and 5 Fastify contract tests, including a malformed-JSON 400 boundary check.
+  - The Day 20 SQL check, `npm run test:database:day21`, and `npm run test:database:day22` passed against disposable PostgreSQL 17-alpine. Day 22 covered extra-property rejection, decimal-string money/BIGINT fields, tenant isolation, successful and stale manual corrections, product rename/default-price/deactivation and stale versions, normalized-name conflicts, idempotency same/different payloads, historical price preservation, unknown versus zero prices, bounded date filtering, cursor pagination, no-sale complete/reopen semantics, and automatic coverage reopening after sales.
+  - `node --check apps/api/app.ts`, `node --check packages/domain/catalog.ts`, and `git diff --check` passed. The temporary PostgreSQL container and test schemas were removed after verification.
 
 ---
 

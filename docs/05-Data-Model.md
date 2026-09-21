@@ -5,7 +5,7 @@ tags: [easyledger, data]
 ---
 # Data model and calculation rules
 
-The Day 20 portion of this logical schema is implemented in `db/migrations/001_initial_schema.sql`; mutation services remain planned. Every business-owned relation carries `business_id`; ownership comes from authentication, never an LLM argument. See [[docs/08-Security-and-Operations]].
+The Day 20 portion of this logical schema is implemented in `db/migrations/001_initial_schema.sql`, with product optimistic versioning in `db/migrations/002_product_versions.sql`. The Day 21 mutation services and the Day 22 manual API are implemented and verified. Every business-owned relation carries `business_id`; ownership comes from authentication, never an LLM argument. See [[docs/08-Security-and-Operations]].
 
 | Entity | Key fields and invariants |
 | --- | --- |
@@ -48,10 +48,12 @@ Resolve “today” once using the business timezone and server time, then show 
 
 No rows on an open day means unknown activity, displayed as a gap/null. Complete day with no sales is confirmed zero. Rows on an open day are partial recorded sales, not a promise that all sales are captured. Unknown-price rows make revenue incomplete even on a complete day. Percentage change with zero prior revenue is undefined and shown as “not available,” not infinity; missing periods suppress percentage claims. Units can still be queried when revenue is incomplete.
 
-## Mutation transaction
+## Implemented mutation transaction
 
 Authenticate; validate proposal and confirmation; claim unique operation key; check payload hash and base versions; write all sale/revision changes; increment ledger revision; persist receipt; commit atomically. A duplicate key with identical payload returns the stored result. Different payload with that key conflicts. A retry after timeout first reads operation status. Undo uses a new operation linked to the original and checks current versions; it never deletes history.
 
+Day 21 implements this transaction for manual sale batches, corrections and compensating undos in `packages/domain/mutations.ts`. Day 22 adds idempotent, version-checked catalog create/update operations and audited coverage transitions through the same `operations` table; all successful catalog and coverage mutations increment `business.ledger_revision`. The Fastify adapter resolves the authenticated owner's business server-side and never accepts `business_id` or `actor_user_id` from HTTP input. Catalog IDs and sale IDs outside the tenant are returned as indistinguishable 404 responses.
+
 Indexes: business/date and business/product/date for sales, unique operation key, dashboard business/ID and revision lookup. Charts and drilldown use the same normalized query and revision; if history has changed, refresh both rather than mixing snapshots. These rules implement [[docs/02-SRS]] and drive [[docs/06-Agent-and-API]].
 
-Coverage changes use the same operation transaction and business revision as sales. Adding or correcting sales on a complete day reopens that day and displays a warning, since the prior completeness confirmation may no longer reflect all entries. A later explicit confirmation restores completeness. Product deactivation is a soft state change; historical product IDs remain resolvable.
+Coverage changes use the same operation transaction and business revision as sales. A missing coverage row is logically open at version 0; completing it creates version 1, and reopening or completing an existing row advances its version. A no-sale complete receipt sets `confirmed_zero`; a complete day with sales remains complete but is not a zero day. Adding or correcting sales on a complete day reopens that day and displays a warning, since the prior completeness confirmation may no longer reflect all entries. A later explicit confirmation restores completeness. Product deactivation is a soft state change; historical product IDs remain resolvable while future sales through the inactive product are rejected.

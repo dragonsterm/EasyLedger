@@ -7,7 +7,7 @@ tags: [easyledger, operations, delivery]
 
 ## What exists today
 
-Planning notes, the existing Obsidian vault, Graphify artifacts and documentation maintenance scripts exist alongside the implemented Day 20 data foundation and Day 21 mutation service. The repository now contains the initial PostgreSQL migration, synthetic catalog seed, exact IDR/USD money module, transactional sale creation, correction and compensating undo, plus domain and PostgreSQL checks. No application server, authentication, provider session, user interface or deployment exists. `npm run graph:serve` opens documentation visualization, not EasyLedger.
+Planning notes, the existing Obsidian vault, Graphify artifacts and documentation maintenance scripts exist alongside the implemented Day 20 data foundation, Day 21 mutation service and Day 22 manual ledger API. The repository now contains the initial PostgreSQL migration, product version migration, synthetic catalog seed, exact IDR/USD money module, transactional sale creation, correction and compensating undo, tenant-scoped catalog and sales routes, audited day coverage, plus domain, contract and PostgreSQL checks. The voice provider session, user interface and deployment remain planned. `npm run graph:serve` opens documentation visualization, not EasyLedger.
 
 ## Documentation setup
 
@@ -18,10 +18,10 @@ For the browser graph, run `npm run graph:serve`, then open `http://127.0.0.1:41
 ## Implemented foundation and proposed structure
 
 - `apps/web`: React frontend, ledger/history, dashboard builder, microphone/session adapter.
-- `apps/api`: Fastify routes, authenticated tool gateway, ledger/dashboard/query services.
-- `packages/domain`: implemented exact money parsing, validation and aggregation plus the PostgreSQL-backed `OperationService`; `packages/contracts` remains proposed for shared API/widget schemas.
-- `db/migrations` and `db/seed`: implemented initial PostgreSQL schema and labeled synthetic catalog.
-- `tests/domain` and `tests/database`: implemented Day 20 checks plus Day 21 validation and real PostgreSQL mutation/concurrency coverage; API, voice and browser checks remain planned in [[docs/09-Verification]].
+- `apps/api`: verified Fastify manual ledger routes with an injected authentication adapter; the authenticated tool gateway, dashboard and analytics services remain planned.
+- `packages/domain`: implemented exact money parsing, validation and aggregation plus PostgreSQL-backed sale, catalog and coverage services; `packages/contracts` remains proposed for shared API/widget schemas.
+- `db/migrations` and `db/seed`: implemented initial PostgreSQL schema, product version migration and labeled synthetic catalog.
+- `tests/domain`, `tests/api` and `tests/database`: implemented Day 20 checks, Day 21 validation and PostgreSQL mutation/concurrency coverage, and Day 22 contract/API/tenant/coverage coverage; voice and browser checks remain planned in [[docs/09-Verification]].
 
 Choose final package manager layout and compatible versions during P1. Do not install the entire application stack merely because it appears here. Frontend and backend can remain in one repository without microservices.
 
@@ -31,7 +31,13 @@ Choose final package manager layout and compatible versions during P1. Do not in
 
 Batch creation validates all products before writing and records one append-only revision per sale. Corrections update the selected sale only when its expected version is current. Undo creates a new operation and compensating revisions, voiding newly created sales or restoring prior values while always advancing versions. A current snapshot mismatch or prior undo prevents reversal. Mutations also reopen affected completed dates and append coverage revisions atomically.
 
-`npm test` covers deterministic validation and hashing. `npm run test:database:day21` uses `EASYLEDGER_TEST_DATABASE_URL` and a disposable schema to exercise PostgreSQL behavior, including 20 simultaneous identical calls, altered-payload conflicts, rollback, correction, undo, intervening edits, null-versus-zero prices and day-coverage reopening. The verified run used PostgreSQL 17-alpine. Authentication and HTTP status mapping belong to the Day 22 API layer; `OperationError` already carries stable codes, retryability and intended status values for that adapter.
+`npm test` covers deterministic validation, hashing and API contracts. `npm run test:database:day21` uses `EASYLEDGER_TEST_DATABASE_URL` and a disposable schema to exercise PostgreSQL behavior, including 20 simultaneous identical calls, altered-payload conflicts, rollback, correction, undo, intervening edits, null-versus-zero prices and day-coverage reopening. The Day 22 API adds injected authentication and HTTP status mapping; `OperationError` carries stable codes, retryability and intended status values for that adapter. The verified runs used PostgreSQL 17-alpine.
+
+## Implemented Day 22 manual API
+
+`apps/api/app.ts` exposes versioned API v1 sales, product and day-coverage routes through an injected authentication adapter and PostgreSQL pool. The adapter resolves a single owner business server-side. JSON schemas reject extra fields and client-supplied tenant or actor IDs; missing authentication is 401, an authenticated user without a business is 403, and tenant-owned missing IDs are 404. Sales are paginated with a bounded opaque cursor, current product names, voided status, filters and the business ledger revision. Catalog writes and coverage transitions claim idempotency keys transactionally and use product/coverage versions for stale-write conflicts. Coverage receipts distinguish a confirmed zero day from an open gap, and sale mutations automatically reopen completed dates.
+
+The verified Day 22 run used Fastify 5.12.5 and PostgreSQL 17-alpine. `npm test`, the repository Day 20 SQL check, `npm run test:database:day21`, `npm run test:database:day22`, syntax checks and `git diff --check` passed against a disposable schema/container. The temporary PostgreSQL container was removed after the final verification.
 
 ## Integration spike exit checklist
 
