@@ -34,7 +34,7 @@
 | **Day 18** | Sep 18 | **P1 De-risk** | AssemblyAI Voice Agent API research, tool contract design, spike planning | `[x] Completed` |
 | **Day 19** | Sep 19 (Today) | **P1 Exit** | Hackathon rules alignment, daily task tracking system, spike prep | `[x] Completed` |
 | **Day 20** | Sep 20 | **P2 Data First** | PostgreSQL schema, migrations, product catalog & exact IDR/USD arithmetic | `[x] Completed` |
-| **Day 21** | Sep 21 | **P2 Data First** | Idempotency engine, two-phase mutation transactions & revision tracking | `[ ] Pending` |
+| **Day 21** | Sep 21 | **P2 Data First** | Idempotency engine, two-phase mutation transactions & revision tracking | `[x] Completed` |
 | **Day 22** | Sep 22 | **P2 Data First** | Manual ledger API (Fastify), tenant isolation & day-coverage semantics | `[ ] Pending` |
 | **Day 23** | Sep 23 | **P3 Voice Agent** | AssemblyAI session bootstrap, authenticated HTTP tool gateway | `[ ] Pending` |
 | **Day 24** | Sep 24 | **P3 Voice Agent** | Two-phase proposal state machine, ambiguity clarification & receipts | `[ ] Pending` |
@@ -117,20 +117,24 @@
 
 ### Day 21 · Sep 21, 2026: Phase P2 — Data First: Idempotency & Mutations
 - **Role:** Backend Engineer
-- **Status:** `[ ] Pending`
+- **Status:** `[x] Completed`
 - **What to Do:**
   - Implement the atomic mutation transaction pipeline with server-enforced idempotency.
   - Build sale correction and undo mechanics using compensating revisions (never deleting historical records).
 - **Tasks to Do:**
-  - [ ] **TASK-21-01**: Implement `OperationService`: stores `(business_id, idempotency_key, payload_hash, status, receipt)`. Ensure duplicate requests return the cached receipt.
-  - [ ] **TASK-21-02**: Implement atomic sale commit logic: increments `business.ledger_revision` in the same database transaction.
-  - [ ] **TASK-21-03**: Implement sale correction handler: verifies `expected_version`; rejects stale edits with `CONFLICT (409)`.
-  - [ ] **TASK-21-04**: Implement undo handler: generates compensating revisions linked to the original operation ID (Test `T-04`).
-  - [ ] **TASK-21-05**: Implement concurrency tests: simulate 20 concurrent identical requests and verify single logical commit (Test `T-03`).
+  - [x] **TASK-21-01**: Implement `OperationService`: stores `(business_id, idempotency_key, payload_hash, status, receipt)`. Ensure duplicate requests return the cached receipt.
+  - [x] **TASK-21-02**: Implement atomic sale commit logic: increments `business.ledger_revision` in the same database transaction.
+  - [x] **TASK-21-03**: Implement sale correction handler: verifies `expected_version`; rejects stale edits with `CONFLICT (409)`.
+  - [x] **TASK-21-04**: Implement undo handler: generates compensating revisions linked to the original operation ID (Test `T-04`).
+  - [x] **TASK-21-05**: Implement concurrency tests: simulate 20 concurrent identical requests and verify single logical commit (Test `T-03`).
 - **Agent Execution Guidance:**
   - Review [`docs/05-Data-Model.md#mutation-transaction`](file:///C:/Project/EasyLedger/docs/05-Data-Model.md) and [`docs/02-SRS.md`](file:///C:/Project/EasyLedger/docs/02-SRS.md) FR-05, FR-06, FR-14, FR-15.
 - **Human Verification Checkpoint:**
-  - Verify that an identical retry returns the exact same receipt and that an altered payload under the same key returns a 409 conflict.
+  - Verified on PostgreSQL 17-alpine: identical sequential and 20-way concurrent retries returned the exact stored receipt; altered payload reuse returned `IDEMPOTENCY_CONFLICT` (409 semantics).
+- **Verification Evidence:**
+  - `npm test` passed 11 domain and schema tests, including canonical payload hashing, missing-versus-null handling, validation bounds and impossible-date rejection.
+  - `npm run test:database:day21` passed against a disposable PostgreSQL 17-alpine database. It verified one logical commit under 20 concurrent calls, atomic invalid-batch rollback, exact cached receipts, stale correction rejection, compensating undo, intervening-edit protection, append-only revisions, null-versus-zero prices and completed-day reopening.
+  - Syntax checks and `git diff --check` passed. The test schema was isolated and removed after the run.
 
 ---
 

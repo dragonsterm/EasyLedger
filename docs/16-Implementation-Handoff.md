@@ -7,7 +7,7 @@ tags: [easyledger, operations, delivery]
 
 ## What exists today
 
-Planning notes, the existing Obsidian vault, Graphify artifacts and documentation maintenance scripts exist alongside the implemented Day 20 foundation: the initial PostgreSQL migration, synthetic catalog seed, exact IDR/USD money module, and domain/database checks. No application server, authentication, provider session, user interface or deployment exists. `npm run graph:serve` opens documentation visualization, not EasyLedger.
+Planning notes, the existing Obsidian vault, Graphify artifacts and documentation maintenance scripts exist alongside the implemented Day 20 data foundation and Day 21 mutation service. The repository now contains the initial PostgreSQL migration, synthetic catalog seed, exact IDR/USD money module, transactional sale creation, correction and compensating undo, plus domain and PostgreSQL checks. No application server, authentication, provider session, user interface or deployment exists. `npm run graph:serve` opens documentation visualization, not EasyLedger.
 
 ## Documentation setup
 
@@ -19,11 +19,19 @@ For the browser graph, run `npm run graph:serve`, then open `http://127.0.0.1:41
 
 - `apps/web`: React frontend, ledger/history, dashboard builder, microphone/session adapter.
 - `apps/api`: Fastify routes, authenticated tool gateway, ledger/dashboard/query services.
-- `packages/domain`: implemented exact money parsing, validation and aggregation; `packages/contracts` remains proposed for shared API/widget schemas.
+- `packages/domain`: implemented exact money parsing, validation and aggregation plus the PostgreSQL-backed `OperationService`; `packages/contracts` remains proposed for shared API/widget schemas.
 - `db/migrations` and `db/seed`: implemented initial PostgreSQL schema and labeled synthetic catalog.
-- `tests/domain` and `tests/database`: implemented Day 20 unit/schema/PostgreSQL checks; broader integration/browser checks remain planned in [[docs/09-Verification]].
+- `tests/domain` and `tests/database`: implemented Day 20 checks plus Day 21 validation and real PostgreSQL mutation/concurrency coverage; API, voice and browser checks remain planned in [[docs/09-Verification]].
 
 Choose final package manager layout and compatible versions during P1. Do not install the entire application stack merely because it appears here. Frontend and backend can remain in one repository without microservices.
+
+## Implemented Day 21 mutation pipeline
+
+`packages/domain/mutations.ts` exposes a database-backed `OperationService` for normalized ledger mutations. It hashes canonical semantic payloads, claims each business/idempotency key inside the transaction, returns the stored receipt for identical retries and rejects changed payloads. A business row lock serializes ledger revisions; successful batches, corrections and undos increment the revision exactly once and persist the receipt in the same commit.
+
+Batch creation validates all products before writing and records one append-only revision per sale. Corrections update the selected sale only when its expected version is current. Undo creates a new operation and compensating revisions, voiding newly created sales or restoring prior values while always advancing versions. A current snapshot mismatch or prior undo prevents reversal. Mutations also reopen affected completed dates and append coverage revisions atomically.
+
+`npm test` covers deterministic validation and hashing. `npm run test:database:day21` uses `EASYLEDGER_TEST_DATABASE_URL` and a disposable schema to exercise PostgreSQL behavior, including 20 simultaneous identical calls, altered-payload conflicts, rollback, correction, undo, intervening edits, null-versus-zero prices and day-coverage reopening. The verified run used PostgreSQL 17-alpine. Authentication and HTTP status mapping belong to the Day 22 API layer; `OperationError` already carries stable codes, retryability and intended status values for that adapter.
 
 ## Integration spike exit checklist
 
