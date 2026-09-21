@@ -6,6 +6,13 @@ export {
   CoverageService,
 } from '../../packages/domain/catalog.ts';
 export {
+  DashboardService,
+  type DashboardView,
+  type LayoutItem,
+  type SaveDashboardInput,
+  type WidgetSpec,
+} from '../../packages/domain/dashboards.ts';
+export {
   ProposalService,
   SalesQueryService,
   VoiceSessionService,

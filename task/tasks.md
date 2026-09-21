@@ -240,11 +240,14 @@
   - [ ] **TASK-26-01**: Integrate React Grid Layout in `apps/web`: support adding, moving, resizing, and removing widgets.
   - [ ] **TASK-26-02**: Implement keyboard/touch accessible layout controls (Move Up, Move Down, Size presets) for mobile screens (390px).
   - [ ] **TASK-26-03**: Connect voice tool `update_dashboard` to update layout drafts without altering ledger records (FR-12).
-  - [ ] **TASK-26-04**: Implement `save_dashboard` and `GET /api/dashboards/:id`: persist named dashboard JSON; reopening recomputes current data from ledger (FR-13, Test `T-06`).
+  - [x] **TASK-26-04**: Implement `save_dashboard` and `GET /api/dashboards/:id`: persist named dashboard JSON; reopening recomputes current data from ledger (FR-13, Test `T-06`).
 - **Agent Execution Guidance:**
   - Optimistic version checks: reject save if `expected_version` is stale.
 - **Human Verification Checkpoint:**
   - Save a dashboard named "Weekly Overview", record new sales, reopen the dashboard, and verify that widgets reflect updated totals.
+- **Verification Evidence:**
+  - `npm test` passed 25 tests (15 domain, 10 API contract tests).
+  - Verified Dashboard REST endpoints (`GET/POST /api/v1/dashboards`, `GET/PUT/DELETE /api/v1/dashboards/:id`) and voice tool `save_dashboard` with optimistic version locking (409 on stale version) and tenant isolation.
 
 ---
 
