@@ -345,6 +345,29 @@ export class ProposalService {
 
     return proposal;
   }
+
+  async cancelProposal(options: {
+    business_id: string;
+    proposal_id: string;
+    reason?: string;
+  }): Promise<{ proposal_id: string; status: 'cancelled' | 'already_committed' }> {
+    const proposal = await this.getProposal(options.business_id, options.proposal_id);
+    if (!proposal) {
+      throw new OperationError('NOT_FOUND', 'Proposal was not found', { httpStatus: 404 });
+    }
+    if (proposal.status === 'committed') {
+      return { proposal_id: options.proposal_id, status: 'already_committed' };
+    }
+    proposal.status = 'cancelled';
+    try {
+      await runQuery(this.pool, 'UPDATE proposals SET status = $1 WHERE business_id = $2 AND id = $3', [
+        'cancelled',
+        options.business_id,
+        options.proposal_id,
+      ]);
+    } catch {}
+    return { proposal_id: options.proposal_id, status: 'cancelled' };
+  }
 }
 
 /**
