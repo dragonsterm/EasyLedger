@@ -38,7 +38,7 @@
 | **Day 22** | Sep 22 | **P2 Data First** | Manual ledger API (Fastify), tenant isolation & day-coverage semantics | `[x] Completed` |
 | **Day 23** | Sep 23 | **P3 Voice Agent** | AssemblyAI session bootstrap, authenticated HTTP tool gateway | `[ ] Pending` |
 | **Day 24** | Sep 24 | **P3 Voice Agent** | Two-phase proposal state machine, ambiguity clarification & receipts | `[ ] Pending` |
-| **Day 25** | Sep 25 | **P4 Builder** | ECharts widget renderer, deterministic query engine (line/bar/KPI) | `[ ] Pending` |
+| **Day 25** | Sep 25 | **P4 Builder** | React/Vite workspace initialized, ECharts widget renderer, deterministic query engine (line/bar/KPI) | `[/] In Progress` |
 | **Day 26** | Sep 26 | **P4 Builder** | Responsive grid layout, voice/manual layout editing, dashboard persistence | `[ ] Pending` |
 | **Day 27** | Sep 27 | **P5 Validate** | End-to-end golden journey test, accessibility (390px/1280px), latency checks | `[ ] Pending` |
 | **Day 28** | Sep 28 | **P5 Validate** | Labeled synthetic demo fixtures, demo reset isolation & backup restore drill | `[ ] Pending` |
@@ -203,20 +203,25 @@
 
 ### Day 25 · Sep 25, 2026: Phase P4 — Dashboard Builder: Widgets & Query Engine
 - **Role:** Frontend & Analytics Engineer
-- **Status:** `[ ] Pending`
+- **Status:** `[/] In Progress`
 - **What to Do:**
+  - Initialize Vite + React 18 + TypeScript SPA workspace in `apps/web`.
   - Implement deterministic analytics query service in backend (sums, daily grouping, product breakdown).
   - Build React frontend dashboard with Apache ECharts widget components (line chart, bar chart, KPI cards).
   - Handle missing data vs zero sales correctly in visualizations.
 - **Tasks to Do:**
-  - [ ] **TASK-25-01**: Implement `POST /api/analytics/query`: executes parameterized queries grouped by date or product; computes exact totals and completeness flags.
-  - [ ] **TASK-25-02**: Implement ECharts renderers: Daily Revenue Line Chart, Product Sales Bar Chart, Total Revenue & Quantity KPI cards.
-  - [ ] **TASK-25-03**: Implement missing-versus-zero visualization: open days with no records render as gaps; complete zero-sale days render as 0.
-  - [ ] **TASK-25-04**: Implement chart datum tap-to-drilldown: tapping a bar/point opens modal showing authorized source transactions (FR-11, Test `T-05`).
+  - [x] **TASK-25-01**: Initialize Vite + React 18 + TypeScript SPA workspace in `apps/web` with base application shell (Ledger, Dashboard, Catalog navigation tabs), voice agent status bar, responsive layout (390px–1280px), and Fastify backend `/api` proxy.
+  - [ ] **TASK-25-02**: Implement `POST /api/analytics/query`: executes parameterized queries grouped by date or product; computes exact totals and completeness flags.
+  - [ ] **TASK-25-03**: Implement ECharts renderers: Daily Revenue Line Chart, Product Sales Bar Chart, Total Revenue & Quantity KPI cards.
+  - [ ] **TASK-25-04**: Implement missing-versus-zero visualization: open days with no records render as gaps; complete zero-sale days render as 0.
+  - [ ] **TASK-25-05**: Implement chart datum tap-to-drilldown: tapping a bar/point opens modal showing authorized source transactions (FR-11, Test `T-05`).
 - **Agent Execution Guidance:**
   - Refer to [`docs/07-Dashboard-and-UX.md`](file:///C:/Project/EasyLedger/docs/07-Dashboard-and-UX.md) and [`docs/05-Data-Model.md`](file:///C:/Project/EasyLedger/docs/05-Data-Model.md).
 - **Human Verification Checkpoint:**
-  - Tap a chart point and verify that the drilldown list displays the exact underlying transactions at the same ledger revision.
+  - Run `npm --prefix apps/web run dev` to verify local server boots on port 5173 with functional tab navigation and mobile responsiveness.
+- **Verification Evidence:**
+  - `npm --prefix apps/web run build` passed cleanly (`dist/` generated in 576ms with zero TypeScript/lint errors).
+  - Clean neutral styling verified across 390px mobile and 1280px desktop layouts; `*.tsbuildinfo` added to `.gitignore`.
 
 ---
 
