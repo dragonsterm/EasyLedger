@@ -14,7 +14,8 @@
     "test:domain": "node --test tests/domain/*.test.mjs",
     "test:database:day21": "node --test tests/database/day21_integration.mjs",
     "test:api": "node --test tests/api/*.test.mjs",
-    "test:database:day22": "node --test tests/database/day22_integration.mjs"
+    "test:database:day22": "node --test tests/database/day22_integration.mjs",
+    "test:database:day23": "node --test tests/database/day23_integration.mjs"
   },
   "devDependencies": {
     "@sentropic/graphify": "0.18.0"

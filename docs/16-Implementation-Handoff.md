@@ -7,7 +7,7 @@ tags: [easyledger, operations, delivery]
 
 ## What exists today
 
-Planning notes, the existing Obsidian vault, Graphify artifacts and documentation maintenance scripts exist alongside the implemented Day 20 data foundation, Day 21 mutation service and Day 22 manual ledger API. The repository now contains the initial PostgreSQL migration, product version migration, synthetic catalog seed, exact IDR/USD money module, transactional sale creation, correction and compensating undo, tenant-scoped catalog and sales routes, audited day coverage, plus domain, contract and PostgreSQL checks. The voice provider session, user interface and deployment remain planned. `npm run graph:serve` opens documentation visualization, not EasyLedger.
+Planning notes, the existing Obsidian vault, Graphify artifacts and documentation maintenance scripts exist alongside the implemented Day 20 data foundation, Day 21 mutation service, Day 22 manual ledger API, and Day 23 voice session bootstrap and tool gateway. The repository now contains the initial PostgreSQL migration, product version migration, voice sessions migration, synthetic catalog seed, exact IDR/USD money module, transactional sale creation, correction and compensating undo, tenant-scoped catalog and sales routes, audited day coverage, ephemeral AssemblyAI session token generation, Fastify voice tool gateway (`get_context`, `propose_sales`, `commit_sales`, `propose_correction`, `commit_correction`, `query_sales`), plus domain, contract and PostgreSQL checks. The browser user interface and Render deployment remain planned. `npm run graph:serve` opens documentation visualization, not EasyLedger.
 
 ## Documentation setup
 
@@ -38,6 +38,14 @@ Batch creation validates all products before writing and records one append-only
 `apps/api/app.ts` exposes versioned API v1 sales, product and day-coverage routes through an injected authentication adapter and PostgreSQL pool. The adapter resolves a single owner business server-side. JSON schemas reject extra fields and client-supplied tenant or actor IDs; missing authentication is 401, an authenticated user without a business is 403, and tenant-owned missing IDs are 404. Sales are paginated with a bounded opaque cursor, current product names, voided status, filters and the business ledger revision. Catalog writes and coverage transitions claim idempotency keys transactionally and use product/coverage versions for stale-write conflicts. Coverage receipts distinguish a confirmed zero day from an open gap, and sale mutations automatically reopen completed dates.
 
 The verified Day 22 run used Fastify 5.12.5 and PostgreSQL 17-alpine. `npm test`, the repository Day 20 SQL check, `npm run test:database:day21`, `npm run test:database:day22`, syntax checks and `git diff --check` passed against a disposable schema/container. The temporary PostgreSQL container was removed after the final verification.
+
+## Implemented Day 23 voice gateway
+
+`POST /api/v1/voice/sessions` (and alias `/api/voice/sessions`) authenticates the merchant through the configured authentication adapter, resolves the single tenant business server-side, and issues an ephemeral session token alongside an AssemblyAI ephemeral token (`/v3/token`). Long-lived API keys are never returned to clients or logged. The ephemeral session is stored in PostgreSQL `voice_sessions` (`db/migrations/003_voice_sessions.sql`) with a SHA-256 token hash and configurable TTL.
+
+The Fastify HTTP tool gateway (`apps/api/app.ts`) registers endpoints for `get_context`, `propose_sales`, `commit_sales`, `propose_correction`, `commit_correction`, and `query_sales` under `/api/v1/voice/tools/*` and `/api/voice/tools/*`. The gateway authenticates incoming requests via the ephemeral session token, resolves tenant identity server-side, and strictly rejects any client-supplied or model-supplied `business_id` or `actor_user_id` with 422 `VALIDATION_ERROR`. Two-phase mutation proposals are stored with SHA-256 hashed confirmation tokens and payload hashes in the `proposals` table, requiring explicit confirmation before calling the underlying `OperationService`. Deterministic sales queries calculate exact revenue and unit totals while flagging incomplete revenue from unknown prices.
+
+The verified Day 23 run used Fastify 5.12.5 and PostgreSQL 17-alpine. `npm test` (15 domain + 9 API tests), `npm run test:database:day21`, `npm run test:database:day22`, `npm run test:database:day23`, and live AssemblyAI token generation passed against disposable schemas and containers.
 
 ## Integration spike exit checklist
 

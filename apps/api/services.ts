@@ -5,3 +5,9 @@ export {
   CatalogService,
   CoverageService,
 } from '../../packages/domain/catalog.ts';
+export {
+  ProposalService,
+  SalesQueryService,
+  VoiceSessionService,
+  fetchAssemblyAiToken,
+} from '../../packages/domain/voice.ts';

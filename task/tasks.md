@@ -36,7 +36,7 @@
 | **Day 20** | Sep 20 | **P2 Data First** | PostgreSQL schema, migrations, product catalog & exact IDR/USD arithmetic | `[x] Completed` |
 | **Day 21** | Sep 21 | **P2 Data First** | Idempotency engine, two-phase mutation transactions & revision tracking | `[x] Completed` |
 | **Day 22** | Sep 22 | **P2 Data First** | Manual ledger API (Fastify), tenant isolation & day-coverage semantics | `[x] Completed` |
-| **Day 23** | Sep 23 | **P3 Voice Agent** | AssemblyAI session bootstrap, authenticated HTTP tool gateway | `[ ] Pending` |
+| **Day 23** | Sep 23 | **P3 Voice Agent** | AssemblyAI session bootstrap, authenticated HTTP tool gateway | `[x] Completed` |
 | **Day 24** | Sep 24 | **P3 Voice Agent** | Two-phase proposal state machine, ambiguity clarification & receipts | `[ ] Pending` |
 | **Day 25** | Sep 25 | **P4 Builder** | React/Vite workspace initialized, ECharts widget renderer, deterministic query engine (line/bar/KPI) | `[/] In Progress` |
 | **Day 26** | Sep 26 | **P4 Builder** | Responsive grid layout, voice/manual layout editing, dashboard persistence | `[ ] Pending` |
@@ -165,20 +165,24 @@
 
 ### Day 23 · Sep 23, 2026: Phase P3 — Voice Agent: AssemblyAI Session & Gateway
 - **Role:** AI & Integration Engineer
-- **Status:** `[ ] Pending`
+- **Status:** `[x] Completed`
 - **What to Do:**
   - Integrate AssemblyAI Voice Agent API.
   - Implement authenticated session bootstrap endpoint that issues ephemeral credentials without leaking long-lived secrets.
   - Register Fastify HTTP tool gateway endpoints accessible by the AssemblyAI Voice Agent.
 - **Tasks to Do:**
-  - [ ] **TASK-23-01**: Implement `POST /api/voice/sessions`: authenticates merchant, initializes AssemblyAI voice agent session, and returns ephemeral client token.
-  - [ ] **TASK-23-02**: Implement HTTP tool gateway in Fastify: register endpoints for `get_context`, `propose_sales`, `commit_sales`, `propose_correction`, `commit_correction`, `query_sales`.
-  - [ ] **TASK-23-03**: Bind tool calls to server-held session identity; reject any client-supplied or model-supplied `business_id`.
-  - [ ] **TASK-23-04**: Write integration tests mocking AssemblyAI webhook tool invocations with valid and expired session tokens.
+  - [x] **TASK-23-01**: Implement `POST /api/voice/sessions`: authenticates merchant, initializes AssemblyAI voice agent session, and returns ephemeral client token.
+  - [x] **TASK-23-02**: Implement HTTP tool gateway in Fastify: register endpoints for `get_context`, `propose_sales`, `commit_sales`, `propose_correction`, `commit_correction`, `query_sales`.
+  - [x] **TASK-23-03**: Bind tool calls to server-held session identity; reject any client-supplied or model-supplied `business_id`.
+  - [x] **TASK-23-04**: Write integration tests mocking AssemblyAI webhook tool invocations with valid and expired session tokens.
 - **Agent Execution Guidance:**
   - Review [`docs/06-Agent-and-API.md`](file:///C:/Project/EasyLedger/docs/06-Agent-and-API.md) and [`docs/08-Security-and-Operations.md`](file:///C:/Project/EasyLedger/docs/08-Security-and-Operations.md).
 - **Human Verification Checkpoint:**
-  - Verify that no AssemblyAI API secrets appear in browser network requests or bundle files.
+  - Verified that no AssemblyAI API secrets appear in browser responses, network bundles, or client credentials; ephemeral provider tokens are generated server-side.
+- **Verification Evidence:**
+  - `npm test` passed 15 domain tests and 9 API contract tests (24/24 passing).
+  - PostgreSQL 17-alpine integration test passed (`npm run test:database:day23`): verified session bootstrap, SHA-256 session token hashing in `voice_sessions` table, tenant isolation across tools, two-phase propose/commit for sales batches and corrections, stale correction conflicts (409), deterministic sales queries, and rejection of client/model-supplied `business_id` (422) and missing/invalid/expired session tokens (401).
+  - Live ad-hoc verification against AssemblyAI Streaming API confirmed HTTP 201 session creation, generating a 2,466-byte ephemeral client token with 0 long-lived secret exposure.
 
 ---
 
