@@ -280,12 +280,12 @@
 - **Role:** Product Lead & Presenter
 - **Status:** `[ ] Pending`
 - **What to Do:**
-  - Deploy working web application and API to production cloud hosting.
+  - Deploy working web application and API to Render (`apps/web` as Static Site, `apps/api` as Web Service, and managed Render PostgreSQL).
   - Record 5-minute video walkthrough following the submission narrative.
   - Prepare pitch deck (PDF) covering problem, solution, architecture, and live demo links.
 - **Tasks to Do:**
-  - [ ] **TASK-29-01**: Deploy Fastify API and PostgreSQL database with HTTPS, rate limiting, and CORS configuration.
-  - [ ] **TASK-29-02**: Deploy React frontend to static hosting; verify live AssemblyAI voice agent connectivity.
+  - [ ] **TASK-29-01**: Deploy Fastify API (`apps/api`) and PostgreSQL database to Render with HTTPS, rate limiting, and CORS configuration.
+  - [ ] **TASK-29-02**: Deploy React frontend (`apps/web`) to Render Static Site; verify live AssemblyAI voice agent connectivity.
   - [ ] **TASK-29-03**: Create 16:9 cover image for lablab.ai submission.
   - [ ] **TASK-29-04**: Record and edit MP4 video presentation (max 5 minutes):
     1. Introduction: Merchant pain point (paper/phone ledger friction).

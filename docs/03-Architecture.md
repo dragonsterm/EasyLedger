@@ -40,4 +40,9 @@ Selection context uses dashboard ID, widget ID and current version, checked agai
 
 ## Deployment shape
 
-Plan static frontend hosting, a persistent Node API container capable of outbound HTTPS and session work, and managed PostgreSQL with backups. Provider-specific hosting is undecided. Prefer one region near the expected demo users and database; measure voice latency separately. No Redis, vector database, Python service or multi-agent framework is required by the MVP. Operational boundaries are in [[docs/08-Security-and-Operations]].
+Deploy to Render using a three-tier architecture:
+- Static Site for `apps/web` (React + Vite SPA) with single-page rewrite rules (`/* -> /index.html`).
+- Web Service for `apps/api` (Node.js + Fastify) running the persistent container with outbound HTTPS, session management, and HTTP tool gateway.
+- Managed PostgreSQL instance for persistent storage with automated daily backups.
+
+The production region is Singapore (`singapore`) to minimize latency for Indonesian business timezones (`Asia/Jakarta`). No Redis, vector database, Python service, or multi-agent framework is required by the MVP. Operational boundaries are in [[docs/08-Security-and-Operations]]. See [[docs/04-Decisions]] (ADR-011).

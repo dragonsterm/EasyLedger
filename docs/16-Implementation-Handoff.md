@@ -51,7 +51,7 @@ The verified Day 22 run used Fastify 5.12.5 and PostgreSQL 17-alpine. `npm test`
 
 ## Deployment and recovery sequence (future)
 
-Select host/region/auth provider and retention policy using [[docs/04-Decisions]]. Provision separate demo credentials and PostgreSQL. Review/apply migrations; seed only labeled synthetic data. Configure HTTPS, cookies, provider credentials and allowed origins server-side. Run authorization, arithmetic, voice and builder smoke checks. Confirm backup restoration before sharing a public URL.
+Deploy to Render as decided in [[docs/04-Decisions]] (ADR-011): provision a Render Managed PostgreSQL instance, configure the Fastify Web Service (`apps/api`) with database connection and AssemblyAI credentials, and deploy the React/Vite Static Site (`apps/web`) with rewrite rules for SPA routing. Provision separate demo credentials and database schemas. Review/apply migrations; seed only labeled synthetic data. Configure HTTPS, cookies, provider credentials and allowed origins server-side. Run authorization, arithmetic, voice and builder smoke checks. Confirm backup restoration before sharing a public URL.
 
 On incident: stop new unsafe mutations, preserve receipts/audit IDs, identify whether the provider, API or database failed, and expose an honest status to users. Recover the database from a verified backup only with an explicit recovery plan; reconcile operations since that backup before reopening writes. Roll back a failed application release with schema compatibility checked. Rehearse these steps before real merchant data is accepted.
 

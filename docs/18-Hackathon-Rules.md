@@ -51,7 +51,7 @@ To qualify for official judging, the final submission on lablab.ai must satisfy 
 
 ### 3. Technical proof & accessibility
 - **Public GitHub Repository:** Clean public repository at `https://github.com/dragonsterm/EasyLedger` with open-source `LICENSE` (MIT), clear documentation, and reproducible setup instructions.
-- **Hosted Working Prototype:** Live, accessible online web application deployed with synthetic demo datasets and interactive voice controls.
+- **Hosted Working Prototype:** Live, accessible online web application deployed on Render (`apps/web` Static Site, `apps/api` Web Service, and managed PostgreSQL) with synthetic demo datasets and interactive voice controls.
 - **Clean Hygiene:** Zero committed API keys, secrets, private customer data, or local workspace state.
 
 ## Hackathon rules & compliance checklist

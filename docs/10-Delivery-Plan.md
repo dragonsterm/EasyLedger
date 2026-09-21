@@ -15,7 +15,7 @@ Planning baseline: 2026-09-17. The event advertises September 1–30, 2026; exac
 | P3 Agent | Sep 23–24 | Proposal/confirm/commit flow, clarification, truthful receipts, retry recovery | P2 |
 | P4 Builder | Sep 25–26 | Line/bar/KPI, filter/drilldown, voice/manual edit, save/reopen | P2 query contracts; P3 for voice |
 | P5 Validate | Sep 27–28 | Acceptance scenarios, accessibility, latency measurement, restore and user walkthroughs | P3 + P4 |
-| P6 Submit | Sep 29, buffer Sep 30 | Online demo, video/deck, public repo review and organizer checklist | P5 |
+| P6 Submit | Sep 29, buffer Sep 30 | Online demo deployed on Render, video/deck, public repo review and organizer checklist | P5 |
 
 Protect the central record → correct → visualize → arrange → save journey. If schedule slips, reduce later chart types/connectors/templates, not arithmetic, authorization, confirmation or duplicate prevention. A failed secure voice spike requires a documented fallback decision before building around unsupported capabilities.
 
