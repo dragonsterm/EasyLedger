@@ -17,6 +17,13 @@ import {
   fetchAssemblyAiToken,
   type VoiceSessionRecord,
 } from '../../packages/domain/voice.ts';
+import {
+  DashboardService,
+  type DashboardView,
+  type LayoutItem,
+  type SaveDashboardInput,
+  type WidgetSpec,
+} from '../../packages/domain/dashboards.ts';
 
 /**
  * The API intentionally receives authentication as an adapter.  Production
@@ -325,6 +332,83 @@ const toolQuerySalesSchema = {
   },
 };
 
+const widgetSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['id', 'type', 'title', 'metric'],
+  properties: {
+    id: { type: 'string', minLength: 1, maxLength: 100 },
+    type: { type: 'string', enum: ['line', 'bar', 'kpi', 'table'] },
+    title: { type: 'string', minLength: 1, maxLength: 200 },
+    metric: { type: 'string', enum: ['units', 'revenue'] },
+    dimension: { type: 'string', enum: ['date', 'product', 'none'] },
+    filters: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        date_from: dateSchema,
+        date_to: dateSchema,
+        product_ids: { type: 'array', items: uuidSchema, maxItems: 50 },
+      },
+    },
+    comparison: { type: 'string', minLength: 1, maxLength: 100 },
+    format: { type: 'string', minLength: 1, maxLength: 50 },
+    schema_version: { type: 'integer', minimum: 1 },
+  },
+};
+
+const layoutItemSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['i', 'x', 'y', 'w', 'h'],
+  properties: {
+    i: { type: 'string', minLength: 1, maxLength: 100 },
+    x: { type: 'number', minimum: 0 },
+    y: { type: 'number', minimum: 0 },
+    w: { type: 'number', minimum: 1 },
+    h: { type: 'number', minimum: 1 },
+  },
+};
+
+const dashboardCreateSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['name'],
+  properties: {
+    id: uuidSchema,
+    name: { type: 'string', minLength: 1, maxLength: 200 },
+    widgets: { type: 'array', maxItems: 20, items: widgetSchema },
+    layout: { type: 'array', items: layoutItemSchema },
+    schema_version: { type: 'integer', minimum: 1 },
+  },
+};
+
+const dashboardUpdateSchema = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    name: { type: 'string', minLength: 1, maxLength: 200 },
+    expected_version: integerSchema,
+    widgets: { type: 'array', maxItems: 20, items: widgetSchema },
+    layout: { type: 'array', items: layoutItemSchema },
+    schema_version: { type: 'integer', minimum: 1 },
+  },
+};
+
+const toolSaveDashboardSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['name'],
+  properties: {
+    dashboard_id: uuidSchema,
+    name: { type: 'string', minLength: 1, maxLength: 200 },
+    expected_version: integerSchema,
+    widgets: { type: 'array', maxItems: 20, items: widgetSchema },
+    layout: { type: 'array', items: layoutItemSchema },
+    idempotency_key: { type: 'string', minLength: 1, maxLength: 200 },
+  },
+};
+
 function text(value: unknown, field: string): string {
   if (typeof value !== 'string' || value.trim() === '') {
     throw new ApiError('VALIDATION_ERROR', `${field} is required`, { httpStatus: 422, fieldErrors: { [field]: 'required' } });
@@ -580,6 +664,7 @@ export function createApp(options: AppOptions) {
   const voiceSessions = new VoiceSessionService(options.pool);
   const proposals = new ProposalService(options.pool);
   const salesQueries = new SalesQueryService(options.pool);
+  const dashboards = new DashboardService(options.pool);
 
   app.addHook('onRequest', async (request) => {
     const rawUrl = request.raw.url ?? request.url;
@@ -816,6 +901,78 @@ export function createApp(options: AppOptions) {
     }));
   });
 
+  // --- Day 26: Dashboard Persistence API ---
+
+  const registerDashboardRoutes = (prefix: string) => {
+    app.get(`${prefix}/dashboards`, async (request, reply) => {
+      const context = (request as unknown as { easyLedger: { business: { id: string; currency: 'IDR' | 'USD'; ledger_revision: string } } }).easyLedger;
+      const list = await dashboards.listDashboards(context.business.id);
+      return reply.code(200).send(successEnvelope(String(request.id), { dashboards: list, items: list }, {
+        currency: context.business.currency,
+        ledger_revision: context.business.ledger_revision,
+      }));
+    });
+
+    app.get(`${prefix}/dashboards/:id`, { schema: { params: uuidParams } }, async (request, reply) => {
+      const context = (request as unknown as { easyLedger: { business: { id: string; currency: 'IDR' | 'USD'; ledger_revision: string } } }).easyLedger;
+      const params = request.params as { id: string };
+      const dash = await dashboards.getDashboard(context.business.id, params.id);
+      return reply.code(200).send(successEnvelope(String(request.id), dash, {
+        currency: context.business.currency,
+        ledger_revision: context.business.ledger_revision,
+        dashboard_version: dash.version,
+      }));
+    });
+
+    app.post(`${prefix}/dashboards`, { schema: { body: dashboardCreateSchema } }, async (request, reply) => {
+      const context = (request as unknown as { easyLedger: { business: { id: string; currency: 'IDR' | 'USD'; ledger_revision: string } } }).easyLedger;
+      const body = request.body as SaveDashboardInput;
+      const created = await dashboards.saveDashboard({
+        business_id: context.business.id,
+        id: body.id,
+        name: body.name,
+        widgets: body.widgets,
+        layout: body.layout,
+        schema_version: body.schema_version,
+      });
+      return reply.code(201).send(successEnvelope(String(request.id), created, {
+        currency: context.business.currency,
+        ledger_revision: context.business.ledger_revision,
+        dashboard_version: created.version,
+      }));
+    });
+
+    app.put(`${prefix}/dashboards/:id`, { schema: { params: uuidParams, body: dashboardUpdateSchema } }, async (request, reply) => {
+      const context = (request as unknown as { easyLedger: { business: { id: string; currency: 'IDR' | 'USD'; ledger_revision: string } } }).easyLedger;
+      const params = request.params as { id: string };
+      const body = request.body as SaveDashboardInput;
+      const updated = await dashboards.saveDashboard({
+        business_id: context.business.id,
+        id: params.id,
+        name: body.name ?? '',
+        expected_version: body.expected_version,
+        widgets: body.widgets,
+        layout: body.layout,
+        schema_version: body.schema_version,
+      });
+      return reply.code(200).send(successEnvelope(String(request.id), updated, {
+        currency: context.business.currency,
+        ledger_revision: context.business.ledger_revision,
+        dashboard_version: updated.version,
+      }));
+    });
+
+    app.delete(`${prefix}/dashboards/:id`, { schema: { params: uuidParams } }, async (request, reply) => {
+      const context = (request as unknown as { easyLedger: { business: { id: string; currency: 'IDR' | 'USD'; ledger_revision: string } } }).easyLedger;
+      const params = request.params as { id: string };
+      const result = await dashboards.deleteDashboard(context.business.id, params.id);
+      return reply.code(200).send(successEnvelope(String(request.id), result, {
+        currency: context.business.currency,
+        ledger_revision: context.business.ledger_revision,
+      }));
+    });
+  };
+
   // --- Day 25: Deterministic Analytics Query API ---
 
   const registerAnalyticsRoute = (routePath: string) => {
@@ -854,6 +1011,8 @@ export function createApp(options: AppOptions) {
     });
   };
 
+  registerDashboardRoutes('/api/v1');
+  registerDashboardRoutes('/api');
   registerAnalyticsRoute('/api/v1/analytics/query');
   registerAnalyticsRoute('/api/analytics/query');
 
@@ -1249,6 +1408,28 @@ export function createApp(options: AppOptions) {
     }));
   };
 
+  const handleSaveDashboard = async (request: unknown, reply: unknown) => {
+    const req = request as { id: string; body: { dashboard_id?: string; name: string; expected_version?: string; widgets?: WidgetSpec[]; layout?: LayoutItem[] }; easyLedger: { business: { id: string; currency: 'IDR' | 'USD'; ledger_revision: string } } };
+    const rep = reply as { code: (status: number) => { send: (payload: unknown) => unknown } };
+    const context = req.easyLedger;
+    const body = req.body;
+
+    const saved = await dashboards.saveDashboard({
+      business_id: context.business.id,
+      id: body.dashboard_id,
+      name: body.name,
+      expected_version: body.expected_version,
+      widgets: body.widgets,
+      layout: body.layout,
+    });
+
+    return rep.code(200).send(successEnvelope(String(req.id), saved, {
+      currency: context.business.currency,
+      ledger_revision: context.business.ledger_revision,
+      dashboard_version: saved.version,
+    }));
+  };
+
   for (const prefix of ['/api/v1/voice/tools', '/api/voice/tools']) {
     app.post(`${prefix}/get_context`, { schema: { body: toolGetContextSchema } }, handleGetContext);
     app.get(`${prefix}/get_context`, handleGetContext);
@@ -1257,6 +1438,7 @@ export function createApp(options: AppOptions) {
     app.post(`${prefix}/propose_correction`, { schema: { body: toolProposeCorrectionSchema } }, handleProposeCorrection);
     app.post(`${prefix}/commit_correction`, { schema: { body: toolCommitCorrectionSchema } }, handleCommitCorrection);
     app.post(`${prefix}/query_sales`, { schema: { body: toolQuerySalesSchema } }, handleQuerySales);
+    app.post(`${prefix}/save_dashboard`, { schema: { body: toolSaveDashboardSchema } }, handleSaveDashboard);
     app.post(`${prefix}/cancel_proposal`, { schema: { body: toolCancelProposalSchema } }, handleCancelProposal);
 
     app.post(`${prefix}/:tool`, async (request, reply) => {
@@ -1272,6 +1454,8 @@ export function createApp(options: AppOptions) {
           return handleProposeCorrection(request, reply);
         case 'commit_correction':
           return handleCommitCorrection(request, reply);
+        case 'save_dashboard':
+          return handleSaveDashboard(request, reply);
         case 'cancel_proposal':
           return handleCancelProposal(request, reply);
         case 'query_sales':

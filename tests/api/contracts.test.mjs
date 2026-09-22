@@ -78,6 +78,107 @@ test('read responses are ok and malformed JSON is a safe 400', async (t) => {
   assert.equal(malformed.json().message, 'Request body is malformed');
 });
 
+test('TASK-26-04: Dashboard API enforces CRUD, optimistic locking, and tenant boundaries', async (t) => {
+  const app = createApp({ pool: stubPool(), authAdapter: () => ({ userId: owner }) });
+  t.after(() => app.close());
+
+  // 1. Unauthenticated request to /api/v1/dashboards returns 401
+  const unauthApp = createApp({ pool: stubPool(), authAdapter: () => null });
+  t.after(() => unauthApp.close());
+  const unauthRes = await unauthApp.inject({ method: 'GET', url: '/api/v1/dashboards' });
+  assert.equal(unauthRes.statusCode, 401);
+
+  // 2. Create dashboard via POST /api/v1/dashboards
+  const createRes = await app.inject({
+    method: 'POST',
+    url: '/api/v1/dashboards',
+    payload: {
+      name: 'Weekly Overview',
+      widgets: [
+        {
+          id: 'widget-rev-trend',
+          type: 'line',
+          title: 'Daily Revenue Trend',
+          metric: 'revenue',
+          dimension: 'date',
+        },
+      ],
+      layout: [
+        { i: 'widget-rev-trend', x: 0, y: 0, w: 6, h: 4 },
+      ],
+    },
+  });
+  assert.equal(createRes.statusCode, 201);
+  const created = createRes.json().data;
+  assert.ok(created.id);
+  assert.equal(created.name, 'Weekly Overview');
+  assert.equal(created.version, '1');
+  assert.equal(created.widgets.length, 1);
+  assert.equal(created.widgets[0].title, 'Daily Revenue Trend');
+
+  const dashboardId = created.id;
+
+  // 3. Retrieve dashboard via GET /api/v1/dashboards/:id
+  const getRes = await app.inject({ method: 'GET', url: `/api/v1/dashboards/${dashboardId}` });
+  assert.equal(getRes.statusCode, 200);
+  assert.equal(getRes.json().data.name, 'Weekly Overview');
+
+  // 4. Update dashboard with matching expected_version increments version
+  const updateRes = await app.inject({
+    method: 'PUT',
+    url: `/api/v1/dashboards/${dashboardId}`,
+    payload: {
+      name: 'Updated Weekly Overview',
+      expected_version: '1',
+      widgets: [
+        {
+          id: 'widget-rev-trend',
+          type: 'line',
+          title: 'Daily Revenue Trend',
+          metric: 'revenue',
+          dimension: 'date',
+        },
+        {
+          id: 'widget-kpi-rev',
+          type: 'kpi',
+          title: 'Total Revenue',
+          metric: 'revenue',
+        },
+      ],
+      layout: [
+        { i: 'widget-rev-trend', x: 0, y: 0, w: 6, h: 4 },
+        { i: 'widget-kpi-rev', x: 6, y: 0, w: 3, h: 2 },
+      ],
+    },
+  });
+  assert.equal(updateRes.statusCode, 200);
+  const updated = updateRes.json().data;
+  assert.equal(updated.name, 'Updated Weekly Overview');
+  assert.equal(updated.version, '2');
+  assert.equal(updated.widgets.length, 2);
+
+  // 5. Update with stale expected_version returns 409 CONFLICT
+  const staleRes = await app.inject({
+    method: 'PUT',
+    url: `/api/v1/dashboards/${dashboardId}`,
+    payload: {
+      name: 'Conflicted Update',
+      expected_version: '1', // current is 2
+    },
+  });
+  assert.equal(staleRes.statusCode, 409);
+  assert.equal(staleRes.json().code, 'CONFLICT');
+
+  // 6. Delete dashboard via DELETE /api/v1/dashboards/:id
+  const delRes = await app.inject({ method: 'DELETE', url: `/api/v1/dashboards/${dashboardId}` });
+  assert.equal(delRes.statusCode, 200);
+  assert.equal(delRes.json().data.deleted, true);
+
+  // Subsequent GET returns 404
+  const postDelRes = await app.inject({ method: 'GET', url: `/api/v1/dashboards/${dashboardId}` });
+  assert.equal(postDelRes.statusCode, 404);
+});
+
 test('TASK-25-02: POST /api/v1/analytics/query enforces auth, validates schemas, and returns aggregates', async (t) => {
   const app = createApp({ pool: stubPool(), authAdapter: () => ({ userId: owner }) });
   t.after(() => app.close());
