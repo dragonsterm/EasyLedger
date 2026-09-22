@@ -816,6 +816,47 @@ export function createApp(options: AppOptions) {
     }));
   });
 
+  // --- Day 25: Deterministic Analytics Query API ---
+
+  const registerAnalyticsRoute = (routePath: string) => {
+    app.post(routePath, { schema: { body: toolQuerySalesSchema } }, async (request, reply) => {
+      const context = (request as unknown as { easyLedger: { business: { id: string; currency: 'IDR' | 'USD'; ledger_revision: string } } }).easyLedger;
+      const body = request.body as {
+        metric: 'units' | 'revenue';
+        dimension?: 'date' | 'product' | 'none';
+        date_from?: string;
+        date_to?: string;
+        start_date?: string;
+        end_date?: string;
+        product_ids?: string[];
+        comparison?: string;
+      };
+
+      const rawFrom = body.date_from ?? body.start_date;
+      const rawTo = body.date_to ?? body.end_date;
+      const dates = dateRange(rawFrom, rawTo);
+
+      const result = await salesQueries.querySales({
+        business_id: context.business.id,
+        currency: context.business.currency,
+        ledger_revision: context.business.ledger_revision,
+        metric: body.metric,
+        dimension: body.dimension,
+        date_from: dates.start,
+        date_to: dates.end,
+        product_ids: body.product_ids,
+      });
+
+      return reply.code(200).send(successEnvelope(String(request.id), result, {
+        currency: result.currency,
+        ledger_revision: result.ledger_revision,
+      }));
+    });
+  };
+
+  registerAnalyticsRoute('/api/v1/analytics/query');
+  registerAnalyticsRoute('/api/analytics/query');
+
   // --- Day 23: Voice Agent Session Bootstrap & HTTP Tool Gateway ---
 
   const registerVoiceSessionRoute = (routePath: string) => {

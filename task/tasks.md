@@ -218,7 +218,7 @@
   - Handle missing data vs zero sales correctly in visualizations.
 - **Tasks to Do:**
   - [x] **TASK-25-01**: Initialize Vite + React 18 + TypeScript SPA workspace in `apps/web` with base application shell (Ledger, Dashboard, Catalog navigation tabs), voice agent status bar, responsive layout (390px–1280px), and Fastify backend `/api` proxy.
-  - [ ] **TASK-25-02**: Implement `POST /api/analytics/query`: executes parameterized queries grouped by date or product; computes exact totals and completeness flags.
+  - [x] **TASK-25-02**: Implement `POST /api/v1/analytics/query`: executes parameterized queries grouped by date or product; computes exact totals and completeness flags.
   - [ ] **TASK-25-03**: Implement ECharts renderers: Daily Revenue Line Chart, Product Sales Bar Chart, Total Revenue & Quantity KPI cards.
   - [ ] **TASK-25-04**: Implement missing-versus-zero visualization: open days with no records render as gaps; complete zero-sale days render as 0.
   - [ ] **TASK-25-05**: Implement chart datum tap-to-drilldown: tapping a bar/point opens modal showing authorized source transactions (FR-11, Test `T-05`).
