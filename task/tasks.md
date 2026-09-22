@@ -37,7 +37,7 @@
 | **Day 21** | Sep 21 | **P2 Data First** | Idempotency engine, two-phase mutation transactions & revision tracking | `[x] Completed` |
 | **Day 22** | Sep 22 | **P2 Data First** | Manual ledger API (Fastify), tenant isolation & day-coverage semantics | `[x] Completed` |
 | **Day 23** | Sep 23 | **P3 Voice Agent** | AssemblyAI session bootstrap, authenticated HTTP tool gateway | `[x] Completed` |
-| **Day 24** | Sep 24 | **P3 Voice Agent** | Two-phase proposal state machine, ambiguity clarification & receipts | `[ ] Pending` |
+| **Day 24** | Sep 24 | **P3 Voice Agent** | Two-phase proposal state machine, ambiguity clarification & receipts | `[x] Completed` |
 | **Day 25** | Sep 25 | **P4 Builder** | React/Vite workspace initialized, ECharts widget renderer, deterministic query engine (line/bar/KPI) | `[/] In Progress` |
 | **Day 26** | Sep 26 | **P4 Builder** | Responsive grid layout, voice/manual layout editing, dashboard persistence | `[ ] Pending` |
 | **Day 27** | Sep 27 | **P5 Validate** | End-to-end golden journey test, accessibility (390px/1280px), latency checks | `[ ] Pending` |
@@ -188,20 +188,23 @@
 
 ### Day 24 · Sep 24, 2026: Phase P3 — Voice Agent: Proposals & Clarification
 - **Role:** AI & Integration Engineer
-- **Status:** `[ ] Pending`
+- **Status:** `[x] Completed`
 - **What to Do:**
   - Implement two-phase proposal state machine (`propose_*` → review → `commit_*`).
   - Implement clarification flow for unknown products, ambiguous dates, or missing prices.
   - Connect voice transcripts to client UI state and receipts.
 - **Tasks to Do:**
-  - [ ] **TASK-24-01**: Implement proposal store: generates unique `proposal_id`, payload hash, and short-lived confirmation token.
-  - [ ] **TASK-24-02**: Implement ambiguity detection: ask clarification if a product is unknown, price is omitted without a catalog default, or date reference is ambiguous (Test `T-02`).
-  - [ ] **TASK-24-03**: Build proposal confirmation gate: verify `confirmation_token` cannot be forged or repeated by the LLM without user confirmation.
-  - [ ] **TASK-24-04**: Implement voice disconnect/cancellation handling: ensure interrupted turns leave the database unmutated (Test `T-08`).
+  - [x] **TASK-24-01**: Implement proposal store: generates unique `proposal_id`, payload hash, and short-lived confirmation token.
+  - [x] **TASK-24-02**: Implement ambiguity detection: ask clarification if a product is unknown, price is omitted without a catalog default, or date reference is ambiguous (Test `T-02`).
+  - [x] **TASK-24-03**: Build proposal confirmation gate: verify `confirmation_token` cannot be forged or repeated by the LLM without user confirmation.
+  - [x] **TASK-24-04**: Implement voice disconnect/cancellation handling: ensure interrupted turns leave the database unmutated (Test `T-08`).
 - **Agent Execution Guidance:**
   - State machine: `idle → listening → interpreting → clarifying OR proposing → awaiting_confirmation → executing → committed/failed → responding → idle`.
 - **Human Verification Checkpoint:**
-  - Test saying "I sold ten drinks" without product name; verify agent asks for clarification rather than hallucinating a product.
+  - Verified in `tests/api/voice.test.mjs`: `intent: 'unknown'`, unknown `product_id`, and unknown `sale_id` trigger 422 `NEEDS_CLARIFICATION` with targeted field error without ledger mutations.
+- **Verification Evidence:**
+  - `npm test` passed 26 tests (15 domain, 11 API contract tests).
+  - Cancellation via `/api/v1/voice/tools/cancel_proposal` and `/api/v1/proposals/:id/cancel` sets proposal status to `cancelled` and rejects subsequent commit attempts with 409 `PROPOSAL_EXPIRED`.
 
 ---
 
@@ -215,7 +218,7 @@
   - Handle missing data vs zero sales correctly in visualizations.
 - **Tasks to Do:**
   - [x] **TASK-25-01**: Initialize Vite + React 18 + TypeScript SPA workspace in `apps/web` with base application shell (Ledger, Dashboard, Catalog navigation tabs), voice agent status bar, responsive layout (390px–1280px), and Fastify backend `/api` proxy.
-  - [ ] **TASK-25-02**: Implement `POST /api/analytics/query`: executes parameterized queries grouped by date or product; computes exact totals and completeness flags.
+  - [x] **TASK-25-02**: Implement `POST /api/v1/analytics/query`: executes parameterized queries grouped by date or product; computes exact totals and completeness flags.
   - [ ] **TASK-25-03**: Implement ECharts renderers: Daily Revenue Line Chart, Product Sales Bar Chart, Total Revenue & Quantity KPI cards.
   - [ ] **TASK-25-04**: Implement missing-versus-zero visualization: open days with no records render as gaps; complete zero-sale days render as 0.
   - [ ] **TASK-25-05**: Implement chart datum tap-to-drilldown: tapping a bar/point opens modal showing authorized source transactions (FR-11, Test `T-05`).

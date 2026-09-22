@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 
 import {
+  CatalogNotFoundError,
   CatalogService,
   CoverageService,
 } from '../../packages/domain/catalog.ts';
@@ -257,7 +258,7 @@ const toolProposeSalesSchema = {
   required: ['lines'],
   properties: {
     lines: { type: 'array', minItems: 1, maxItems: 100, items: toolSaleLineSchema },
-    intent: { type: 'string', enum: ['additional', 'total'] },
+    intent: { type: 'string', enum: ['additional', 'total', 'unknown'] },
   },
 };
 
@@ -269,6 +270,16 @@ const toolCommitSalesSchema = {
     proposal_id: uuidSchema,
     confirmation_token: { type: 'string', minLength: 1, maxLength: 200 },
     idempotency_key: { type: 'string', minLength: 1, maxLength: 200 },
+  },
+};
+
+const toolCancelProposalSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['proposal_id'],
+  properties: {
+    proposal_id: uuidSchema,
+    reason: { type: 'string', minLength: 1, maxLength: 500 },
   },
 };
 
@@ -962,8 +973,48 @@ export function createApp(options: AppOptions) {
     });
   };
 
+  // --- Day 25: Deterministic Analytics Query API ---
+
+  const registerAnalyticsRoute = (routePath: string) => {
+    app.post(routePath, { schema: { body: toolQuerySalesSchema } }, async (request, reply) => {
+      const context = (request as unknown as { easyLedger: { business: { id: string; currency: 'IDR' | 'USD'; ledger_revision: string } } }).easyLedger;
+      const body = request.body as {
+        metric: 'units' | 'revenue';
+        dimension?: 'date' | 'product' | 'none';
+        date_from?: string;
+        date_to?: string;
+        start_date?: string;
+        end_date?: string;
+        product_ids?: string[];
+        comparison?: string;
+      };
+
+      const rawFrom = body.date_from ?? body.start_date;
+      const rawTo = body.date_to ?? body.end_date;
+      const dates = dateRange(rawFrom, rawTo);
+
+      const result = await salesQueries.querySales({
+        business_id: context.business.id,
+        currency: context.business.currency,
+        ledger_revision: context.business.ledger_revision,
+        metric: body.metric,
+        dimension: body.dimension,
+        date_from: dates.start,
+        date_to: dates.end,
+        product_ids: body.product_ids,
+      });
+
+      return reply.code(200).send(successEnvelope(String(request.id), result, {
+        currency: result.currency,
+        ledger_revision: result.ledger_revision,
+      }));
+    });
+  };
+
   registerDashboardRoutes('/api/v1');
   registerDashboardRoutes('/api');
+  registerAnalyticsRoute('/api/v1/analytics/query');
+  registerAnalyticsRoute('/api/analytics/query');
 
   // --- Day 23: Voice Agent Session Bootstrap & HTTP Tool Gateway ---
 
@@ -1048,8 +1099,26 @@ export function createApp(options: AppOptions) {
     let knownRevenue = 0n;
     let unknownPriceCount = 0;
 
+    if (body.intent === 'unknown') {
+      throw new ApiError('NEEDS_CLARIFICATION', 'Is this your total sales for today, or additional sales?', {
+        httpStatus: 422,
+        fieldErrors: { intent: 'ambiguous_intent' },
+      });
+    }
+
     for (const line of body.lines) {
-      const product = await catalog.getProduct(context.business.id, line.product_id);
+      let product;
+      try {
+        product = await catalog.getProduct(context.business.id, line.product_id);
+      } catch (err) {
+        if (err instanceof CatalogNotFoundError) {
+          throw new ApiError('NEEDS_CLARIFICATION', `Product ${line.product_id} is unknown in your catalog. Please select a valid product.`, {
+            httpStatus: 422,
+            fieldErrors: { product_id: 'unknown_product' },
+          });
+        }
+        throw err;
+      }
       if (!product.active) {
         throw new ApiError('VALIDATION_ERROR', `Product ${product.name} is deactivated and cannot receive new sales`, { httpStatus: 422 });
       }
@@ -1167,7 +1236,6 @@ export function createApp(options: AppOptions) {
     const context = req.easyLedger;
     const body = req.body;
 
-    await ensureSaleOwned(options.pool, context.business.id, body.sale_id);
     const saleRes = await poolQuery<{
       id: string;
       product_id: string;
@@ -1189,7 +1257,10 @@ export function createApp(options: AppOptions) {
     );
 
     if (!saleRes.rowCount || !saleRes.rows[0]) {
-      throw new ApiError('NOT_FOUND', 'Sale is unavailable', { httpStatus: 404 });
+      throw new ApiError('NEEDS_CLARIFICATION', 'Target sale is unknown or ambiguous. Please select a specific sale from your history.', {
+        httpStatus: 422,
+        fieldErrors: { sale_id: 'ambiguous_target' },
+      });
     }
     const currentSale = saleRes.rows[0];
     if (currentSale.version !== body.expected_version) {
@@ -1292,6 +1363,24 @@ export function createApp(options: AppOptions) {
     }));
   };
 
+  const handleCancelProposal = async (request: unknown, reply: unknown) => {
+    const req = request as { id: string; body: { proposal_id: string; reason?: string }; easyLedger: { business: { id: string; currency: 'IDR' | 'USD'; ledger_revision: string } } };
+    const rep = reply as { code: (status: number) => { send: (payload: unknown) => unknown } };
+    const context = req.easyLedger;
+    const body = req.body;
+
+    const result = await proposals.cancelProposal({
+      business_id: context.business.id,
+      proposal_id: body.proposal_id,
+      reason: body.reason,
+    });
+
+    return rep.code(200).send(successEnvelope(String(req.id), result, {
+      currency: context.business.currency,
+      ledger_revision: context.business.ledger_revision,
+    }));
+  };
+
   const handleQuerySales = async (request: unknown, reply: unknown) => {
     const req = request as { id: string; body: { metric: 'units' | 'revenue'; dimension?: 'date' | 'product' | 'none'; date_from?: string; date_to?: string; start_date?: string; end_date?: string; product_ids?: string[] }; easyLedger: { business: { id: string; currency: 'IDR' | 'USD'; ledger_revision: string } } };
     const rep = reply as { code: (status: number) => { send: (payload: unknown) => unknown } };
@@ -1350,6 +1439,7 @@ export function createApp(options: AppOptions) {
     app.post(`${prefix}/commit_correction`, { schema: { body: toolCommitCorrectionSchema } }, handleCommitCorrection);
     app.post(`${prefix}/query_sales`, { schema: { body: toolQuerySalesSchema } }, handleQuerySales);
     app.post(`${prefix}/save_dashboard`, { schema: { body: toolSaveDashboardSchema } }, handleSaveDashboard);
+    app.post(`${prefix}/cancel_proposal`, { schema: { body: toolCancelProposalSchema } }, handleCancelProposal);
 
     app.post(`${prefix}/:tool`, async (request, reply) => {
       const toolName = (request.params as { tool: string }).tool;
@@ -1366,6 +1456,8 @@ export function createApp(options: AppOptions) {
           return handleCommitCorrection(request, reply);
         case 'save_dashboard':
           return handleSaveDashboard(request, reply);
+        case 'cancel_proposal':
+          return handleCancelProposal(request, reply);
         case 'query_sales':
           return handleQuerySales(request, reply);
         default:
@@ -1373,6 +1465,19 @@ export function createApp(options: AppOptions) {
       }
     });
   }
+
+  app.post('/api/v1/proposals/:id/cancel', { schema: { params: uuidParams } }, async (request, reply) => {
+    const context = (request as unknown as { easyLedger: { business: { id: string; currency: 'IDR' | 'USD'; ledger_revision: string } } }).easyLedger;
+    const params = request.params as { id: string };
+    const result = await proposals.cancelProposal({
+      business_id: context.business.id,
+      proposal_id: params.id,
+    });
+    return reply.code(200).send(successEnvelope(String(request.id), result, {
+      currency: context.business.currency,
+      ledger_revision: context.business.ledger_revision,
+    }));
+  });
 
   // A catalog row missing from the tenant is deliberately normalized to the
   // same 404 as an unknown ID.  Keep this explicit for callers that import

@@ -178,3 +178,61 @@ test('TASK-26-04: Dashboard API enforces CRUD, optimistic locking, and tenant bo
   const postDelRes = await app.inject({ method: 'GET', url: `/api/v1/dashboards/${dashboardId}` });
   assert.equal(postDelRes.statusCode, 404);
 });
+
+test('TASK-25-02: POST /api/v1/analytics/query enforces auth, validates schemas, and returns aggregates', async (t) => {
+  const app = createApp({ pool: stubPool(), authAdapter: () => ({ userId: owner }) });
+  t.after(() => app.close());
+
+  // 1. Unauthenticated request returns 401
+  const unauthApp = createApp({ pool: stubPool(), authAdapter: () => null });
+  t.after(() => unauthApp.close());
+  const unauthRes = await unauthApp.inject({
+    method: 'POST',
+    url: '/api/v1/analytics/query',
+    payload: { metric: 'revenue' },
+  });
+  assert.equal(unauthRes.statusCode, 401);
+  assert.equal(unauthRes.json().code, 'UNAUTHORIZED');
+
+  // 2. Extra property (business_id) returns 422 VALIDATION_ERROR
+  const extraRes = await app.inject({
+    method: 'POST',
+    url: '/api/v1/analytics/query',
+    payload: { metric: 'revenue', business_id: business },
+  });
+  assert.equal(extraRes.statusCode, 422);
+  assert.equal(extraRes.json().code, 'VALIDATION_ERROR');
+
+  // 3. Valid analytics query returns 200 OK and expected structure
+  const validRes = await app.inject({
+    method: 'POST',
+    url: '/api/v1/analytics/query',
+    payload: {
+      metric: 'revenue',
+      dimension: 'none',
+      date_from: '2026-09-01',
+      date_to: '2026-09-30',
+    },
+  });
+  assert.equal(validRes.statusCode, 200);
+  const data = validRes.json().data;
+  assert.equal(data.metric, 'revenue');
+  assert.equal(data.currency, 'IDR');
+  assert.equal(data.completeness, 'complete');
+  assert.equal(Array.isArray(data.rows), true);
+  assert.equal(data.filters.date_from, '2026-09-01');
+  assert.equal(data.filters.date_to, '2026-09-30');
+
+  // 4. Exceeding 366 days limit returns 422 VALIDATION_ERROR
+  const wideRangeRes = await app.inject({
+    method: 'POST',
+    url: '/api/v1/analytics/query',
+    payload: {
+      metric: 'units',
+      date_from: '2024-01-01',
+      date_to: '2025-06-01',
+    },
+  });
+  assert.equal(wideRangeRes.statusCode, 422);
+  assert.equal(wideRangeRes.json().code, 'VALIDATION_ERROR');
+});

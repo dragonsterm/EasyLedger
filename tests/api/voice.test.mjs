@@ -63,6 +63,10 @@ function mockPool() {
         const found = businesses.filter((b) => b.id === values[0]);
         return { rows: found, rowCount: found.length };
       }
+      if (sql.includes('FROM products') && sql.includes('id = $2')) {
+        const found = products.filter((p) => p.business_id === values[0] && p.id === values[1]);
+        return { rows: found, rowCount: found.length };
+      }
       if (sql.includes('FROM products') && sql.includes('active')) {
         const found = products.filter((p) => p.business_id === values[0] && p.active);
         return { rows: found, rowCount: found.length };
@@ -327,4 +331,146 @@ test('TASK-23-02: HTTP tool gateway supports propose_sales, propose_correction, 
     payload: {},
   });
   assert.equal(dispatchRes.statusCode, 200);
+});
+
+test('TASK-24-02: ambiguity detection triggers NEEDS_CLARIFICATION without ledger mutation', async (t) => {
+  const app = createApp({
+    pool: mockPool(),
+    authAdapter: () => ({ userId: owner }),
+    assemblyTokenGenerator: () => 'mock_token',
+  });
+  t.after(() => app.close());
+
+  const sessionRes = await app.inject({
+    method: 'POST',
+    url: '/api/v1/voice/sessions',
+    payload: {},
+  });
+  const sessionToken = sessionRes.json().data.session_token;
+
+  // 1. Ambiguous intent (total vs additional) triggers NEEDS_CLARIFICATION
+  const ambigRes = await app.inject({
+    method: 'POST',
+    url: '/api/v1/voice/tools/propose_sales',
+    headers: { 'x-session-token': sessionToken },
+    payload: {
+      intent: 'unknown',
+      lines: [
+        { product_id: orangeProduct, quantity: '10', sale_date: '2026-09-24' },
+      ],
+    },
+  });
+  assert.equal(ambigRes.statusCode, 422);
+  const ambigBody = ambigRes.json();
+  assert.equal(ambigBody.code, 'NEEDS_CLARIFICATION');
+  assert.equal(ambigBody.message, 'Is this your total sales for today, or additional sales?');
+  assert.equal(ambigBody.field_errors.intent, 'ambiguous_intent');
+
+  // 2. Unknown product in catalog triggers NEEDS_CLARIFICATION
+  const unknownProdRes = await app.inject({
+    method: 'POST',
+    url: '/api/v1/voice/tools/propose_sales',
+    headers: { 'x-session-token': sessionToken },
+    payload: {
+      lines: [
+        { product_id: '00000000-0000-4000-8000-999999999999', quantity: '5', sale_date: '2026-09-24' },
+      ],
+    },
+  });
+  assert.equal(unknownProdRes.statusCode, 422);
+  const unknownProdBody = unknownProdRes.json();
+  assert.equal(unknownProdBody.code, 'NEEDS_CLARIFICATION');
+  assert.equal(unknownProdBody.field_errors.product_id, 'unknown_product');
+
+  // 3. Ambiguous or unknown correction target triggers NEEDS_CLARIFICATION
+  const ambigTargetRes = await app.inject({
+    method: 'POST',
+    url: '/api/v1/voice/tools/propose_correction',
+    headers: { 'x-session-token': sessionToken },
+    payload: {
+      sale_id: '00000000-0000-4000-8000-999999999999',
+      expected_version: '1',
+      changes: { quantity: '5' },
+      reason: 'Fix wrong amount',
+    },
+  });
+  assert.equal(ambigTargetRes.statusCode, 422);
+  const ambigTargetBody = ambigTargetRes.json();
+  assert.equal(ambigTargetBody.code, 'NEEDS_CLARIFICATION');
+  assert.equal(ambigTargetBody.field_errors.sale_id, 'ambiguous_target');
+});
+
+test('TASK-24-04: cancellation/disconnect handling prevents mutation and marks proposal cancelled', async (t) => {
+  const app = createApp({
+    pool: mockPool(),
+    authAdapter: () => ({ userId: owner }),
+    assemblyTokenGenerator: () => 'mock_token',
+  });
+  t.after(() => app.close());
+
+  const sessionRes = await app.inject({
+    method: 'POST',
+    url: '/api/v1/voice/sessions',
+    payload: {},
+  });
+  const sessionToken = sessionRes.json().data.session_token;
+
+  // 1. Propose sales
+  const proposeRes = await app.inject({
+    method: 'POST',
+    url: '/api/v1/voice/tools/propose_sales',
+    headers: { 'x-session-token': sessionToken },
+    payload: {
+      lines: [
+        { product_id: orangeProduct, quantity: '3', sale_date: '2026-09-24' },
+      ],
+    },
+  });
+  assert.equal(proposeRes.statusCode, 200);
+  const proposalId = proposeRes.json().data.proposal_id;
+  const token = proposeRes.json().data.confirmation_token;
+
+  // 2. Cancel proposal via tool
+  const cancelRes = await app.inject({
+    method: 'POST',
+    url: '/api/v1/voice/tools/cancel_proposal',
+    headers: { 'x-session-token': sessionToken },
+    payload: {
+      proposal_id: proposalId,
+      reason: 'User disconnected or interrupted turn',
+    },
+  });
+  assert.equal(cancelRes.statusCode, 200);
+  assert.equal(cancelRes.json().data.status, 'cancelled');
+
+  // 3. Attempting to commit cancelled proposal is rejected with 409
+  const commitRes = await app.inject({
+    method: 'POST',
+    url: '/api/v1/voice/tools/commit_sales',
+    headers: { 'x-session-token': sessionToken },
+    payload: {
+      proposal_id: proposalId,
+      confirmation_token: token,
+      idempotency_key: 'cancelled-commit-attempt',
+    },
+  });
+  assert.equal(commitRes.statusCode, 409);
+  assert.equal(commitRes.json().code, 'PROPOSAL_EXPIRED');
+
+  // 4. Test REST route POST /api/v1/proposals/:id/cancel
+  const propose2 = await app.inject({
+    method: 'POST',
+    url: '/api/v1/voice/tools/propose_sales',
+    headers: { 'x-session-token': sessionToken },
+    payload: {
+      lines: [{ product_id: orangeProduct, quantity: '1', sale_date: '2026-09-24' }],
+    },
+  });
+  const prop2Id = propose2.json().data.proposal_id;
+  const restCancel = await app.inject({
+    method: 'POST',
+    url: `/api/v1/proposals/${prop2Id}/cancel`,
+  });
+  assert.equal(restCancel.statusCode, 200);
+  assert.equal(restCancel.json().data.status, 'cancelled');
 });
