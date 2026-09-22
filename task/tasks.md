@@ -217,7 +217,7 @@
   - Build React frontend dashboard with Apache ECharts widget components (line chart, bar chart, KPI cards).
   - Handle missing data vs zero sales correctly in visualizations.
 - **Tasks to Do:**
-  - [x] **TASK-25-01**: Initialize Vite + React 18 + TypeScript SPA workspace in `apps/web` with base application shell (Ledger, Dashboard, Catalog navigation tabs), voice agent status bar, responsive layout (390px–1280px), and Fastify backend `/api` proxy.
+  - [x] **TASK-25-01**: Initialize the Vite + React 18 + TypeScript SPA workspace in `apps/web` and refine its desktop-first application shell as a static dashboard-builder template: Overview, Ledger, Dashboard and Catalog navigation; visible voice status; filters/actions; KPI/chart placeholders; data-quality, selected-widget and source-transaction panels; and the existing Fastify `/api` proxy. This task establishes presentation and information architecture at the 1280px reference width; mobile composition remains assigned to **TASK-26-02** and final 390px/1280px accessibility acceptance remains assigned to Test `T-09`.
   - [x] **TASK-25-02**: Implement `POST /api/v1/analytics/query`: executes parameterized queries grouped by date or product; computes exact totals and completeness flags.
   - [ ] **TASK-25-03**: Implement ECharts renderers: Daily Revenue Line Chart, Product Sales Bar Chart, Total Revenue & Quantity KPI cards.
   - [ ] **TASK-25-04**: Implement missing-versus-zero visualization: open days with no records render as gaps; complete zero-sale days render as 0.
@@ -225,10 +225,14 @@
 - **Agent Execution Guidance:**
   - Refer to [`docs/07-Dashboard-and-UX.md`](file:///C:/Project/EasyLedger/docs/07-Dashboard-and-UX.md) and [`docs/05-Data-Model.md`](file:///C:/Project/EasyLedger/docs/05-Data-Model.md).
 - **Human Verification Checkpoint:**
-  - Run `npm --prefix apps/web run dev` to verify local server boots on port 5173 with functional tab navigation and mobile responsiveness.
+  - Run `npm --prefix apps/web run dev` and inspect the static shell at the 1280px reference width. Verify semantic navigation/controls, visible keyboard focus, no horizontal overflow and readable missing-versus-zero/unknown-price labels. Do not treat representative charts or controls as implemented analytics behavior.
 - **Verification Evidence:**
-  - `npm --prefix apps/web run build` passed cleanly (`dist/` generated in 576ms with zero TypeScript/lint errors).
-  - Clean neutral styling verified across 390px mobile and 1280px desktop layouts; `*.tsbuildinfo` added to `.gitignore`.
+  - `npm --prefix apps/web run build` passed on 2026-09-23: TypeScript completed and Vite 6.4.3 generated the production bundle with 27 transformed modules and no build errors.
+  - Ad-hoc browser inspection at a 1280×900 viewport rendered the Figma-aligned desktop template with `scrollWidth=1265` inside `innerWidth=1280`, eight dashboard cards, 27 semantic focus targets and zero captured console errors; keyboard focus showed a 3px visible outline and no non-absolute element crossed the horizontal viewport boundary.
+  - The template surfaces SRS/knowledge-graph semantics without claiming later tasks complete: unknown-price exclusions remain labeled (FR-08), open-day gaps and confirmed zero use distinct shapes plus text (FR-10), chart/table and manual-control alternatives are represented (NFR-05), and revision-matched source transactions are shown as a static preview (FR-11). **TASK-25-03**, **TASK-25-04** and **TASK-25-05** remain pending for real renderers, query-driven states and drilldown behavior.
+- **Reflection:**
+  - The prior neutral placeholder established routing but did not communicate the intended builder workflow. The refined shell adopts the friendly Google/Material direction from the approved Figma frame while keeping EasyLedger's trust signals prominent.
+  - This pass intentionally stops at a desktop static template. It does not add ECharts, React Grid Layout, voice execution, dashboard persistence or live drilldown, and it does not claim 390px acceptance; those remain in their numbered Day 25–27 tasks.
 
 ---
 
