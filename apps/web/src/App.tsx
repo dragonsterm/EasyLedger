@@ -150,7 +150,7 @@ function DashboardFilters() {
       </div>
       <span className="filter-spacer" aria-hidden="true" />
       <div className="canvas-toolbar-actions">
-        <button className="button button-add" type="button">+ Add widget</button>
+        <button className="button button-add" id="add-widget" type="button">+ Add widget</button>
         <label className="zoom-control">
           <span className="sr-only">Canvas zoom</span>
           <select defaultValue="100" aria-label="Canvas zoom">
@@ -235,128 +235,159 @@ function Inspector() {
 function App() {
   return (
     <div className="app-shell">
-      <aside className="nav-rail" aria-label="Primary navigation">
+      <header className="builder-toolbar">
         <div className="rail-brand">
           <strong>EasyLedger</strong>
           <span>Sales, made clear.</span>
         </div>
 
-        <nav className="rail-nav" aria-label="Workspace">
-          <a className="rail-link" href="#overview">Overview</a>
-          <a className="rail-link" href="#ledger">Ledger</a>
-          <a className="rail-link rail-link-active" href="#dashboard" aria-current="page">Dashboard</a>
-          <a className="rail-link" href="#catalog">Catalog</a>
+        <nav className="primary-nav" aria-label="Primary navigation">
+          <a className="primary-link primary-link-overview" href="#overview">
+            <img src="/assets/nav-overview.svg" width="16" height="16" alt="" aria-hidden="true" />Overview
+          </a>
+          <a className="primary-link primary-link-ledger" href="#ledger">
+            <img src="/assets/nav-ledger.svg" width="16" height="16" alt="" aria-hidden="true" />Ledger
+          </a>
+          <a className="primary-link primary-link-dashboard primary-link-active" href="#dashboard" aria-current="page">
+            <img src="/assets/nav-dashboard.svg" width="16" height="16" alt="" aria-hidden="true" />Dashboard
+          </a>
+          <a className="primary-link primary-link-catalog" href="#catalog">
+            <img src="/assets/nav-catalog.svg" width="16" height="16" alt="" aria-hidden="true" />Catalog
+          </a>
         </nav>
 
-        <div className="rail-spacer" aria-hidden="true" />
+        <span className="toolbar-space" aria-hidden="true" />
 
-        <div className="rail-help">
-          <strong>Make it yours</strong>
-          <p>Drag cards to arrange your dashboard.</p>
-          <p>Or use the inspector to move a widget.</p>
+        <div className="builder-actions">
+          <span className="mode-pill">Editing</span>
+          <button className="button button-preview" type="button">Preview</button>
+          <button className="button button-save" type="button">Save changes</button>
         </div>
+      </header>
 
-        <div className="rail-footer">
-          <strong>Kedai Segar</strong>
-          <span>IDR · Workspace ready</span>
-        </div>
-      </aside>
+      <div className="dashboard-shell">
+        <aside className="nav-rail" aria-label="Dashboard builder shortcuts">
+          <div className="rail-spacer-top" aria-hidden="true" />
 
-      <div className="workspace">
-        <header className="builder-toolbar">
-          <p className="breadcrumb">Workspace <span aria-hidden="true">/</span> Dashboard builder</p>
-          <div className="builder-actions">
-            <span className="mode-pill">Editing</span>
-            <button className="button button-preview" type="button">Preview</button>
-            <button className="button button-save" type="button">Save changes</button>
-          </div>
-        </header>
+          <nav className="rail-actions" aria-label="Builder actions">
+            <a className="rail-action rail-action-active" href="#dashboard" aria-label="Dashboard canvas">
+              <img src="/assets/rail-dashboard.svg" width="18" height="18" alt="" aria-hidden="true" />
+            </a>
+            <a className="rail-action" href="#voice-title" aria-label="Ask EasyLedger">
+              <img src="/assets/rail-voice.svg" width="18" height="18" alt="" aria-hidden="true" />
+            </a>
+            <a className="rail-action" href="#add-widget" aria-label="Add widget">
+              <img src="/assets/rail-add-widget.svg" width="18" height="18" alt="" aria-hidden="true" />
+            </a>
+            <a className="rail-action" href="#source-sales" aria-label="Source sales">
+              <img src="/assets/rail-source-sales.svg" width="18" height="18" alt="" aria-hidden="true" />
+            </a>
+          </nav>
 
-        <header className="dashboard-header">
-          <div className="dashboard-header-inner">
-            <div className="dashboard-heading">
-              <h1>Weekly sales overview</h1>
-              <p>Kedai Segar <span aria-hidden="true">·</span> IDR <span aria-hidden="true">·</span> Your week, at a glance.</p>
+          <div className="rail-spacer" aria-hidden="true" />
+
+          <aside className="rail-help">
+            <strong>Make it yours</strong>
+            <p>Drag cards to arrange your dashboard.</p>
+            <p>Or use the inspector to move a widget.</p>
+          </aside>
+
+          <section className="rail-footer" aria-label="Account and workspace">
+            <div className="rail-avatar" aria-hidden="true">KS</div>
+            <div className="rail-workspace">
+              <strong>Kedai Segar</strong>
+              <span>IDR</span>
+              <span>Workspace ready</span>
             </div>
-            <div className="dashboard-status" aria-label="Dashboard status">
-              <div className="saved-status">
-                <strong>Saved just now</strong>
-                <span>Dashboard up to date</span>
+          </section>
+        </aside>
+
+        <div className="workspace">
+          <header className="dashboard-header">
+            <div className="dashboard-header-inner">
+              <div className="dashboard-heading">
+                <p className="breadcrumb">Workspace <span aria-hidden="true">/</span> Dashboard builder</p>
+                <h1>Weekly sales overview</h1>
+                <p>Kedai Segar <span aria-hidden="true">·</span> IDR <span aria-hidden="true">·</span> Your week, at a glance.</p>
               </div>
-              <div className="refreshed-status">
-                <strong>Refreshed 09:42</strong>
-                <span>Revision 142 <i aria-hidden="true">·</i> 5 of 7 days complete</span>
+              <div className="dashboard-status" aria-label="Dashboard status">
+                <div className="saved-status">
+                  <strong>Saved just now</strong>
+                  <span>Dashboard up to date</span>
+                </div>
+                <div className="refreshed-status">
+                  <strong>Refreshed 09:42</strong>
+                  <span>Revision 142 <i aria-hidden="true">·</i> 5 of 7 days complete</span>
+                </div>
               </div>
             </div>
+          </header>
+
+          <div className="editor-body">
+            <main className="canvas" id="dashboard">
+              <div className="canvas-inner">
+                <section className="voice-card" aria-labelledby="voice-title">
+                  <img className="voice-icon" src="/assets/voice-waveform.svg" width="32" height="32" alt="" aria-hidden="true" />
+                  <div className="voice-copy">
+                    <h2 id="voice-title">Ask EasyLedger</h2>
+                    <p>Try “show revenue this week”</p>
+                  </div>
+                  <button className="voice-shortcut" type="button" aria-label="Voice status idle, press Space to listen">
+                    Idle · Press Space
+                  </button>
+                </section>
+
+                <DashboardFilters />
+
+                <section className="stat-grid" aria-label="Weekly sales summary">
+                  <StatCard label="Total revenue" value="Rp 3.480.000" note="Known-price sales · 2 rows excluded" tone="revenue" />
+                  <StatCard label="Units sold" value="214" note="Includes sales with unknown prices" tone="units" />
+                  <StatCard label="Complete days" value="5 of 7" note="2 days still open · gaps stay visible" tone="days" />
+                </section>
+
+                <section className="chart-grid" aria-label="Dashboard charts">
+                  <div className="selected-widget" role="group" aria-label="Selected widget: Daily revenue">
+                    <LineChart />
+                    <SelectionHandles />
+                  </div>
+                  <ProductChart />
+                </section>
+
+                <aside className="quality-notice" aria-label="Data quality notice">
+                  <div>
+                    <strong>A little context for your numbers</strong>
+                    <p>2 rows have no price. Open days stay as gaps; confirmed zero stays zero.</p>
+                  </div>
+                  <button className="view-ledger" type="button">View ledger</button>
+                </aside>
+
+                <section className="source-card" id="source-sales" tabIndex={-1} aria-labelledby="source-title">
+                  <div className="source-card-heading">
+                    <h2 id="source-title">Source sales</h2>
+                    <span>Revision 142 · matched</span>
+                  </div>
+                  <div className="source-summary">
+                    <div>
+                      <strong>Orange Juice · 19 Sep</strong>
+                      <span>Same filters as this dashboard</span>
+                    </div>
+                    <div>
+                      <strong>2 authorized rows</strong>
+                      <span>From your ledger</span>
+                    </div>
+                    <div>
+                      <strong>IDR 240.000 total</strong>
+                    </div>
+                  </div>
+                  <p className="source-helper">Select a chart point or bar to inspect the matching sales.</p>
+                </section>
+
+                <p className="canvas-footer">Select a widget to edit <span aria-hidden="true">·</span> Drag to arrange or use Position controls</p>
+              </div>
+            </main>
+
+            <Inspector />
           </div>
-        </header>
-
-        <div className="editor-body">
-          <main className="canvas" id="dashboard">
-            <div className="canvas-inner">
-              <section className="voice-card" aria-labelledby="voice-title">
-                <span className="voice-icon" aria-hidden="true">
-                  <i /><i /><i /><i />
-                </span>
-                <div className="voice-copy">
-                  <h2 id="voice-title">Ask EasyLedger</h2>
-                  <p>Try “show revenue this week”</p>
-                </div>
-                <button className="voice-shortcut" type="button" aria-label="Voice status idle, press Space to listen">
-                  <span className="status-dot" />Idle · Press Space
-                </button>
-              </section>
-
-              <DashboardFilters />
-
-              <section className="stat-grid" aria-label="Weekly sales summary">
-                <StatCard label="Total revenue" value="Rp 3.480.000" note="Known-price sales · 2 rows excluded" tone="revenue" />
-                <StatCard label="Units sold" value="214" note="Includes sales with unknown prices" tone="units" />
-                <StatCard label="Complete days" value="5 of 7" note="2 days still open · gaps stay visible" tone="days" />
-              </section>
-
-              <section className="chart-grid" aria-label="Dashboard charts">
-                <div className="selected-widget" role="group" aria-label="Selected widget: Daily revenue">
-                  <LineChart />
-                  <SelectionHandles />
-                </div>
-                <ProductChart />
-              </section>
-
-              <aside className="quality-notice" aria-label="Data quality notice">
-                <div>
-                  <strong>A little context for your numbers</strong>
-                  <p>2 rows have no price. Open days stay as gaps; confirmed zero stays zero.</p>
-                </div>
-                <button className="view-ledger" type="button">View ledger</button>
-              </aside>
-
-              <section className="source-card" aria-labelledby="source-title">
-                <div className="source-card-heading">
-                  <h2 id="source-title">Source sales</h2>
-                  <span>Revision 142 · matched</span>
-                </div>
-                <div className="source-summary">
-                  <div>
-                    <strong>Orange Juice · 19 Sep</strong>
-                    <span>Same filters as this dashboard</span>
-                  </div>
-                  <div>
-                    <strong>2 authorized rows</strong>
-                    <span>From your ledger</span>
-                  </div>
-                  <div>
-                    <strong>IDR 240.000 total</strong>
-                  </div>
-                </div>
-                <p className="source-helper">Select a chart point or bar to inspect the matching sales.</p>
-              </section>
-
-              <p className="canvas-footer">Select a widget to edit <span aria-hidden="true">·</span> Drag to arrange or use Position controls</p>
-            </div>
-          </main>
-
-          <Inspector />
         </div>
       </div>
     </div>
