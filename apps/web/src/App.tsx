@@ -1,127 +1,355 @@
-type ChartDatum = {
-  date: string;
-  value: string;
-  state: 'revenue' | 'gap' | 'zero';
-  detail: string;
+import { useState } from 'react';
+import type { EChartsOption } from 'echarts';
+import EChart from './EChart';
+import {
+  escapeTooltipHtml,
+  formatAnalyticsTotal,
+  formatMoneyMinor,
+  mapAnalyticsRowsToChart,
+  sampleDailyRevenue,
+  sampleProductUnits,
+  sampleTotalRevenue,
+  sampleTotalUnits,
+} from './analytics';
+import type { AnalyticsQueryResponse, ChartMapping, ChartPoint, LedgerCurrency } from './analytics';
+
+type WidgetType = 'Line chart' | 'Bar chart' | 'KPI';
+type WidgetMetric = 'Revenue' | 'Units sold' | 'Day completeness';
+type WidgetDimension = 'Day' | 'Product' | 'None';
+
+interface WidgetSelection {
+  id: string;
+  title: string;
+  type: WidgetType;
+  metric: WidgetMetric;
+  dimension: WidgetDimension;
+  data: AnalyticsQueryResponse | null;
+}
+
+const revenueByDate = mapAnalyticsRowsToChart(sampleDailyRevenue);
+const unitsByProduct = mapAnalyticsRowsToChart(sampleProductUnits);
+
+const revenueWidget: WidgetSelection = {
+  id: 'total-revenue',
+  title: 'Total revenue',
+  type: 'KPI',
+  metric: 'Revenue',
+  dimension: 'None',
+  data: sampleTotalRevenue,
 };
 
-const chartData: ChartDatum[] = [
-  { date: '16 Sep', value: 'Rp 520.000', state: 'revenue', detail: 'Known-price revenue' },
-  { date: '17 Sep', value: 'Rp 820.000', state: 'revenue', detail: 'Known-price revenue' },
-  { date: '18 Sep', value: 'Rp 620.000', state: 'revenue', detail: 'Known-price revenue' },
-  { date: '19 Sep', value: 'Rp 1.060.000', state: 'revenue', detail: 'Known-price revenue · selected datum' },
-  { date: '20 Sep', value: 'No data', state: 'gap', detail: 'Open day — no data (gap)' },
-  { date: '21 Sep', value: 'Rp 0', state: 'zero', detail: 'Confirmed zero' },
-  { date: '22 Sep', value: 'Rp 480.000', state: 'revenue', detail: 'Known-price revenue' },
-];
+const unitsWidget: WidgetSelection = {
+  id: 'total-units',
+  title: 'Units sold',
+  type: 'KPI',
+  metric: 'Units sold',
+  dimension: 'None',
+  data: sampleTotalUnits,
+};
 
-const productBars = [
-  { name: 'Orange Juice', units: 164, width: 100, tone: 'lime' },
-  { name: 'Rice 5kg', units: 118, width: 72, tone: 'mint' },
-  { name: 'Coffee', units: 88, width: 54, tone: 'coral' },
-  { name: 'Other', units: 54, width: 33, tone: 'lavender' },
-];
+const dailyRevenueWidget: WidgetSelection = {
+  id: 'daily-revenue',
+  title: 'Daily revenue',
+  type: 'Line chart',
+  metric: 'Revenue',
+  dimension: 'Day',
+  data: sampleDailyRevenue,
+};
 
-function StatCard({
-  label,
+const productSalesWidget: WidgetSelection = {
+  id: 'sales-by-product',
+  title: 'Sales by product',
+  type: 'Bar chart',
+  metric: 'Units sold',
+  dimension: 'Product',
+  data: sampleProductUnits,
+};
+
+const completeDaysWidget: WidgetSelection = {
+  id: 'complete-days',
+  title: 'Complete days',
+  type: 'KPI',
+  metric: 'Day completeness',
+  dimension: 'Day',
+  data: null,
+};
+
+function isReady(mapping: ChartMapping): mapping is Extract<ChartMapping, { status: 'ready' }> {
+  return mapping.status === 'ready';
+}
+
+function shortDateLabel(label: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(label);
+  if (!match) return label;
+  const month = new Intl.DateTimeFormat('en', { month: 'short', timeZone: 'UTC' })
+    .format(new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]))));
+  return `${Number(match[3])} ${month}`;
+}
+
+function tooltipIndex(parameters: unknown): number | null {
+  const candidate = Array.isArray(parameters) ? parameters[0] : parameters;
+  if (typeof candidate !== 'object' || candidate === null || !('dataIndex' in candidate)) return null;
+  const index = candidate.dataIndex;
+  return typeof index === 'number' && Number.isInteger(index) ? index : null;
+}
+
+function formatMoneyTick(value: string | number, currency: LedgerCurrency): string {
+  const numeric = typeof value === 'number' ? value : Number(value);
+  const minorUnits = Math.round(numeric);
+  if (!Number.isSafeInteger(minorUnits) || minorUnits < 0) return '—';
+  return formatMoneyMinor(String(minorUnits), currency);
+}
+
+function formatCountTick(value: string | number): string {
+  const numeric = typeof value === 'number' ? value : Number(value);
+  const count = Math.round(numeric);
+  if (!Number.isSafeInteger(count) || count < 0) return '—';
+  return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(BigInt(count));
+}
+
+function revenueTooltip(parameters: unknown, points: ChartPoint[], currency: LedgerCurrency): string {
+  const index = tooltipIndex(parameters);
+  if (index === null || index >= points.length) return '';
+  const point = points[index];
+  const amount = point.exactValue === null
+    ? 'Unknown price'
+    : formatMoneyMinor(point.exactValue, currency);
+  return `${escapeTooltipHtml(point.label)}<br/><strong>${escapeTooltipHtml(amount)}</strong>`;
+}
+
+function quantityTooltip(parameters: unknown, points: ChartPoint[]): string {
+  const index = tooltipIndex(parameters);
+  if (index === null || index >= points.length) return '';
+  const point = points[index];
+  const units = point.exactValue === null
+    ? 'No quantity'
+    : new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(BigInt(point.exactValue));
+  return `${escapeTooltipHtml(point.label)}<br/><strong>${escapeTooltipHtml(units)} units</strong>`;
+}
+
+function revenueChartOption(mapping: ChartMapping, currency: LedgerCurrency): EChartsOption {
+  const points = isReady(mapping) ? mapping.points : [];
+  return {
+    animation: false,
+    grid: { left: 65, right: 13, top: 8, bottom: 30 },
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: '#fbfbf7',
+      borderColor: '#e5e8df',
+      textStyle: { color: '#30382c', fontFamily: 'Roboto, Segoe UI, Arial, sans-serif', fontSize: 11 },
+      formatter: (parameters) => revenueTooltip(parameters, points, currency),
+    },
+    xAxis: {
+      type: 'category',
+      boundaryGap: false,
+      data: points.map((point) => shortDateLabel(point.label)),
+      axisLine: { lineStyle: { color: '#dfe3d9' } },
+      axisTick: { show: false },
+      axisLabel: { color: '#68715f', fontSize: 10, hideOverlap: true },
+    },
+    yAxis: {
+      type: 'value',
+      min: 0,
+      axisLine: { show: false },
+      axisTick: { show: false },
+      axisLabel: {
+        color: '#68715f',
+        fontSize: 10,
+        formatter: (value) => formatMoneyTick(value, currency),
+      },
+      splitLine: { lineStyle: { color: '#edf0e8', type: 'dashed' } },
+    },
+    series: [{
+      name: 'Known-price revenue',
+      type: 'line',
+      smooth: false,
+      connectNulls: false,
+      showSymbol: true,
+      symbol: 'circle',
+      symbolSize: 7,
+      data: points.map((point) => point.value),
+      lineStyle: { color: '#6d865f', width: 2 },
+      itemStyle: { color: '#6d865f', borderColor: '#ffffff', borderWidth: 1.5 },
+    }],
+  };
+}
+
+function productChartOption(mapping: ChartMapping): EChartsOption {
+  const points = isReady(mapping) ? mapping.points : [];
+  const colors = ['#d3de9b', '#b4d5c7', '#e7c0a8', '#c9c4de'];
+  return {
+    animation: false,
+    grid: { left: 100, right: 26, top: 8, bottom: 22 },
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' },
+      backgroundColor: '#fbfbf7',
+      borderColor: '#e5e8df',
+      textStyle: { color: '#30382c', fontFamily: 'Roboto, Segoe UI, Arial, sans-serif', fontSize: 11 },
+      formatter: (parameters) => quantityTooltip(parameters, points),
+    },
+    xAxis: {
+      type: 'value',
+      min: 0,
+      axisLine: { show: false },
+      axisTick: { show: false },
+      axisLabel: { color: '#68715f', fontSize: 10, formatter: (value) => formatCountTick(value) },
+      splitLine: { lineStyle: { color: '#edf0e8', type: 'dashed' } },
+    },
+    yAxis: {
+      type: 'category',
+      inverse: true,
+      data: points.map((point) => point.label),
+      axisLine: { show: false },
+      axisTick: { show: false },
+      axisLabel: { color: '#68715f', fontSize: 11, width: 90, overflow: 'truncate' },
+    },
+    series: [{
+      name: 'Units sold',
+      type: 'bar',
+      barWidth: 14,
+      data: points.map((point, index) => ({ value: point.value, itemStyle: { color: colors[index % colors.length] } })),
+      itemStyle: { borderRadius: [0, 7, 7, 0] },
+    }],
+  };
+}
+
+const dailyRevenueOption = revenueChartOption(revenueByDate, sampleDailyRevenue.currency);
+const productSalesOption = productChartOption(unitsByProduct);
+
+function MetricCard({
+  widget,
   value,
   note,
   tone,
+  selected,
+  onSelect,
 }: {
-  label: string;
+  widget: WidgetSelection;
   value: string;
   note: string;
   tone: 'revenue' | 'units' | 'days';
+  selected: boolean;
+  onSelect: (widget: WidgetSelection) => void;
 }) {
   return (
-    <article className={'stat-card stat-card-' + tone}>
-      <span className="stat-label">{label}</span>
+    <button
+      id={`widget-${widget.id}`}
+      className={`stat-card stat-card-${tone} widget-selectable${selected ? ' widget-selected' : ''}`}
+      type="button"
+      aria-label={`${widget.title}: ${value}. ${note}. Open widget properties.`}
+      aria-pressed={selected}
+      onClick={() => onSelect(widget)}
+    >
+      <span className="stat-label">{widget.title}</span>
       <strong className="stat-value">{value}</strong>
-      <p className="stat-note">{note}</p>
-    </article>
+      <span className="stat-note">{note}</span>
+    </button>
   );
 }
 
-function LineChart() {
+function CompletenessNote({ data }: { data: AnalyticsQueryResponse }) {
+  return data.has_unknown_prices
+    ? <span className="sample-completeness">Some prices are unknown; known-price revenue excludes them.</span>
+    : <span className="sample-completeness">Revenue is complete for this sample.</span>;
+}
+
+function RevenueChart({ selected, onSelect }: { selected: boolean; onSelect: (widget: WidgetSelection) => void }) {
+  const chartMessage = revenueByDate.status === 'empty'
+    ? 'No data for this sample.'
+    : revenueByDate.status === 'unsupported-range'
+      ? revenueByDate.reason
+      : null;
+  const points = isReady(revenueByDate) ? revenueByDate.points : [];
+
   return (
-    <figure className="chart-card chart-card-line" aria-labelledby="daily-revenue-title">
-      <div className="chart-card-heading">
-        <div>
-          <h3 id="daily-revenue-title">Daily revenue</h3>
-          <p className="chart-subtitle">Known-price revenue · IDR</p>
-        </div>
-        <span className="selected-pill">Selected</span>
-      </div>
-      <img
-        className="revenue-plot"
-        src="/assets/daily-revenue-plot.svg"
-        alt="Daily revenue from 16 to 22 September. The 20 September open day is a gap and 21 September is a confirmed zero."
-        width="518"
-        height="172"
-      />
-      <p className="chart-legend" id="daily-revenue-legend">
-        <span className="legend-key legend-key-revenue" aria-hidden="true" />
-        <span>Revenue</span>
-        <span className="legend-key legend-key-zero" aria-hidden="true" />
-        <span>Confirmed zero</span>
-        <span className="legend-key legend-key-gap" aria-hidden="true" />
-        <span>Open day — no data</span>
-      </p>
+    <>
+      <button
+        id={`widget-${dailyRevenueWidget.id}`}
+        className={`selected-widget widget-selectable${selected ? ' widget-selected' : ''}`}
+        type="button"
+        aria-label="Daily revenue line chart. Sample data. Open widget properties."
+        aria-pressed={selected}
+        onClick={() => onSelect(dailyRevenueWidget)}
+      >
+        <figure className="chart-card chart-card-line" aria-labelledby="daily-revenue-title">
+          <div className="chart-card-heading">
+            <div>
+              <h3 id="daily-revenue-title">Daily revenue</h3>
+              <p className="chart-subtitle">Sample · Known-price revenue · {sampleDailyRevenue.currency}</p>
+            </div>
+            {selected && <span className="selected-pill">Selected</span>}
+          </div>
+          {chartMessage
+            ? <div className="chart-state chart-state-line">{chartMessage}</div>
+            : <div className="chart-visual chart-visual-line"><EChart option={dailyRevenueOption} label="Daily known-price revenue line chart from 16 to 22 September 2026" /></div>}
+          <p className="chart-data-note">Null revenue means unknown price. Zero means known revenue of zero.</p>
+        </figure>
+      </button>
       <table className="sr-only">
-        <caption>Daily revenue details</caption>
-        <thead><tr><th>Date</th><th>Value</th><th>State</th></tr></thead>
+        <caption>Sample daily revenue details</caption>
+        <thead><tr><th>Date</th><th>Known-price revenue</th><th>Quantity</th><th>Price state</th></tr></thead>
         <tbody>
-          {chartData.map((datum) => (
-            <tr key={datum.date}><td>{datum.date}</td><td>{datum.value}</td><td>{datum.detail}</td></tr>
-          ))}
+          {points.length === 0
+            ? <tr><td colSpan={4}>{chartMessage ?? 'No data for this sample.'}</td></tr>
+            : points.map((point) => (
+              <tr key={point.key}>
+                <td>{point.label}</td>
+                <td>{point.exactValue === null ? 'Unknown price' : formatMoneyMinor(point.exactValue, sampleDailyRevenue.currency)}</td>
+                <td>{point.quantity}</td>
+                <td>{point.state === 'unknown-price' ? 'Unknown price, not zero' : point.value === 0 ? 'Known zero revenue' : 'Known-price revenue'}</td>
+              </tr>
+            ))}
         </tbody>
       </table>
-    </figure>
+    </>
   );
 }
 
-function ProductChart() {
-  return (
-    <figure className="chart-card product-card" aria-labelledby="product-chart-title">
-      <div className="chart-card-heading product-card-heading">
-        <div>
-          <h3 id="product-chart-title">Sales by product</h3>
-          <p className="chart-subtitle">Units sold · select a bar to view rows</p>
-        </div>
-      </div>
-      <div className="bar-list">
-        {productBars.map((product) => (
-          <button
-            className="bar-row"
-            type="button"
-            key={product.name}
-            aria-label={product.name + ', ' + product.units + ' units sold'}
-          >
-            <span className="bar-label">{product.name}</span>
-            <span className="bar-track">
-              <span className={'bar-fill bar-fill-' + product.tone} style={{ width: product.width + '%' }} />
-            </span>
-            <strong className="bar-value">{product.units}</strong>
-          </button>
-        ))}
-      </div>
-      <p className="product-card-footer">All sales remain visible</p>
-    </figure>
-  );
-}
+function ProductChart({ selected, onSelect }: { selected: boolean; onSelect: (widget: WidgetSelection) => void }) {
+  const chartMessage = unitsByProduct.status === 'empty'
+    ? 'No data for this sample.'
+    : unitsByProduct.status === 'unsupported-range'
+      ? unitsByProduct.reason
+      : null;
+  const points = isReady(unitsByProduct) ? unitsByProduct.points : [];
 
-function SelectionHandles() {
   return (
-    <div className="selection-handles" aria-hidden="true">
-      <span className="selection-handle selection-handle-top-left" />
-      <span className="selection-handle selection-handle-top-center" />
-      <span className="selection-handle selection-handle-top-right" />
-      <span className="selection-handle selection-handle-middle-left" />
-      <span className="selection-handle selection-handle-middle-right" />
-      <span className="selection-handle selection-handle-bottom-left" />
-      <span className="selection-handle selection-handle-bottom-center" />
-      <span className="selection-handle selection-handle-bottom-right" />
-    </div>
+    <>
+      <button
+        id={`widget-${productSalesWidget.id}`}
+        className={`chart-card product-card widget-selectable${selected ? ' widget-selected' : ''}`}
+        type="button"
+        aria-label="Sales by product horizontal bar chart. Sample data. Open widget properties."
+        aria-pressed={selected}
+        onClick={() => onSelect(productSalesWidget)}
+      >
+        <figure aria-labelledby="product-chart-title">
+          <div className="chart-card-heading product-card-heading">
+            <div>
+              <h3 id="product-chart-title">Sales by product</h3>
+              <p className="chart-subtitle">Sample · Units sold</p>
+            </div>
+            {selected && <span className="selected-pill">Selected</span>}
+          </div>
+          {chartMessage
+            ? <div className="chart-state chart-state-product">{chartMessage}</div>
+            : <div className="chart-visual chart-visual-product"><EChart option={productSalesOption} label="Sample units sold by product horizontal bar chart" /></div>}
+          <p className="product-card-footer">All sample quantities include rows with unknown prices</p>
+        </figure>
+      </button>
+      <table className="sr-only">
+        <caption>Sample units sold by product</caption>
+        <thead><tr><th>Product</th><th>Units sold</th></tr></thead>
+        <tbody>
+          {points.length === 0
+            ? <tr><td colSpan={2}>{chartMessage ?? 'No data for this sample.'}</td></tr>
+            : points.map((point) => (
+              <tr key={point.key}><td>{point.label}</td><td>{point.exactValue ?? 'No quantity'}</td></tr>
+            ))}
+        </tbody>
+      </table>
+    </>
   );
 }
 
@@ -131,29 +359,29 @@ function DashboardFilters() {
       <div className="filter-controls">
         <label className="filter-control">
           <span className="sr-only">Date range</span>
-          <select defaultValue="week" aria-label="Date range">
+          <select defaultValue="week" aria-label="Date range" disabled>
             <option value="week">16–22 Sep 2026</option>
           </select>
         </label>
         <label className="filter-control">
           <span className="sr-only">Product filter</span>
-          <select defaultValue="all" aria-label="Product filter">
+          <select defaultValue="all" aria-label="Product filter" disabled>
             <option value="all">All products</option>
           </select>
         </label>
         <label className="filter-control">
           <span className="sr-only">Comparison period</span>
-          <select defaultValue="previous" aria-label="Comparison period">
+          <select defaultValue="previous" aria-label="Comparison period" disabled>
             <option value="previous">Previous week</option>
           </select>
         </label>
       </div>
       <span className="filter-spacer" aria-hidden="true" />
       <div className="canvas-toolbar-actions">
-        <button className="button button-add" id="add-widget" type="button">+ Add widget</button>
+        <button className="button button-add" id="add-widget" type="button" disabled title="Widget creation is not connected in this preview">+ Add widget</button>
         <label className="zoom-control">
           <span className="sr-only">Canvas zoom</span>
-          <select defaultValue="100" aria-label="Canvas zoom">
+          <select defaultValue="100" aria-label="Canvas zoom" disabled>
             <option value="100">100%</option>
           </select>
         </label>
@@ -162,77 +390,168 @@ function DashboardFilters() {
   );
 }
 
-function Inspector() {
+function Inspector({ widget, onClose }: { widget: WidgetSelection | null; onClose: () => void }) {
+  if (!widget) return null;
+  const completeness = widget.data
+    ? widget.metric === 'Units sold'
+      ? widget.data.has_unknown_prices
+        ? 'Quantities include sales with unknown prices'
+        : 'Quantities contain no unknown-price sales'
+      : widget.data.has_unknown_prices ? 'Revenue incomplete · unknown prices present' : 'Revenue complete'
+    : 'Illustrative only · not read from the API';
+  const closeAndRestoreFocus = () => {
+    onClose();
+    window.requestAnimationFrame(() => document.getElementById(`widget-${widget.id}`)?.focus());
+  };
+
   return (
-    <aside className="inspector" aria-label="Selected widget properties">
+    <aside className="inspector" aria-label={`${widget.title} widget properties`} aria-labelledby="inspector-title">
       <header className="inspector-heading">
-        <h2>Widget properties</h2>
-        <p>Daily revenue</p>
+        <div>
+          <h2 id="inspector-title">Widget properties</h2>
+          <p>{widget.title}</p>
+        </div>
+        <button className="inspector-close" type="button" aria-label="Close widget properties" onClick={closeAndRestoreFocus}>
+          <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true" focusable="false">
+            <path d="M5 5l10 10M15 5L5 15" />
+          </svg>
+        </button>
       </header>
 
-      <div className="inspector-tabs" role="tablist" aria-label="Widget property sections">
-        <button className="inspector-tab inspector-tab-active" type="button" role="tab" aria-selected="true">Setup</button>
-        <button className="inspector-tab" type="button" role="tab" aria-selected="false">Style</button>
-      </div>
-
-      <label className="inspector-field">
-        <span>Widget title</span>
-        <input type="text" defaultValue="Daily revenue" aria-label="Widget title" />
-      </label>
-
-      <fieldset className="chart-type-field">
-        <legend>Chart type</legend>
-        <div className="chart-type-options">
-          <button type="button" className="chart-type-active" aria-pressed="true">Line</button>
-          <button type="button" aria-pressed="false">Bar</button>
-          <button type="button" aria-pressed="false">KPI</button>
-        </div>
-      </fieldset>
-
-      <label className="inspector-field inspector-select-field">
-        <span>Metric</span>
-        <select defaultValue="known-revenue" aria-label="Metric">
-          <option value="known-revenue">Known-price revenue</option>
-        </select>
-      </label>
-
-      <label className="inspector-field inspector-select-field">
-        <span>Group by</span>
-        <select defaultValue="day" aria-label="Group by">
-          <option value="day">Day</option>
-        </select>
-      </label>
-
-      <section className="inspector-rules" aria-labelledby="data-rules-title">
-        <h3 id="data-rules-title">Keep the full picture</h3>
-        <dl>
-          <div><dt>Open days</dt><dd>Show as gaps</dd></div>
-          <div><dt>Confirmed zero</dt><dd>Keep at 0</dd></div>
-          <div><dt>Unknown prices</dt><dd>Exclude from revenue</dd></div>
-        </dl>
+      <section className="inspector-sample" aria-label="Sample data status">
+        <strong>Sample data</strong>
+        <p>{widget.data ? 'This widget is not connected to a live ledger.' : 'Coverage values are examples and are not connected to day coverage.'}</p>
       </section>
 
-      <section className="position-controls" aria-labelledby="position-title">
-        <h3 id="position-title">Position</h3>
-        <div>
-          <button type="button">Move left</button>
-          <button type="button">Move right</button>
-        </div>
+      <dl className="inspector-properties">
+        <div><dt>Title</dt><dd>{widget.title}</dd></div>
+        <div><dt>Widget type</dt><dd>{widget.type}</dd></div>
+        <div><dt>Metric</dt><dd>{widget.metric}</dd></div>
+        <div><dt>Group by</dt><dd>{widget.dimension}</dd></div>
+        <div><dt>Currency</dt><dd>{widget.data?.currency ?? 'Not applicable'}</dd></div>
+        <div><dt>Completeness</dt><dd>{completeness}</dd></div>
+        <div><dt>Revision</dt><dd>{widget.data ? `Sample fixture · ${widget.data.ledger_revision}` : 'No API revision'}</dd></div>
+      </dl>
+
+      <section className="inspector-rules" aria-label="How this sample is shown">
+        <h3>How values are shown</h3>
+        <p>{widget.data
+          ? 'Unknown revenue stays blank. A known revenue of zero stays 0. Quantity includes rows with unknown prices.'
+          : '5 of 7 days are shown as an illustrative sample. The analytics response does not provide day coverage.'}</p>
       </section>
 
-      <section className="inspector-source">
-        <h3>Connected to your ledger</h3>
-        <p>Revision 142 · same filters</p>
-        <p>Last refreshed at 09:42</p>
-        <p>Changes here affect this widget.</p>
-      </section>
-
-      <button className="remove-widget" type="button">Remove widget</button>
+      <p className="inspector-preview-note">Editing, arranging and saving are not enabled in this preview.</p>
     </aside>
   );
 }
 
+function Dashboard({
+  widget,
+  onSelect,
+  onClose,
+}: {
+  widget: WidgetSelection | null;
+  onSelect: (widget: WidgetSelection) => void;
+  onClose: () => void;
+}) {
+  const revenueNote = sampleTotalRevenue.has_unknown_prices
+    ? 'Known-price revenue · unknown prices excluded'
+    : 'Known-price revenue';
+  const unitsNote = sampleTotalUnits.has_unknown_prices
+    ? 'Includes sales with unknown prices'
+    : 'Complete quantity total';
+
+  return (
+    <div className={`editor-body${widget ? ' inspector-open' : ' inspector-closed'}`}>
+      <main className="canvas" id="dashboard">
+        <div className="canvas-inner">
+          <section className="voice-card" aria-labelledby="voice-title">
+            <img className="voice-icon" src="/assets/voice-waveform.svg" width="32" height="32" alt="" aria-hidden="true" />
+            <div className="voice-copy">
+              <h2 id="voice-title">Ask EasyLedger</h2>
+              <p>Try “show revenue this week”</p>
+            </div>
+            <button className="voice-shortcut" type="button" aria-label="Voice controls are not connected in this preview" disabled>
+              Voice preview only
+            </button>
+          </section>
+
+          <DashboardFilters />
+
+          <section className="stat-grid" aria-label="Sample weekly sales summary">
+            <MetricCard
+              widget={revenueWidget}
+              value={formatAnalyticsTotal(sampleTotalRevenue)}
+              note={revenueNote}
+              tone="revenue"
+              selected={widget?.id === revenueWidget.id}
+              onSelect={onSelect}
+            />
+            <MetricCard
+              widget={unitsWidget}
+              value={formatAnalyticsTotal(sampleTotalUnits)}
+              note={unitsNote}
+              tone="units"
+              selected={widget?.id === unitsWidget.id}
+              onSelect={onSelect}
+            />
+            <MetricCard
+              widget={completeDaysWidget}
+              value="5 of 7"
+              note="Example coverage values"
+              tone="days"
+              selected={widget?.id === completeDaysWidget.id}
+              onSelect={onSelect}
+            />
+          </section>
+
+          <section className="chart-grid" aria-label="Sample dashboard charts">
+            <RevenueChart selected={widget?.id === dailyRevenueWidget.id} onSelect={onSelect} />
+            <ProductChart selected={widget?.id === productSalesWidget.id} onSelect={onSelect} />
+          </section>
+
+          <aside className="quality-notice" aria-label="Sample data quality notice">
+            <div>
+              <strong>Sample values, with price context</strong>
+              <p><CompletenessNote data={sampleDailyRevenue} /> Open-day completeness is not represented by this sample chart.</p>
+            </div>
+            <span className="quality-sample-tag">Preview only</span>
+          </aside>
+
+          <section className="source-card" id="source-sales" tabIndex={-1} aria-labelledby="source-title">
+            <div className="source-card-heading">
+              <h2 id="source-title">Source preview</h2>
+              <span>Sample fixture · revision 142</span>
+            </div>
+            <div className="source-summary">
+              <div>
+                <strong>7 sample dates</strong>
+                <span>Values used in the line chart</span>
+              </div>
+              <div>
+                <strong>Product quantities</strong>
+                <span>Values used in the bar chart</span>
+              </div>
+              <div>
+                <strong>{formatAnalyticsTotal(sampleTotalRevenue)} known-price total</strong>
+                <span>{sampleTotalRevenue.currency} · sample only</span>
+              </div>
+            </div>
+            <p className="source-helper">Live source transactions are not connected in this preview.</p>
+          </section>
+
+          <p className="canvas-footer">Select a chart or KPI to view its properties.</p>
+        </div>
+      </main>
+      <Inspector widget={widget} onClose={onClose} />
+    </div>
+  );
+}
+
 function App() {
+  const [selectedWidget, setSelectedWidget] = useState<WidgetSelection | null>(null);
+  const closeInspector = () => setSelectedWidget(null);
+
   return (
     <div className="app-shell">
       <header className="builder-toolbar">
@@ -259,9 +578,9 @@ function App() {
         <span className="toolbar-space" aria-hidden="true" />
 
         <div className="builder-actions">
-          <span className="mode-pill">Editing</span>
-          <button className="button button-preview" type="button">Preview</button>
-          <button className="button button-save" type="button">Save changes</button>
+          <span className="mode-pill">Sample preview</span>
+          <button className="button button-preview" type="button" disabled title="This dashboard is already in preview mode">Preview</button>
+          <button className="button button-save" type="button" disabled title="Dashboard saving is not connected in this preview">Save unavailable</button>
         </div>
       </header>
 
@@ -279,7 +598,7 @@ function App() {
             <a className="rail-action" href="#add-widget" aria-label="Add widget">
               <img src="/assets/rail-add-widget.svg" width="18" height="18" alt="" aria-hidden="true" />
             </a>
-            <a className="rail-action" href="#source-sales" aria-label="Source sales">
+            <a className="rail-action" href="#source-sales" aria-label="Source preview">
               <img src="/assets/rail-source-sales.svg" width="18" height="18" alt="" aria-hidden="true" />
             </a>
           </nav>
@@ -288,16 +607,16 @@ function App() {
 
           <aside className="rail-help">
             <strong>Make it yours</strong>
-            <p>Drag cards to arrange your dashboard.</p>
-            <p>Or use the inspector to move a widget.</p>
+            <p>Chart and KPI values are sample data.</p>
+            <p>Widget layout controls are unavailable.</p>
           </aside>
 
-          <section className="rail-footer" aria-label="Account and workspace">
-            <div className="rail-avatar" aria-hidden="true">KS</div>
+          <section className="rail-footer" aria-label="Sample workspace">
+            <div className="rail-avatar" aria-hidden="true">EL</div>
             <div className="rail-workspace">
-              <strong>Kedai Segar</strong>
-              <span>IDR</span>
-              <span>Workspace ready</span>
+              <strong>Example business</strong>
+              <span>IDR · sample</span>
+              <span>No live ledger connection</span>
             </div>
           </section>
         </aside>
@@ -306,88 +625,24 @@ function App() {
           <header className="dashboard-header">
             <div className="dashboard-header-inner">
               <div className="dashboard-heading">
-                <p className="breadcrumb">Workspace <span aria-hidden="true">/</span> Dashboard builder</p>
+                <p className="breadcrumb">Sample workspace <span aria-hidden="true">/</span> Dashboard preview</p>
                 <h1>Weekly sales overview</h1>
-                <p>Kedai Segar <span aria-hidden="true">·</span> IDR <span aria-hidden="true">·</span> Your week, at a glance.</p>
+                <p>Example business <span aria-hidden="true">·</span> IDR <span aria-hidden="true">·</span> Sample data only.</p>
               </div>
-              <div className="dashboard-status" aria-label="Dashboard status">
+              <div className="dashboard-status" aria-label="Dashboard data status">
                 <div className="saved-status">
-                  <strong>Saved just now</strong>
-                  <span>Dashboard up to date</span>
+                  <strong>Sample preview</strong>
+                  <span>Not connected to a live ledger</span>
                 </div>
                 <div className="refreshed-status">
-                  <strong>Refreshed 09:42</strong>
-                  <span>Revision 142 <i aria-hidden="true">·</i> 5 of 7 days complete</span>
+                  <strong>Local sample values</strong>
+                  <span>Fixture revision 142 <i aria-hidden="true">·</i> example data</span>
                 </div>
               </div>
             </div>
           </header>
 
-          <div className="editor-body">
-            <main className="canvas" id="dashboard">
-              <div className="canvas-inner">
-                <section className="voice-card" aria-labelledby="voice-title">
-                  <img className="voice-icon" src="/assets/voice-waveform.svg" width="32" height="32" alt="" aria-hidden="true" />
-                  <div className="voice-copy">
-                    <h2 id="voice-title">Ask EasyLedger</h2>
-                    <p>Try “show revenue this week”</p>
-                  </div>
-                  <button className="voice-shortcut" type="button" aria-label="Voice status idle, press Space to listen">
-                    Idle · Press Space
-                  </button>
-                </section>
-
-                <DashboardFilters />
-
-                <section className="stat-grid" aria-label="Weekly sales summary">
-                  <StatCard label="Total revenue" value="Rp 3.480.000" note="Known-price sales · 2 rows excluded" tone="revenue" />
-                  <StatCard label="Units sold" value="214" note="Includes sales with unknown prices" tone="units" />
-                  <StatCard label="Complete days" value="5 of 7" note="2 days still open · gaps stay visible" tone="days" />
-                </section>
-
-                <section className="chart-grid" aria-label="Dashboard charts">
-                  <div className="selected-widget" role="group" aria-label="Selected widget: Daily revenue">
-                    <LineChart />
-                    <SelectionHandles />
-                  </div>
-                  <ProductChart />
-                </section>
-
-                <aside className="quality-notice" aria-label="Data quality notice">
-                  <div>
-                    <strong>A little context for your numbers</strong>
-                    <p>2 rows have no price. Open days stay as gaps; confirmed zero stays zero.</p>
-                  </div>
-                  <button className="view-ledger" type="button">View ledger</button>
-                </aside>
-
-                <section className="source-card" id="source-sales" tabIndex={-1} aria-labelledby="source-title">
-                  <div className="source-card-heading">
-                    <h2 id="source-title">Source sales</h2>
-                    <span>Revision 142 · matched</span>
-                  </div>
-                  <div className="source-summary">
-                    <div>
-                      <strong>Orange Juice · 19 Sep</strong>
-                      <span>Same filters as this dashboard</span>
-                    </div>
-                    <div>
-                      <strong>2 authorized rows</strong>
-                      <span>From your ledger</span>
-                    </div>
-                    <div>
-                      <strong>IDR 240.000 total</strong>
-                    </div>
-                  </div>
-                  <p className="source-helper">Select a chart point or bar to inspect the matching sales.</p>
-                </section>
-
-                <p className="canvas-footer">Select a widget to edit <span aria-hidden="true">·</span> Drag to arrange or use Position controls</p>
-              </div>
-            </main>
-
-            <Inspector />
-          </div>
+          <Dashboard widget={selectedWidget} onSelect={setSelectedWidget} onClose={closeInspector} />
         </div>
       </div>
     </div>

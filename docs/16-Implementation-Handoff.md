@@ -7,7 +7,7 @@ tags: [easyledger, operations, delivery]
 
 ## What exists today
 
-Planning notes, the existing Obsidian vault, Graphify artifacts and documentation maintenance scripts exist alongside the implemented Day 20 data foundation, Day 21 mutation service, Day 22 manual ledger API, and Day 23 voice session bootstrap and tool gateway. The repository now contains the initial PostgreSQL migration, product version migration, voice sessions migration, synthetic catalog seed, exact IDR/USD money module, transactional sale creation, correction and compensating undo, tenant-scoped catalog and sales routes, audited day coverage, ephemeral AssemblyAI session token generation, Fastify voice tool gateway (`get_context`, `propose_sales`, `commit_sales`, `propose_correction`, `commit_correction`, `query_sales`), plus domain, contract and PostgreSQL checks. The browser user interface and Render deployment remain planned. `npm run graph:serve` opens documentation visualization, not EasyLedger.
+Planning notes, the existing Obsidian vault, Graphify artifacts and documentation maintenance scripts exist alongside the implemented Day 20 data foundation, Day 21 mutation service, Day 22 manual ledger API, Day 23 voice session bootstrap and tool gateway, Day 25 analytics endpoint, and a browser dashboard preview with ECharts renderers. The repository now contains the initial PostgreSQL migration, product version migration, voice sessions migration, synthetic catalog seed, exact IDR/USD money module, transactional sale creation, correction and compensating undo, tenant-scoped catalog and sales routes, audited day coverage, ephemeral AssemblyAI session token generation, Fastify voice tool gateway (`get_context`, `propose_sales`, `commit_sales`, `propose_correction`, `commit_correction`, `query_sales`), plus domain, contract and PostgreSQL checks. The browser preview uses local sample data; authenticated live queries, voice interaction in the browser, complete builder behavior and Render deployment remain planned. `npm run graph:serve` opens documentation visualization, not EasyLedger.
 
 ## Documentation setup
 
@@ -17,8 +17,8 @@ For the browser graph, run `npm run graph:serve`, then open `http://127.0.0.1:41
 
 ## Implemented foundation and proposed structure
 
-- `apps/web`: React frontend, ledger/history, dashboard builder, microphone/session adapter.
-- `apps/api`: verified Fastify manual ledger routes with an injected authentication adapter; the authenticated tool gateway, dashboard and analytics services remain planned.
+- `apps/web`: implemented React/Vite dashboard preview with ECharts line and bar charts, Total revenue and Units sold KPI cards, and click/keyboard-selected widget properties; ledger/history, live query binding, builder persistence controls and microphone/session adapter remain planned.
+- `apps/api`: implemented Fastify manual ledger routes, voice tool gateway, dashboard service and `POST /api/v1/analytics/query` with an injected authentication adapter; the browser still needs an authenticated session integration.
 - `packages/domain`: implemented exact money parsing, validation and aggregation plus PostgreSQL-backed sale, catalog and coverage services; `packages/contracts` remains proposed for shared API/widget schemas.
 - `db/migrations` and `db/seed`: implemented initial PostgreSQL schema, product version migration and labeled synthetic catalog.
 - `tests/domain`, `tests/api` and `tests/database`: implemented Day 20 checks, Day 21 validation and PostgreSQL mutation/concurrency coverage, and Day 22 contract/API/tenant/coverage coverage; voice and browser checks remain planned in [[docs/09-Verification]].
@@ -46,6 +46,14 @@ The verified Day 22 run used Fastify 5.12.5 and PostgreSQL 17-alpine. `npm test`
 The Fastify HTTP tool gateway (`apps/api/app.ts`) registers endpoints for `get_context`, `propose_sales`, `commit_sales`, `propose_correction`, `commit_correction`, and `query_sales` under `/api/v1/voice/tools/*` and `/api/voice/tools/*`. The gateway authenticates incoming requests via the ephemeral session token, resolves tenant identity server-side, and strictly rejects any client-supplied or model-supplied `business_id` or `actor_user_id` with 422 `VALIDATION_ERROR`. Two-phase mutation proposals are stored with SHA-256 hashed confirmation tokens and payload hashes in the `proposals` table, requiring explicit confirmation before calling the underlying `OperationService`. Deterministic sales queries calculate exact revenue and unit totals while flagging incomplete revenue from unknown prices.
 
 The verified Day 23 run used Fastify 5.12.5 and PostgreSQL 17-alpine. `npm test` (15 domain + 9 API tests), `npm run test:database:day21`, `npm run test:database:day22`, `npm run test:database:day23`, and live AssemblyAI token generation passed against disposable schemas and containers.
+
+## Implemented TASK-25-03 dashboard renderers
+
+`apps/web/src/analytics.ts` defines the analytics response shape, validates success envelopes, maps exact minor-unit row values to ECharts only when they fit JavaScript's safe integer range, and formats IDR/USD totals without floating-point money arithmetic. `apps/web/src/EChart.tsx` registers the ECharts line, bar, grid, tooltip and SVG modules, resizes charts with their container and disposes instances on unmount. The Daily revenue line, Sales by product horizontal bar, Total revenue and Units sold cards use those typed sample responses. A separate Complete days card remains an illustrative sample; the analytics response does not provide day-coverage data.
+
+Every visible chart or KPI opens a selected-widget properties panel through mouse or keyboard activation. The panel reports the selected widget's title, type, metric, grouping and sample status. Its styled SVG close button dismisses the panel and returns focus to the selected card. Tooltip labels are HTML-escaped, and chart tables retain text alternatives. The preview labels sample values and unavailable actions explicitly; it does not claim an authorized live ledger connection, saved dashboard, source-row drilldown or full missing-versus-confirmed-zero day coverage. Those integrations remain in the numbered Day 25–26 tasks.
+
+Verification on 2026-09-25: `npm --prefix apps/web run build`, `git diff --check`, focused mapper checks for valid values, empty/null/zero/overflow and exact USD formatting, HTML tooltip escaping, and the seven existing API contract cases passed. Browser review at a 1280px viewport showed both ECharts SVGs, no horizontal overflow, the existing desktop card styling, correct inspector selection for chart and KPI cards, and close-button focus restoration. The Vite build reported a JavaScript chunk over 500 kB; production loading performance was not measured.
 
 ## Integration spike exit checklist
 
