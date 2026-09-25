@@ -5,7 +5,7 @@ tags: [easyledger, architecture, decisions]
 ---
 # Architecture decisions and stack
 
-Decisions dated 2026-09-17 are planning recommendations. The Day 20 PostgreSQL and exact-money foundation is implemented; the remaining stack still requires compatibility and integration spikes. Pin compatible package versions and verify licenses during implementation. Official references are catalogued in [[docs/13-Sources]].
+Decisions dated 2026-09-17 are planning recommendations. The Day 20 PostgreSQL and exact-money foundation, Day 21 mutation pipeline, and Day 22 Fastify manual API baseline are implemented and verified. The frontend, voice provider session and deployment still require compatibility and integration spikes. Pin compatible package versions and verify licenses during implementation. Official references are catalogued in [[docs/13-Sources]].
 
 | ADR | Decision | Rationale and tradeoff |
 | --- | --- | --- |
@@ -19,6 +19,7 @@ Decisions dated 2026-09-17 are planning recommendations. The Day 20 PostgreSQL a
 | ADR-008 | Simple functional UI; theme deferred | Prioritize backend and complete journeys. Basic focus, responsive controls and readable states are required now; branding and polish follow usability testing. |
 | ADR-009 | MIT license for original project work | Permissive open-source baseline aligned with published lablab precedent. This event's complete license clause is not verified; see [[docs/11-Hackathon-and-License]]. |
 | ADR-010 | One immutable business currency, IDR or USD, stored as exact minor units | IDR uses whole rupiah and USD uses cents. This supports user currency choice without floating point, conversion, or mixed-currency totals; changing currency requires a separate migration rather than rewriting ledger history. |
+| ADR-011 | Render deployment for web, API, and managed PostgreSQL | Render provides native support for Vite static sites (`apps/web`), containerized Fastify Node.js web services (`apps/api`), and managed PostgreSQL within a unified dashboard and VPC. This simplifies database connection strings, environment secrets, and preview deployments for the hackathon MVP. |
 
 ## Alternatives considered
 
@@ -30,7 +31,7 @@ Python/FastAPI plus pandas is useful for complex transformations, statistics or 
 | --- | --- | --- |
 | Voice API account access, token lifetime, HTTP-tool session identity and cancellation | Backend owner | First integration spike |
 | Auth provider and secure demo login | Backend owner | Before any public data access |
-| Hosting provider, region, budget cap, retention | Project owner | Before deployment |
+| Hosting provider, region, budget cap, retention | Project owner | Decided: Render (Static Site, Web Service, Managed PostgreSQL) in Singapore region. Budget cap and data retention to finalize before deployment. |
 | React/chart/grid version compatibility and keyboard behavior | Frontend owner | Builder spike |
 | Indonesian voice, fractional quantities, currencies beyond IDR | Product owner | Post-MVP scope review |
 | Theme, brand and detailed design system | Product/design owner | After functional acceptance |

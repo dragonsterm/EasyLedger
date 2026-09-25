@@ -5,6 +5,7 @@ import { randomUUID } from 'node:crypto';
 import {
   VoiceSessionService,
   ProposalService,
+  SalesQueryService,
   fetchAssemblyAiToken,
   hashToken,
 } from '../../packages/domain/voice.ts';
@@ -126,4 +127,88 @@ test('fetchAssemblyAiToken validates API key and handles errors safely', async (
     },
     (err) => err.code === 'PROVIDER_UNAVAILABLE' && err.httpStatus === 503,
   );
+});
+
+test('SalesQueryService fills bounded date rows and keeps gaps, confirmed zeroes, and unknown prices distinct', async () => {
+  const product = '00000000-0000-4000-8000-000000000201';
+  const calls = [];
+  const pool = {
+    async query(sql, values) {
+      calls.push({ sql, values });
+      return {
+        rows: [
+          { row_key: '2026-09-01', row_label: '2026-09-01', quantity_sum: '2', revenue_sum: null, unknown_price_count: '1', coverage_state: 'open', data_state: 'unknown-price' },
+          { row_key: '2026-09-02', row_label: '2026-09-02', quantity_sum: null, revenue_sum: null, unknown_price_count: '0', coverage_state: 'open', data_state: 'gap' },
+          { row_key: '2026-09-03', row_label: '2026-09-03', quantity_sum: '0', revenue_sum: '0', unknown_price_count: '0', coverage_state: 'complete', data_state: 'confirmed-zero' },
+          { row_key: '2026-09-04', row_label: '2026-09-04', quantity_sum: '1', revenue_sum: '125', unknown_price_count: '0', coverage_state: 'complete', data_state: 'sales' },
+        ],
+        rowCount: 4,
+      };
+    },
+    async connect() { throw new Error('not used'); },
+  };
+
+  const response = await new SalesQueryService(pool).querySales({
+    business_id: businessA,
+    currency: 'IDR',
+    ledger_revision: '9',
+    metric: 'revenue',
+    dimension: 'date',
+    date_from: '2026-09-01',
+    date_to: '2026-09-04',
+    product_ids: [product],
+  });
+
+  assert.equal(calls.length, 1);
+  assert.match(calls[0].sql, /generate_series\(\$2::date::timestamp, \$3::date::timestamp/);
+  assert.match(calls[0].sql, /LEFT JOIN day_coverages/);
+  assert.match(calls[0].sql, /s\.business_id = \$1/);
+  assert.match(calls[0].sql, /s\.sale_date >= \$2/);
+  assert.match(calls[0].sql, /s\.sale_date <= \$3/);
+  assert.match(calls[0].sql, /s\.product_id = ANY\(\$4::uuid\[\]\)/);
+  assert.deepEqual(calls[0].values, [businessA, '2026-09-01', '2026-09-04', [product]]);
+  assert.equal(response.total, '125');
+  assert.equal(response.has_unknown_prices, true);
+  assert.equal(response.completeness, 'incomplete');
+  assert.deepEqual(response.rows.map(({ quantity, revenue, data_state, coverage_state }) => ({ quantity, revenue, data_state, coverage_state })), [
+    { quantity: '2', revenue: null, data_state: 'unknown-price', coverage_state: 'open' },
+    { quantity: null, revenue: null, data_state: 'gap', coverage_state: 'open' },
+    { quantity: '0', revenue: '0', data_state: 'confirmed-zero', coverage_state: 'complete' },
+    { quantity: '1', revenue: '125', data_state: 'sales', coverage_state: 'complete' },
+  ]);
+  assert.deepEqual(response.filters, {
+    date_from: '2026-09-01',
+    date_to: '2026-09-04',
+    product_ids: [product],
+  });
+});
+
+test('SalesQueryService rejects an oversized date spine and propagates database failures', async () => {
+  let queryCount = 0;
+  const pool = {
+    async query() {
+      queryCount += 1;
+      throw new Error('database connection failed');
+    },
+    async connect() { throw new Error('not used'); },
+  };
+  const service = new SalesQueryService(pool);
+  const common = {
+    business_id: businessA,
+    currency: 'IDR',
+    ledger_revision: '9',
+    metric: 'units',
+    dimension: 'date',
+  };
+
+  await assert.rejects(
+    service.querySales({ ...common, date_from: '2026-01-01', date_to: '2027-01-02' }),
+    (error) => error.code === 'VALIDATION_ERROR' && error.httpStatus === 422,
+  );
+  assert.equal(queryCount, 0);
+  await assert.rejects(
+    service.querySales({ ...common, date_from: '2026-09-01', date_to: '2026-09-01' }),
+    (error) => error.message === 'database connection failed',
+  );
+  assert.equal(queryCount, 1);
 });

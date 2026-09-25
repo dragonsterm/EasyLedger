@@ -5,7 +5,7 @@ tags: [easyledger, verification]
 ---
 # Verification and traceability
 
-This remains the application acceptance plan. Day 20 domain and PostgreSQL component checks have run, while API, voice, browser, performance and recovery scenarios remain planned. Documentation-tool checks are separate and reported in [[docs/12-Knowledge-System]]. Every Must requirement in [[docs/02-SRS]] maps to a scenario below.
+This remains the application acceptance plan. Day 20 domain and PostgreSQL checks, Day 21 mutation checks, and the Day 22 manual API, catalog, coverage and tenant-isolation checks have run. Voice, browser, performance and recovery scenarios remain planned. Documentation-tool checks are separate and reported in [[docs/12-Knowledge-System]]. Every Must requirement in [[docs/02-SRS]] maps to a scenario below.
 
 | Test | Requirements | Scenario and pass condition |
 | --- | --- | --- |

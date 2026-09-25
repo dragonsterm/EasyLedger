@@ -180,7 +180,17 @@ test('TASK-26-04: Dashboard API enforces CRUD, optimistic locking, and tenant bo
 });
 
 test('TASK-25-02: POST /api/v1/analytics/query enforces auth, validates schemas, and returns aggregates', async (t) => {
-  const app = createApp({ pool: stubPool(), authAdapter: () => ({ userId: owner }) });
+  const analyticsPool = stubPool();
+  analyticsPool.query = async (sql, values) => {
+    if (String(sql).includes('FROM sales s')) {
+      return {
+        rows: [{ row_key: 'total', row_label: 'Total', quantity_sum: '0', revenue_sum: '0', unknown_price_count: '0' }],
+        rowCount: 1,
+      };
+    }
+    return { rows: [{ id: business, currency: 'IDR', ledger_revision: '0' }], rowCount: 1 };
+  };
+  const app = createApp({ pool: analyticsPool, authAdapter: () => ({ userId: owner }) });
   t.after(() => app.close());
 
   // 1. Unauthenticated request returns 401

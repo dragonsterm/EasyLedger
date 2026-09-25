@@ -13,9 +13,13 @@ export interface AnalyticsQueryRequest {
 export interface AnalyticsQueryRow {
   key: string;
   label: string;
-  quantity: string;
-  /** Exact minor units (whole rupiah for IDR, cents for USD), or null when all prices are unknown. */
+  quantity: string | null;
+  /** Exact minor units (whole rupiah for IDR, cents for USD), or null for a gap or wholly unknown revenue. */
   revenue: string | null;
+  /** Present for date rows; distinguishes an open-day gap from confirmed zero and recorded sales. */
+  data_state?: 'sales' | 'unknown-price' | 'gap' | 'confirmed-zero';
+  /** Day completeness is independent of whether recorded sales have unknown prices. */
+  coverage_state?: 'open' | 'complete';
 }
 
 export interface AnalyticsQueryResponse {
@@ -47,8 +51,9 @@ export interface ChartPoint {
   label: string;
   value: number | null;
   exactValue: string | null;
-  quantity: string;
-  state: 'known' | 'unknown-price';
+  quantity: string | null;
+  state: 'known' | 'unknown-price' | 'gap' | 'confirmed-zero';
+  coverageState?: 'open' | 'complete';
 }
 
 export type ChartMapping =
@@ -57,6 +62,7 @@ export type ChartMapping =
   | { status: 'unsupported-range'; points: []; reason: string };
 
 const DECIMAL_INTEGER = /^(0|[1-9]\d*)$/;
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const MAX_SAFE_INTEGER = BigInt(Number.MAX_SAFE_INTEGER);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -72,6 +78,24 @@ function requireString(value: unknown, field: string): string {
     throw new Error(`Analytics response has an invalid ${field}`);
   }
   return value;
+}
+
+function dateRangeKeys(start: string, end: string): string[] {
+  if (!ISO_DATE.test(start) || !ISO_DATE.test(end)) throw new Error('Analytics response has invalid date filters');
+  const first = new Date(`${start}T00:00:00Z`);
+  const last = new Date(`${end}T00:00:00Z`);
+  if (Number.isNaN(first.valueOf()) || Number.isNaN(last.valueOf()) || first.toISOString().slice(0, 10) !== start || last.toISOString().slice(0, 10) !== end || last < first) {
+    throw new Error('Analytics response has invalid date filters');
+  }
+  const dayCount = (last.valueOf() - first.valueOf()) / 86_400_000 + 1;
+  if (dayCount > 366) throw new Error('Analytics response date range exceeds 366 days');
+  const keys: string[] = [];
+  for (let day = 0; day < dayCount; day += 1) {
+    const date = new Date(first.valueOf());
+    date.setUTCDate(date.getUTCDate() + day);
+    keys.push(date.toISOString().slice(0, 10));
+  }
+  return keys;
 }
 
 /** Validates the API success envelope before any response values reach the UI. */
@@ -121,18 +145,51 @@ export function parseAnalyticsQueryEnvelope(input: unknown): AnalyticsQueryEnvel
     if (!isRecord(value)) throw new Error(`Analytics row ${index + 1} is invalid`);
     const quantity = value.quantity;
     const revenue = value.revenue;
-    if (!isDecimalInteger(quantity)) {
+    if (quantity !== null && !isDecimalInteger(quantity)) {
       throw new Error(`Analytics row ${index + 1} has an invalid quantity`);
     }
     if (revenue !== null && !isDecimalInteger(revenue)) {
       throw new Error(`Analytics row ${index + 1} has an invalid revenue`);
     }
-    if (revenue === null) containsUnknownRevenue = true;
+    const dataState = value.data_state;
+    const coverageState = value.coverage_state;
+    if (dataState !== undefined && dataState !== 'sales' && dataState !== 'unknown-price' && dataState !== 'gap' && dataState !== 'confirmed-zero') {
+      throw new Error(`Analytics row ${index + 1} has an invalid data state`);
+    }
+    if (coverageState !== undefined && coverageState !== 'open' && coverageState !== 'complete') {
+      throw new Error(`Analytics row ${index + 1} has an invalid coverage state`);
+    }
+    if (data.dimension === 'date' && dataState === undefined) {
+      throw new Error(`Analytics date row ${index + 1} is missing its data state`);
+    }
+    if (dataState === 'gap' && (quantity !== null || revenue !== null || coverageState !== 'open')) {
+      throw new Error(`Analytics gap row ${index + 1} must be open with null values`);
+    }
+    if (dataState === 'confirmed-zero' && (quantity !== '0' || revenue !== '0' || coverageState !== 'complete')) {
+      throw new Error(`Analytics confirmed-zero row ${index + 1} must be complete with exact zeros`);
+    }
+    if (dataState === 'sales' && revenue === null) {
+      throw new Error(`Analytics sales row ${index + 1} cannot have unknown revenue`);
+    }
+    if ((dataState === 'sales' || dataState === 'unknown-price') && quantity === null) {
+      throw new Error(`Analytics sales row ${index + 1} must include its quantity`);
+    }
+    if (quantity === null && dataState !== 'gap') {
+      throw new Error(`Analytics row ${index + 1} can omit quantity only for a gap`);
+    }
+    if ((revenue === null && dataState !== 'gap') || dataState === 'unknown-price') {
+      containsUnknownRevenue = true;
+    }
+    if (coverageState !== undefined && data.dimension !== 'date') {
+      throw new Error(`Analytics non-date row ${index + 1} cannot include day coverage`);
+    }
     return {
       key: requireString(value.key, `row ${index + 1} key`),
       label: requireString(value.label, `row ${index + 1} label`),
       quantity,
       revenue,
+      ...(dataState ? { data_state: dataState } : {}),
+      ...(coverageState ? { coverage_state: coverageState } : {}),
     };
   });
   if (containsUnknownRevenue && !data.has_unknown_prices) {
@@ -148,6 +205,18 @@ export function parseAnalyticsQueryEnvelope(input: unknown): AnalyticsQueryEnvel
   }
   if (!productIds.every((productId) => typeof productId === 'string')) {
     throw new Error('Analytics response product filters are invalid');
+  }
+  if (data.dimension === 'date' && (dateFrom !== null || dateTo !== null)) {
+    if (typeof dateFrom !== 'string' || typeof dateTo !== 'string') {
+      throw new Error('Bounded date analytics requires both normalized date filters');
+    }
+    const expectedDateKeys = dateRangeKeys(dateFrom, dateTo);
+    if (rows.length !== expectedDateKeys.length || rows.some((row, index) => row.key !== expectedDateKeys[index])) {
+      throw new Error('Bounded date analytics must include every date in the requested range');
+    }
+    if (rows.some((row) => row.coverage_state === undefined)) {
+      throw new Error('Bounded date analytics rows must include day coverage state');
+    }
   }
 
   const envelope: AnalyticsQueryEnvelope = {
@@ -182,8 +251,18 @@ export function mapAnalyticsRowsToChart(response: AnalyticsQueryResponse): Chart
   const points: ChartPoint[] = [];
   for (const row of response.rows) {
     const exactValue = response.metric === 'revenue' ? row.revenue : row.quantity;
+    if (row.data_state === 'gap') {
+      points.push({ ...row, value: null, exactValue: null, state: 'gap', coverageState: row.coverage_state });
+      continue;
+    }
     if (exactValue === null) {
-      points.push({ ...row, value: null, exactValue: null, state: 'unknown-price' });
+      points.push({
+        ...row,
+        value: null,
+        exactValue: null,
+        state: row.data_state === 'confirmed-zero' ? 'confirmed-zero' : 'unknown-price',
+        coverageState: row.coverage_state,
+      });
       continue;
     }
 
@@ -199,7 +278,12 @@ export function mapAnalyticsRowsToChart(response: AnalyticsQueryResponse): Chart
       ...row,
       value: Number(integer),
       exactValue,
-      state: 'known',
+      state: row.data_state === 'confirmed-zero'
+        ? 'confirmed-zero'
+        : row.data_state === 'unknown-price'
+          ? 'unknown-price'
+          : 'known',
+      coverageState: row.coverage_state,
     });
   }
   return { status: 'ready', points };
@@ -240,7 +324,9 @@ export function escapeTooltipHtml(value: string): string {
 }
 
 export function formatAnalyticsTotal(response: AnalyticsQueryResponse): string {
-  if (!response.rows.some((row) => BigInt(row.quantity) > 0n)) return 'No data';
+  const hasRecordedSales = response.rows.some((row) => row.quantity !== null && BigInt(row.quantity) > 0n);
+  const hasConfirmedZeroDay = response.rows.some((row) => row.data_state === 'confirmed-zero');
+  if (!hasRecordedSales && !hasConfirmedZeroDay) return 'No data';
   if (response.metric === 'revenue') {
     const minorUnits = response.currency === 'IDR'
       ? response.total
@@ -285,13 +371,13 @@ function sampleResponse(
 
 /** Clearly labeled local fixture until the browser has an authenticated session. */
 export const sampleDailyRevenue = sampleResponse('revenue', 'date', '3500000', [
-  { key: '2026-09-16', label: '2026-09-16', quantity: '52', revenue: '520000' },
-  { key: '2026-09-17', label: '2026-09-17', quantity: '78', revenue: '820000' },
-  { key: '2026-09-18', label: '2026-09-18', quantity: '64', revenue: '620000' },
-  { key: '2026-09-19', label: '2026-09-19', quantity: '118', revenue: '1060000' },
-  { key: '2026-09-20', label: '2026-09-20', quantity: '4', revenue: null },
-  { key: '2026-09-21', label: '2026-09-21', quantity: '6', revenue: '0' },
-  { key: '2026-09-22', label: '2026-09-22', quantity: '102', revenue: '480000' },
+  { key: '2026-09-16', label: '2026-09-16', quantity: '52', revenue: '520000', data_state: 'sales', coverage_state: 'complete' },
+  { key: '2026-09-17', label: '2026-09-17', quantity: '78', revenue: '820000', data_state: 'sales', coverage_state: 'complete' },
+  { key: '2026-09-18', label: '2026-09-18', quantity: '64', revenue: '620000', data_state: 'sales', coverage_state: 'complete' },
+  { key: '2026-09-19', label: '2026-09-19', quantity: '118', revenue: '1060000', data_state: 'sales', coverage_state: 'complete' },
+  { key: '2026-09-20', label: '2026-09-20', quantity: null, revenue: null, data_state: 'gap', coverage_state: 'open' },
+  { key: '2026-09-21', label: '2026-09-21', quantity: '0', revenue: '0', data_state: 'confirmed-zero', coverage_state: 'complete' },
+  { key: '2026-09-22', label: '2026-09-22', quantity: '112', revenue: '480000', data_state: 'unknown-price', coverage_state: 'open' },
 ], true);
 
 export const sampleProductUnits = sampleResponse('units', 'product', '424', [

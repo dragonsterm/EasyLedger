@@ -18,6 +18,12 @@ const DEFAULT_SESSION_TTL_SECONDS = 900; // 15 minutes
 const DEFAULT_PROPOSAL_TTL_SECONDS = 300; // 5 minutes
 const MAX_QUERY_DAYS = 366;
 
+function isValidDateOnly(value: string): boolean {
+  if (!DATE_PATTERN.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(parsed.valueOf()) && parsed.toISOString().slice(0, 10) === value;
+}
+
 export interface VoiceSessionRecord {
   id: string;
   business_id: string;
@@ -37,6 +43,9 @@ export interface ProposalRecord {
   base_ledger_revision: string;
   created_at: string;
 }
+
+export type AnalyticsDatumState = 'sales' | 'unknown-price' | 'gap' | 'confirmed-zero';
+export type AnalyticsCoverageState = 'open' | 'complete';
 
 export function hashToken(token: string): string {
   return createHash('sha256').update(token.trim()).digest('hex');
@@ -399,8 +408,10 @@ export class SalesQueryService {
     rows: Array<{
       key: string;
       label: string;
-      quantity: string;
+      quantity: string | null;
       revenue: string | null;
+      data_state: AnalyticsDatumState;
+      coverage_state?: AnalyticsCoverageState;
     }>;
     completeness: 'complete' | 'incomplete';
     has_unknown_prices: boolean;
@@ -411,15 +422,17 @@ export class SalesQueryService {
     };
   }> {
     const dimension = options.dimension ?? 'none';
+    const dateFrom = options.date_from ?? options.date_to ?? undefined;
+    const dateTo = options.date_to ?? options.date_from ?? undefined;
     const values: unknown[] = [options.business_id];
     const where = ['s.business_id = $1', 'NOT s.voided'];
 
-    if (options.date_from) {
-      values.push(options.date_from);
+    if (dateFrom) {
+      values.push(dateFrom);
       where.push(`s.sale_date >= $${values.length}`);
     }
-    if (options.date_to) {
-      values.push(options.date_to);
+    if (dateTo) {
+      values.push(dateTo);
       where.push(`s.sale_date <= $${values.length}`);
     }
     if (options.product_ids && options.product_ids.length > 0) {
@@ -448,23 +461,67 @@ export class SalesQueryService {
     let rows: Array<{
       key: string;
       label: string;
-      quantity: string;
+      quantity: string | null;
       revenue: string | null;
+      data_state: AnalyticsDatumState;
+      coverage_state?: AnalyticsCoverageState;
     }> = [];
     let hasUnknownPrices = false;
     let totalUnits = 0n;
     let totalRevenue = 0n;
 
-    try {
-      const result = await runQuery<{
-        row_key: string;
-        row_label: string;
-        quantity_sum: string;
-        revenue_sum: string | null;
-        unknown_price_count: string;
-      }>(
-        this.pool,
-        `SELECT ${selectClause}
+    const hasBoundedDateRange = dimension === 'date' && Boolean(dateFrom && dateTo);
+    if (dateFrom && dateTo) {
+      const start = Date.parse(`${dateFrom}T00:00:00Z`);
+      const end = Date.parse(`${dateTo}T00:00:00Z`);
+      const dayCount = (end - start) / 86_400_000 + 1;
+      if (!isValidDateOnly(dateFrom) || !isValidDateOnly(dateTo) || !Number.isFinite(start) || !Number.isFinite(end) || end < start || dayCount > MAX_QUERY_DAYS) {
+        throw new OperationError('VALIDATION_ERROR', 'Date analytics requires a valid range of at most 366 days', { httpStatus: 422 });
+      }
+    }
+
+    const boundedDateSql = hasBoundedDateRange
+      ? `WITH date_spine AS (
+           SELECT generated::date AS sale_date
+             FROM generate_series($2::date::timestamp, $3::date::timestamp, INTERVAL '1 day') AS generated
+         ), filtered_sales AS (
+           SELECT s.id, s.sale_date, s.quantity, s.unit_price
+             FROM sales s
+            WHERE ${where.join(' AND ')}
+         ), daily_sales AS (
+           SELECT sale_date,
+                  COUNT(id)::text AS sale_count,
+                  SUM(quantity)::text AS quantity_sum,
+                  CASE WHEN COUNT(CASE WHEN unit_price IS NULL THEN 1 END) = COUNT(id)
+                       THEN NULL
+                       ELSE COALESCE(SUM(CASE WHEN unit_price IS NOT NULL THEN quantity::bigint * unit_price::bigint ELSE 0 END), 0)::text
+                  END AS revenue_sum,
+                  COUNT(CASE WHEN unit_price IS NULL THEN 1 END)::text AS unknown_price_count
+             FROM filtered_sales
+            GROUP BY sale_date
+         )
+         SELECT days.sale_date::text AS row_key,
+                days.sale_date::text AS row_label,
+                CASE WHEN sales.sale_count IS NULL AND coverage.state IS DISTINCT FROM 'complete' THEN NULL
+                     ELSE COALESCE(sales.quantity_sum, '0')
+                END AS quantity_sum,
+                CASE WHEN sales.sale_count IS NULL
+                       THEN CASE WHEN coverage.state = 'complete' THEN '0' ELSE NULL END
+                     ELSE sales.revenue_sum
+                END AS revenue_sum,
+                COALESCE(sales.unknown_price_count, '0') AS unknown_price_count,
+                COALESCE(coverage.state, 'open') AS coverage_state,
+                CASE WHEN sales.sale_count IS NULL AND coverage.state = 'complete' THEN 'confirmed-zero'
+                     WHEN sales.sale_count IS NULL THEN 'gap'
+                     WHEN COALESCE(sales.unknown_price_count::integer, 0) > 0 THEN 'unknown-price'
+                     ELSE 'sales'
+                END AS data_state
+           FROM date_spine days
+           LEFT JOIN daily_sales sales ON sales.sale_date = days.sale_date
+           LEFT JOIN day_coverages coverage
+             ON coverage.business_id = $1 AND coverage.local_date = days.sale_date
+          ORDER BY days.sale_date ASC`
+      : `SELECT ${selectClause}
                 COALESCE(SUM(s.quantity), 0)::text AS quantity_sum,
                 CASE WHEN COUNT(CASE WHEN s.unit_price IS NULL THEN 1 END) = COUNT(s.id) AND COUNT(s.id) > 0
                      THEN NULL
@@ -475,28 +532,32 @@ export class SalesQueryService {
            LEFT JOIN products p ON p.id = s.product_id AND p.business_id = s.business_id
           WHERE ${where.join(' AND ')}
           ${groupByClause}
-          ${orderByClause}`,
-        values,
-      );
+          ${orderByClause}`;
 
-      for (const row of result.rows) {
-        const uCount = BigInt(row.unknown_price_count || '0');
-        if (uCount > 0n) hasUnknownPrices = true;
-        const qVal = BigInt(row.quantity_sum || '0');
-        totalUnits += qVal;
-        if (row.revenue_sum !== null) {
-          totalRevenue += BigInt(row.revenue_sum);
-        }
-        rows.push({
-          key: row.row_key,
-          label: row.row_label,
-          quantity: row.quantity_sum,
-          revenue: row.revenue_sum,
-        });
-      }
-    } catch {
-      // In-memory / mock query fallback
-      rows = [];
+    const result = await runQuery<{
+      row_key: string;
+      row_label: string;
+      quantity_sum: string | null;
+      revenue_sum: string | null;
+      unknown_price_count: string;
+      coverage_state?: AnalyticsCoverageState;
+      data_state?: AnalyticsDatumState;
+    }>(this.pool, boundedDateSql, values);
+
+    for (const row of result.rows) {
+      const uCount = BigInt(row.unknown_price_count || '0');
+      if (uCount > 0n) hasUnknownPrices = true;
+      if (row.quantity_sum !== null) totalUnits += BigInt(row.quantity_sum || '0');
+      if (row.revenue_sum !== null) totalRevenue += BigInt(row.revenue_sum);
+      const dataState = row.data_state ?? (uCount > 0n ? 'unknown-price' : 'sales');
+      rows.push({
+        key: row.row_key,
+        label: row.row_label,
+        quantity: row.quantity_sum,
+        revenue: row.revenue_sum,
+        data_state: dataState,
+        ...(row.coverage_state ? { coverage_state: row.coverage_state } : {}),
+      });
     }
 
     const completeness = hasUnknownPrices ? 'incomplete' : 'complete';
@@ -512,8 +573,8 @@ export class SalesQueryService {
       completeness,
       has_unknown_prices: hasUnknownPrices,
       filters: {
-        date_from: options.date_from ?? null,
-        date_to: options.date_to ?? null,
+        date_from: dateFrom ?? null,
+        date_to: dateTo ?? null,
         product_ids: options.product_ids ?? [],
       },
     };

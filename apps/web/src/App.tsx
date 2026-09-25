@@ -93,6 +93,17 @@ function tooltipIndex(parameters: unknown): number | null {
   return typeof index === 'number' && Number.isInteger(index) ? index : null;
 }
 
+function coverageLabel(point: ChartPoint): string {
+  if (point.coverageState === 'complete') return 'Complete day';
+  if (point.coverageState === 'open') return 'Open day';
+  return '';
+}
+
+function salesStateLabel(point: ChartPoint, detail: string): string {
+  const coverage = coverageLabel(point);
+  return `${coverage ? `${coverage} · ` : ''}${detail}`;
+}
+
 function formatMoneyTick(value: string | number, currency: LedgerCurrency): string {
   const numeric = typeof value === 'number' ? value : Number(value);
   const minorUnits = Math.round(numeric);
@@ -111,20 +122,31 @@ function revenueTooltip(parameters: unknown, points: ChartPoint[], currency: Led
   const index = tooltipIndex(parameters);
   if (index === null || index >= points.length) return '';
   const point = points[index];
+  if (point.state === 'gap') {
+    return `${escapeTooltipHtml(point.label)}<br/><strong>Open day · no sales · gap</strong>`;
+  }
+  if (point.state === 'confirmed-zero') {
+    return `${escapeTooltipHtml(point.label)}<br/><strong>Complete day · no sales · 0</strong>`;
+  }
   const amount = point.exactValue === null
-    ? 'Unknown price'
+    ? 'Sales recorded · revenue unknown'
     : formatMoneyMinor(point.exactValue, currency);
-  return `${escapeTooltipHtml(point.label)}<br/><strong>${escapeTooltipHtml(amount)}</strong>`;
+  const unknownNote = point.state === 'unknown-price' ? '<br/>Some recorded prices are unknown' : '';
+  const coverageNote = coverageLabel(point);
+  return `${escapeTooltipHtml(point.label)}<br/><strong>${escapeTooltipHtml(amount)}</strong>${coverageNote ? `<br/>${coverageNote}` : ''}${unknownNote}`;
 }
 
 function quantityTooltip(parameters: unknown, points: ChartPoint[]): string {
   const index = tooltipIndex(parameters);
   if (index === null || index >= points.length) return '';
   const point = points[index];
+  if (point.state === 'gap') return `${escapeTooltipHtml(point.label)}<br/><strong>Open day · no sales</strong>`;
+  if (point.state === 'confirmed-zero') return `${escapeTooltipHtml(point.label)}<br/><strong>Complete day · no sales · 0 units</strong>`;
   const units = point.exactValue === null
-    ? 'No quantity'
+    ? 'Sales recorded · quantity unknown'
     : new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(BigInt(point.exactValue));
-  return `${escapeTooltipHtml(point.label)}<br/><strong>${escapeTooltipHtml(units)} units</strong>`;
+  const unknownNote = point.state === 'unknown-price' ? '<br/>Some recorded prices are unknown' : '';
+  return `${escapeTooltipHtml(point.label)}<br/><strong>${escapeTooltipHtml(units)} units</strong>${unknownNote}`;
 }
 
 function revenueChartOption(mapping: ChartMapping, currency: LedgerCurrency): EChartsOption {
@@ -283,21 +305,33 @@ function RevenueChart({ selected, onSelect }: { selected: boolean; onSelect: (wi
           {chartMessage
             ? <div className="chart-state chart-state-line">{chartMessage}</div>
             : <div className="chart-visual chart-visual-line"><EChart option={dailyRevenueOption} label="Daily known-price revenue line chart from 16 to 22 September 2026" /></div>}
-          <p className="chart-data-note">Null revenue means unknown price. Zero means known revenue of zero.</p>
+          <p className="chart-data-note">Open no-sale days are gaps; complete no-sale days are zero. Unknown-price sales are labeled separately.</p>
         </figure>
       </button>
       <table className="sr-only">
         <caption>Sample daily revenue details</caption>
-        <thead><tr><th>Date</th><th>Known-price revenue</th><th>Quantity</th><th>Price state</th></tr></thead>
+        <thead><tr><th>Date</th><th>Known-price revenue</th><th>Quantity</th><th>Day and price state</th></tr></thead>
         <tbody>
           {points.length === 0
             ? <tr><td colSpan={4}>{chartMessage ?? 'No data for this sample.'}</td></tr>
             : points.map((point) => (
               <tr key={point.key}>
                 <td>{point.label}</td>
-                <td>{point.exactValue === null ? 'Unknown price' : formatMoneyMinor(point.exactValue, sampleDailyRevenue.currency)}</td>
-                <td>{point.quantity}</td>
-                <td>{point.state === 'unknown-price' ? 'Unknown price, not zero' : point.value === 0 ? 'Known zero revenue' : 'Known-price revenue'}</td>
+                <td>{point.state === 'gap'
+                  ? 'No sale · open day · gap'
+                  : point.state === 'confirmed-zero'
+                    ? '0 · complete no-sale day'
+                    : point.exactValue === null
+                      ? 'Recorded sale · revenue unknown'
+                      : `${formatMoneyMinor(point.exactValue, sampleDailyRevenue.currency)}${point.state === 'unknown-price' ? ' · some prices unknown' : ''}`}</td>
+                <td>{point.quantity ?? 'No sales recorded'}</td>
+                <td>{point.state === 'gap'
+                  ? 'Open day · missing activity is unknown'
+                  : point.state === 'confirmed-zero'
+                    ? 'Complete day · confirmed no sales'
+                    : point.state === 'unknown-price'
+                      ? salesStateLabel(point, 'sales recorded · unknown-price revenue is excluded')
+                      : salesStateLabel(point, 'sales recorded · prices known')}</td>
               </tr>
             ))}
         </tbody>
@@ -436,7 +470,7 @@ function Inspector({ widget, onClose }: { widget: WidgetSelection | null; onClos
       <section className="inspector-rules" aria-label="How this sample is shown">
         <h3>How values are shown</h3>
         <p>{widget.data
-          ? 'Unknown revenue stays blank. A known revenue of zero stays 0. Quantity includes rows with unknown prices.'
+          ? 'Open no-sale days are gaps; complete no-sale days show 0. Unknown-price sales are flagged separately and excluded from known-price revenue.'
           : '5 of 7 days are shown as an illustrative sample. The analytics response does not provide day coverage.'}</p>
       </section>
 
@@ -513,7 +547,7 @@ function Dashboard({
           <aside className="quality-notice" aria-label="Sample data quality notice">
             <div>
               <strong>Sample values, with price context</strong>
-              <p><CompletenessNote data={sampleDailyRevenue} /> Open-day completeness is not represented by this sample chart.</p>
+              <p><CompletenessNote data={sampleDailyRevenue} /> Open no-sale days are gaps; complete no-sale days show 0.</p>
             </div>
             <span className="quality-sample-tag">Preview only</span>
           </aside>

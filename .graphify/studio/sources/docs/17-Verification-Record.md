@@ -22,7 +22,7 @@ Ad-hoc passes performed on 2026-09-17 with Node.js 24.19.0 and Graphify 0.18.0. 
 
 ## Limits and unresolved evidence
 
-Native Obsidian rendering was not directly inspected in this session; canvas JSON/file geometry and links were checked. Application acceptance tests in [[docs/09-Verification]] are planned, not run. AssemblyAI account integration, actual browser microphone/session behavior, hosting, product performance, merchant usability and complete event-specific licensing rules still need the gates in [[docs/10-Delivery-Plan]] and [[docs/11-Hackathon-and-License]].
+Native Obsidian rendering was not directly inspected in this session; canvas JSON/file geometry and links were checked. The remaining application acceptance tests in [[docs/09-Verification]] are planned; Day 20–22 component, mutation and manual API checks are recorded below. AssemblyAI account integration, actual browser microphone/session behavior, hosting, product performance, merchant usability and complete event-specific licensing rules still need the gates in [[docs/10-Delivery-Plan]] and [[docs/11-Hackathon-and-License]].
 
 No mathematical “all possible documentation is complete” claim is made. The gap review covers the current bounded planning scope; implementation discoveries must update [[docs/04-Decisions]], requirements and traceability. Future actions must follow the ad-hoc verification policy in `AGENTS.md`.
 
@@ -34,4 +34,12 @@ The exact-money suite passed for the IDR golden totals (258,000 then 228,000), U
 
 The migration and seed were applied to a temporary PostgreSQL 17 database. Reapplying the seed preserved one demo business and two catalog products. Database checks rejected a duplicate normalized product, a cross-business product reference, zero quantity, negative price, an invalid coverage state and a business currency change. They also preserved distinct null and zero prices. Reapplying the one-way migration failed on an existing table as intended instead of hiding drift. The temporary database was removed after verification.
 
-This verifies the Day 20 data and arithmetic foundation only. It does not verify the Day 21 mutation services, Day 22 API/authorization behavior, AssemblyAI integration, browser workflow, performance, backup/restore or deployment.
+This verifies the Day 20 data and arithmetic foundation. Day 21 and Day 22 verification is recorded below; AssemblyAI integration, browser workflow, performance, backup/restore and deployment remain outside the verified scope.
+
+## Day 21 mutation verification — 2026-09-21
+
+`npm test` passed the deterministic money, schema, canonical payload and mutation validation tests. A disposable PostgreSQL 17-alpine schema passed `npm run test:database:day21`, including 20 concurrent identical retries, altered-payload idempotency conflicts, atomic invalid batches, stale corrections, compensating undo, intervening-edit protection, null-versus-zero prices and automatic reopening of completed days.
+
+## Day 22 API verification — 2026-09-21
+
+The Fastify 5.12.5 API contract tests passed for injected authentication, request IDs, read-response status, malformed-JSON handling, missing-business authorization, required idempotency headers and rejection of extra tenant properties. The disposable PostgreSQL 17-alpine API integration test passed for tenant-scoped reads and writes, 404 behavior for cross-tenant IDs, strict schemas, successful and stale manual corrections, catalog rename/default-price/deactivation and stale versions, normalized-name conflicts, identical and changed idempotency retries, historical price preservation, unknown versus zero prices, bounded date filtering and cursor pagination, isolated per-owner coverage, no-sale complete/reopen coverage, and automatic coverage reopening after a sale. The Day 20 SQL check and Day 21 PostgreSQL integration test passed against the same disposable server. The container and test schemas were removed after the run.
