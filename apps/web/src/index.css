@@ -196,6 +196,10 @@ dd {
   color: #fff;
 }
 
+.primary-link-active img {
+  filter: brightness(0) invert(1);
+}
+
 .toolbar-space {
   min-width: 0;
   flex: 1 1 auto;
@@ -320,6 +324,10 @@ dd {
 .rail-action-active:hover {
   background: var(--ink);
   color: #fff;
+}
+
+.rail-action-active img {
+  filter: brightness(0) invert(1);
 }
 
 .rail-spacer {
@@ -1961,4 +1969,331 @@ dd {
     font-size: 9px;
     line-height: 13px;
   }
+}
+
+/* ==========================================================================
+   Sales Ledger Journal Styles (100% Aligned with EasyLedger DESIGN.md)
+   ========================================================================== */
+
+.ledger-container {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 8px;
+}
+
+.ledger-canvas-toolbar {
+  grid-template-columns: 174px 148px 140px minmax(0, 1fr) 200px 128px !important;
+}
+
+.ledger-search-box input {
+  width: 100%;
+  height: 38px;
+  padding: 0 16px;
+  border: 1px solid transparent;
+  border-radius: 19px;
+  background: var(--field);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 500;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.ledger-search-box input:focus {
+  border-color: var(--selected);
+}
+
+.ledger-table-card {
+  position: relative;
+  width: 100%;
+  height: auto;
+  min-height: auto;
+  overflow: visible;
+  padding: 18px 20px 14px;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+
+.ledger-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  gap: 16px;
+}
+
+.ledger-card-header h2 {
+  color: #30382c;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 22px;
+  margin: 0;
+}
+
+.ledger-card-subtitle {
+  color: var(--muted);
+  font-size: 11px;
+  margin: 2px 0 0;
+}
+
+.ledger-fixture-badge {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 400;
+  white-space: nowrap;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  background: var(--surface-raised);
+  border: 1px solid var(--outline);
+}
+
+.ledger-table-wrapper {
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--outline);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.ledger-data-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.ledger-data-table thead th {
+  padding: 8px 8px;
+  background: #f7f8f3;
+  color: #58634c;
+  font-size: 11px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--outline);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ledger-data-table tbody td {
+  padding: 8px 8px;
+  border-bottom: 1px solid var(--outline);
+  color: var(--ink);
+  font-size: 12px;
+  vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ledger-data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.ledger-data-table tbody tr:hover {
+  background: rgba(240, 241, 235, 0.5);
+}
+
+.row-needs-price {
+  background: rgba(244, 240, 220, 0.35) !important;
+}
+
+.cell-date {
+  white-space: nowrap;
+  font-weight: 500;
+  color: #384532;
+}
+
+.cell-code code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  color: var(--muted-strong);
+  background: var(--surface-raised);
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.cell-product {
+  font-weight: 500;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cell-qty {
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.cell-price {
+  white-space: nowrap;
+}
+
+.cell-total {
+  white-space: nowrap;
+  font-weight: 500;
+  color: #30382c;
+}
+
+.unit-label {
+  margin-left: 2px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.badge-confirmed {
+  background: var(--kpi-mint);
+  color: #1f3f2a;
+}
+
+.badge-corrected {
+  background: #e1e7ec;
+  color: #263d52;
+}
+
+.badge-needs-price,
+.badge-warning {
+  background: var(--warm-note);
+  color: #6a4f21;
+}
+
+.version-pill {
+  display: inline-block;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: #eaede6;
+  color: var(--muted-strong);
+  font-family: monospace;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.action-buttons-group {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.ledger-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid var(--outline);
+  border-radius: 9999px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ledger-action-btn:hover {
+  background: var(--field);
+  border-color: var(--selected);
+}
+
+.ledger-action-btn-lime {
+  background: var(--chip-lime);
+  border-color: transparent;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.ledger-action-btn-lime:hover {
+  opacity: 0.9;
+}
+
+.ledger-action-btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--muted);
+}
+
+.ledger-action-btn-ghost:hover {
+  color: #ba1a1a;
+  background: #fdf2f2;
+}
+
+.ledger-card-footnote {
+  position: static;
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 15px;
+}
+
+.ledger-canvas-footer {
+  padding-top: 4px;
+  padding-bottom: 8px;
+  color: var(--muted);
+  font-size: 11px;
+  text-align: center;
+}
+
+.ledger-dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.ledger-dialog-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ledger-dialog-form label {
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ledger-dialog-form input,
+.ledger-dialog-form select {
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--outline);
+  border-radius: 8px;
+  background: var(--field);
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.ledger-dialog-form input:focus,
+.ledger-dialog-form select:focus {
+  outline: 2px solid var(--selected);
+  border-color: transparent;
+}
+
+.ledger-dialog-form .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.ledger-dialog-form .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
 }
