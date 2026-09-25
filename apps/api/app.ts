@@ -332,6 +332,22 @@ const toolQuerySalesSchema = {
   },
 };
 
+const sourceTransactionsSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['dimension', 'datum_key', 'ledger_revision', 'date_from', 'date_to', 'product_ids'],
+  properties: {
+    dimension: { type: 'string', enum: ['date', 'product'] },
+    datum_key: { type: 'string', minLength: 1, maxLength: 200 },
+    ledger_revision: integerSchema,
+    date_from: { type: ['string', 'null'], pattern: DATE_PATTERN },
+    date_to: { type: ['string', 'null'], pattern: DATE_PATTERN },
+    product_ids: { type: 'array', maxItems: 50, items: uuidSchema },
+    cursor: { type: 'string', minLength: 1, maxLength: 500 },
+    page_size: { type: 'integer', minimum: 1, maximum: 100 },
+  },
+};
+
 const widgetSchema = {
   type: 'object',
   additionalProperties: false,
@@ -470,6 +486,29 @@ function decodeCursor(value: unknown): { sale_date: string; id: string } | undef
     return { sale_date: saleDate, id };
   } catch (error) {
     if (error instanceof ApiError) throw error;
+    throw new ApiError('VALIDATION_ERROR', 'cursor is invalid', { httpStatus: 422, fieldErrors: { cursor: 'invalid cursor' } });
+  }
+}
+
+function decodeSourceCursor(value: unknown): { sale_date: string; id: string } | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== 'string' || !/^[A-Za-z0-9_-]+$/.test(value)) {
+    throw new ApiError('VALIDATION_ERROR', 'cursor is invalid', { httpStatus: 422, fieldErrors: { cursor: 'invalid cursor' } });
+  }
+  try {
+    const bytes = Buffer.from(value, 'base64url');
+    if (bytes.toString('base64url') !== value) throw new Error('non-canonical cursor');
+    const parsed = JSON.parse(bytes.toString('utf8')) as unknown;
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('invalid cursor shape');
+    const fields = Object.keys(parsed);
+    if (fields.length !== 2 || !fields.includes('sale_date') || !fields.includes('id')) throw new Error('invalid cursor fields');
+    const record = parsed as { sale_date?: unknown; id?: unknown };
+    const saleDate = validDate(record.sale_date, 'cursor.sale_date');
+    const id = text(record.id, 'cursor.id');
+    if (!new RegExp(UUID_PATTERN).test(id)) throw new Error('invalid cursor id');
+    if (encodeCursor({ sale_date: saleDate, id }) !== value) throw new Error('non-canonical cursor payload');
+    return { sale_date: saleDate, id };
+  } catch {
     throw new ApiError('VALIDATION_ERROR', 'cursor is invalid', { httpStatus: 422, fieldErrors: { cursor: 'invalid cursor' } });
   }
 }
@@ -1015,6 +1054,54 @@ export function createApp(options: AppOptions) {
   registerDashboardRoutes('/api');
   registerAnalyticsRoute('/api/v1/analytics/query');
   registerAnalyticsRoute('/api/analytics/query');
+
+  const registerSourceTransactionsRoute = (routePath: string) => {
+    app.post(routePath, { schema: { body: sourceTransactionsSchema } }, async (request, reply) => {
+      const context = (request as unknown as { easyLedger: { business: { id: string; currency: 'IDR' | 'USD' } } }).easyLedger;
+      const body = request.body as {
+        dimension: 'date' | 'product';
+        datum_key: string;
+        ledger_revision: string;
+        date_from: string | null;
+        date_to: string | null;
+        product_ids: string[];
+        cursor?: string;
+        page_size?: number;
+      };
+
+      if ((body.date_from === null) !== (body.date_to === null)) {
+        throw new ApiError('VALIDATION_ERROR', 'date_from and date_to must both be null or both contain normalized dates', {
+          httpStatus: 422,
+          fieldErrors: { date_from: 'filters must be normalized together', date_to: 'filters must be normalized together' },
+        });
+      }
+      const dates = body.date_from === null
+        ? {}
+        : dateRange(body.date_from, body.date_to!);
+      const result = await salesQueries.querySourceTransactions({
+        business_id: context.business.id,
+        currency: context.business.currency,
+        ledger_revision: body.ledger_revision,
+        dimension: body.dimension,
+        datum_key: body.datum_key,
+        date_from: dates.start ?? null,
+        date_to: dates.end ?? null,
+        product_ids: body.product_ids,
+        cursor: decodeSourceCursor(body.cursor),
+        page_size: body.page_size,
+      });
+
+      return reply.code(200).send(successEnvelope(String(request.id), {
+        ...result,
+        next_cursor: result.next_cursor ? encodeCursor(result.next_cursor) : null,
+      }, {
+        currency: result.currency,
+        ledger_revision: result.ledger_revision,
+      }));
+    });
+  };
+  registerSourceTransactionsRoute('/api/v1/analytics/source-transactions');
+  registerSourceTransactionsRoute('/api/analytics/source-transactions');
 
   // --- Day 23: Voice Agent Session Bootstrap & HTTP Tool Gateway ---
 

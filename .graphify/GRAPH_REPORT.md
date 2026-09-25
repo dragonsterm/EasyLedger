@@ -5,14 +5,14 @@ Generated from canonical EasyLedger planning notes. EXTRACTED means an explicit 
 # Graph Report - .  (2026-09-25)
 
 ## Corpus Check
-- 20 files · ~12,967 words
+- 20 files · ~13,331 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 135 nodes · 274 edges · 17 communities detected
+- 136 nodes · 275 edges · 17 communities detected
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
-- Edge kinds: references: 126 · specifies: 60 · contains: 55 · verifies: 33
+- Edge kinds: references: 126 · specifies: 60 · contains: 56 · verifies: 33
 
 ## God Nodes (most connected - your core abstractions)
 1. `Software requirements specification` - 42 edges
@@ -20,8 +20,8 @@ Generated from canonical EasyLedger planning notes. EXTRACTED means an explicit 
 3. `Verification and traceability` - 29 edges
 4. `Architecture decisions and stack` - 24 edges
 5. `EasyLedger documentation home` - 20 edges
-6. `Delivery plan and risk register` - 18 edges
-7. `Implementation handoff and runbook` - 18 edges
+6. `Implementation handoff and runbook` - 19 edges
+7. `Delivery plan and risk register` - 18 edges
 8. `AssemblyAI Voice Agent Hackathon rules, requirements, and judging` - 16 edges
 9. `Security and operations plan` - 14 edges
 10. `Data model and calculation rules` - 13 edges
@@ -57,8 +57,8 @@ Cohesion: 0.26
 Nodes (12): FR-02 User can explicitly start/stop microphone capture and see connection/listening/processing/error states; denied permission leaves manual entry usable., FR-05 Correct a selected sale with its current version; stale edits return conflict instead of overwriting. A correction replaces the intended value, never inse, FR-06 Undo a committed operation by a compensating revision, retaining audit history; fail safely when intervening edits make reversal ambiguous., FR-17 Cancel a pending proposal or disconnect safely without losing an acknowledged commit; reconnect refreshes authoritative state before another change., FR-18 Owner can create, rename and deactivate catalog products and set an optional default price through manual controls. Deactivation preserves historical sale, FR-19 Owner explicitly confirms or reopens a business day's completeness. Show its date and consequences before applying; the action is authorized, idempotent a, T-04 Correction/undo, T-08 Voice failure (+4 more)
 
 ### Community 4 - "Implementation handoff and runbook"
-Cohesion: 0.18
-Nodes (11): Implementation handoff and runbook, Documentation setup, Implemented foundation and proposed structure, Implemented Day 21 mutation pipeline, Implemented Day 22 manual API, Implemented Day 23 voice gateway, Implemented TASK-25-03 dashboard renderers, Implemented TASK-25-04 missing-versus-zero dates (+3 more)
+Cohesion: 0.17
+Nodes (12): Implementation handoff and runbook, Documentation setup, Implemented foundation and proposed structure, Implemented Day 21 mutation pipeline, Implemented Day 22 manual API, Implemented Day 23 voice gateway, Implemented TASK-25-03 dashboard renderers, Implemented TASK-25-04 missing-versus-zero dates (+4 more)
 
 ### Community 5 - "Delivery plan and risk register"
 Cohesion: 0.22
@@ -109,17 +109,17 @@ Cohesion: 0.67
 Nodes (3): FR-14 Every ledger mutation uses server-enforced idempotency; concurrent/retried identical requests yield one logical commit and the same receipt. Reuse with di, FR-15 Confirmed mutations return a receipt, updated revision, affected IDs and undo availability. Failed tools never produce success confirmations., T-03 Retry/concurrency
 
 ## Knowledge Gaps
-- **72 isolated node(s):** `Working rules`, `Mandatory ad-hoc verification passes`, `Reading the plan`, `Golden journey`, `Scope and success` (+67 more)
+- **73 isolated node(s):** `Working rules`, `Mandatory ad-hoc verification passes`, `Reading the plan`, `Golden journey`, `Scope and success` (+68 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `Software requirements specification` connect `Manual access and accessibility` to `System architecture`, `Data model and calculation rules`, `Product brief`, `Corrections and undo`, `Verification and release readiness`, `Analytics and missing data`, `Atomic sales and retries`, `Authorization and tool safety`, `Delivery plan and risk register`, `Architecture decisions and stack`, `Knowledge system maintenance`, `AssemblyAI Voice Agent Hackathon rules,`?**
-  _High betweenness centrality (0.314) - this node is a cross-community bridge._
+  _High betweenness centrality (0.311) - this node is a cross-community bridge._
 - **Why does `Architecture decisions and stack` connect `Architecture decisions and stack` to `System architecture`, `Data model and calculation rules`, `Manual access and accessibility`, `Delivery plan and risk register`, `Documentation verification record`, `Knowledge system maintenance`, `Security and operations plan`, `Implementation handoff and runbook`?**
-  _High betweenness centrality (0.204) - this node is a cross-community bridge._
+  _High betweenness centrality (0.203) - this node is a cross-community bridge._
 - **Why does `Verification and traceability` connect `Authorization and tool safety` to `Data model and calculation rules`, `Product brief`, `Manual access and accessibility`, `Agent workflow and API contracts`, `Security and operations plan`, `Verification and release readiness`, `Analytics and missing data`, `Atomic sales and retries`, `Corrections and undo`, `Delivery plan and risk register`, `Documentation verification record`, `Knowledge system maintenance`, `Implementation handoff and runbook`?**
-  _High betweenness centrality (0.188) - this node is a cross-community bridge._
+  _High betweenness centrality (0.189) - this node is a cross-community bridge._
 - **What connects `Working rules`, `Mandatory ad-hoc verification passes`, `Reading the plan` to the rest of the system?**
-  _72 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _73 weakly-connected nodes found - possible documentation gaps or missing edges._

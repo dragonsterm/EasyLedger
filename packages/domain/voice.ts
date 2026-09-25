@@ -47,6 +47,31 @@ export interface ProposalRecord {
 export type AnalyticsDatumState = 'sales' | 'unknown-price' | 'gap' | 'confirmed-zero';
 export type AnalyticsCoverageState = 'open' | 'complete';
 
+export interface SourceTransactionsQueryOptions {
+  business_id: string;
+  currency: Currency;
+  ledger_revision: string;
+  dimension: 'date' | 'product';
+  datum_key: string;
+  date_from?: string | null;
+  date_to?: string | null;
+  product_ids?: string[];
+  cursor?: { sale_date: string; id: string };
+  page_size?: number;
+}
+
+export interface SourceTransactionRow {
+  id: string;
+  product_id: string;
+  product_name: string;
+  quantity: string;
+  unit_price: string | null;
+  line_revenue: string | null;
+  sale_date: string;
+  version: string;
+  currency: Currency;
+}
+
 export function hashToken(token: string): string {
   return createHash('sha256').update(token.trim()).digest('hex');
 }
@@ -578,6 +603,181 @@ export class SalesQueryService {
         product_ids: options.product_ids ?? [],
       },
     };
+  }
+
+  /**
+   * Reads source rows for one chart datum from the exact chart filters and
+   * revision. A repeatable-read snapshot keeps the revision check and page
+   * query on the same committed ledger state.
+   */
+  async querySourceTransactions(options: SourceTransactionsQueryOptions): Promise<{
+    items: SourceTransactionRow[];
+    has_more: boolean;
+    next_cursor: { sale_date: string; id: string } | null;
+    currency: Currency;
+    ledger_revision: string;
+    dimension: 'date' | 'product';
+    datum_key: string;
+    filters: { date_from: string | null; date_to: string | null; product_ids: string[] };
+  }> {
+    const expectedRevision = options.ledger_revision;
+    if (!/^(0|[1-9]\d*)$/.test(expectedRevision)) {
+      throw new OperationError('VALIDATION_ERROR', 'ledger_revision must be a decimal integer', { httpStatus: 422 });
+    }
+    if (!UUID_PATTERN.test(options.business_id)) {
+      throw new OperationError('VALIDATION_ERROR', 'business_id must be a valid UUID', { httpStatus: 422 });
+    }
+
+    const dateFrom = options.date_from ?? options.date_to ?? undefined;
+    const dateTo = options.date_to ?? options.date_from ?? undefined;
+    if (dateFrom && (!isValidDateOnly(dateFrom) || !isValidDateOnly(dateTo!))) {
+      throw new OperationError('VALIDATION_ERROR', 'Date filters must be valid ISO local dates', { httpStatus: 422 });
+    }
+    if (dateFrom && dateTo && (dateFrom > dateTo || (Date.parse(`${dateTo}T00:00:00Z`) - Date.parse(`${dateFrom}T00:00:00Z`)) / 86_400_000 + 1 > MAX_QUERY_DAYS)) {
+      throw new OperationError('VALIDATION_ERROR', 'Date filters must be ordered and span at most 366 days', { httpStatus: 422 });
+    }
+
+    const productIds = options.product_ids ?? [];
+    if (!Array.isArray(productIds) || productIds.length > 50 || productIds.some((id) => !UUID_PATTERN.test(id))) {
+      throw new OperationError('VALIDATION_ERROR', 'product_ids must contain at most 50 valid UUIDs', { httpStatus: 422 });
+    }
+    if (options.dimension === 'date') {
+      if (!isValidDateOnly(options.datum_key)) {
+        throw new OperationError('VALIDATION_ERROR', 'datum_key must be a valid ISO local date for a date chart', { httpStatus: 422 });
+      }
+      if (dateFrom && (options.datum_key < dateFrom || options.datum_key > dateTo!)) {
+        throw new OperationError('VALIDATION_ERROR', 'datum_key must be inside the chart date filters', { httpStatus: 422 });
+      }
+    } else if (options.dimension === 'product') {
+      if (!UUID_PATTERN.test(options.datum_key)) {
+        throw new OperationError('VALIDATION_ERROR', 'datum_key must be a product UUID for a product chart', { httpStatus: 422 });
+      }
+      if (productIds.length > 0 && !productIds.includes(options.datum_key)) {
+        throw new OperationError('VALIDATION_ERROR', 'datum_key must be included in product_ids', { httpStatus: 422 });
+      }
+    } else {
+      throw new OperationError('VALIDATION_ERROR', 'Only date and product chart data can be opened', { httpStatus: 422 });
+    }
+
+    const cursor = options.cursor;
+    if (cursor && (!isValidDateOnly(cursor.sale_date) || !UUID_PATTERN.test(cursor.id))) {
+      throw new OperationError('VALIDATION_ERROR', 'cursor is invalid', { httpStatus: 422 });
+    }
+    const pageSize = options.page_size ?? 50;
+    if (!Number.isInteger(pageSize) || pageSize < 1 || pageSize > 100) {
+      throw new OperationError('VALIDATION_ERROR', 'page_size must be an integer from 1 to 100', { httpStatus: 422 });
+    }
+
+    const client = await this.pool.connect();
+    let transactionStarted = false;
+    try {
+      await client.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY');
+      transactionStarted = true;
+
+      const revisionResult = await client.query<{ currency: Currency; ledger_revision: string }>(
+        `SELECT currency, ledger_revision::text AS ledger_revision
+           FROM businesses
+          WHERE id = $1
+          LIMIT 1`,
+        [options.business_id],
+      );
+      const business = revisionResult.rows[0];
+      if (!business) {
+        throw new OperationError('NOT_FOUND', 'Chart data is unavailable. Refresh the chart and try again.', { httpStatus: 404 });
+      }
+      if (business.ledger_revision !== expectedRevision) {
+        throw new OperationError('STALE_QUERY', 'Chart data changed. Refresh the chart before opening source transactions.', {
+          httpStatus: 409,
+          currentVersion: business.ledger_revision,
+        });
+      }
+
+      const values: unknown[] = [options.business_id];
+      const where = ['s.business_id = $1', 'NOT s.voided'];
+      if (dateFrom) {
+        values.push(dateFrom);
+        where.push(`s.sale_date >= $${values.length}::date`);
+      }
+      if (dateTo) {
+        values.push(dateTo);
+        where.push(`s.sale_date <= $${values.length}::date`);
+      }
+      if (productIds.length > 0) {
+        values.push(productIds);
+        where.push(`s.product_id = ANY($${values.length}::uuid[])`);
+      }
+      if (options.dimension === 'date') {
+        values.push(options.datum_key);
+        where.push(`s.sale_date = $${values.length}::date`);
+      } else {
+        values.push(options.datum_key);
+        where.push(`s.product_id = $${values.length}::uuid`);
+      }
+      if (cursor) {
+        values.push(cursor.sale_date, cursor.id);
+        where.push(`(s.sale_date > $${values.length - 1}::date OR (s.sale_date = $${values.length - 1}::date AND s.id > $${values.length}::uuid))`);
+      }
+      values.push(pageSize + 1);
+
+      const result = await client.query<{
+        id: string;
+        product_id: string;
+        product_name: string;
+        quantity: string;
+        unit_price: string | null;
+        sale_date: string;
+        version: string;
+      }>(
+        `SELECT s.id::text AS id,
+                s.product_id::text AS product_id,
+                p.name AS product_name,
+                s.quantity::text AS quantity,
+                s.unit_price::text AS unit_price,
+                s.sale_date::text AS sale_date,
+                s.version::text AS version
+           FROM sales s
+           JOIN products p ON p.id = s.product_id AND p.business_id = s.business_id
+          WHERE ${where.join(' AND ')}
+          ORDER BY s.sale_date ASC, s.id ASC
+          LIMIT $${values.length}`,
+        values,
+      );
+
+      const hasMore = result.rows.length > pageSize;
+      const selectedRows = hasMore ? result.rows.slice(0, pageSize) : result.rows;
+      const items: SourceTransactionRow[] = selectedRows.map((row) => ({
+        id: row.id,
+        product_id: row.product_id,
+        product_name: row.product_name,
+        quantity: row.quantity,
+        unit_price: row.unit_price,
+        line_revenue: row.unit_price === null ? null : (BigInt(row.quantity) * BigInt(row.unit_price)).toString(),
+        sale_date: row.sale_date,
+        version: row.version,
+        currency: business.currency,
+      }));
+      const lastRow = selectedRows.at(-1);
+
+      await client.query('COMMIT');
+      transactionStarted = false;
+      return {
+        items,
+        has_more: hasMore,
+        next_cursor: hasMore && lastRow ? { sale_date: lastRow.sale_date, id: lastRow.id } : null,
+        currency: business.currency,
+        ledger_revision: business.ledger_revision,
+        dimension: options.dimension,
+        datum_key: options.datum_key,
+        filters: { date_from: dateFrom ?? null, date_to: dateTo ?? null, product_ids: productIds },
+      };
+    } catch (error) {
+      if (transactionStarted) {
+        try { await client.query('ROLLBACK'); } catch { /* Preserve the query error. */ }
+      }
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 }
 

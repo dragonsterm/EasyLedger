@@ -46,6 +46,50 @@ export interface AnalyticsQueryEnvelope {
   warnings: string[];
 }
 
+export interface SourceTransactionsQueryRequest {
+  dimension: 'date' | 'product';
+  datum_key: string;
+  ledger_revision: string;
+  date_from: string | null;
+  date_to: string | null;
+  product_ids: string[];
+  cursor?: string;
+  page_size: number;
+}
+
+export interface SourceTransaction {
+  id: string;
+  product_id: string;
+  product_name: string;
+  quantity: string;
+  unit_price: string | null;
+  line_revenue: string | null;
+  sale_date: string;
+  version: string;
+  currency: LedgerCurrency;
+}
+
+export interface SourceTransactionsResponse {
+  items: SourceTransaction[];
+  has_more: boolean;
+  next_cursor: string | null;
+  currency: LedgerCurrency;
+  ledger_revision: string;
+  dimension: 'date' | 'product';
+  datum_key: string;
+  filters: AnalyticsQueryResponse['filters'];
+}
+
+export class AnalyticsHttpError extends Error {
+  readonly status: number;
+
+  constructor(status: number) {
+    super(`Analytics request failed with status ${status}`);
+    this.name = 'AnalyticsHttpError';
+    this.status = status;
+  }
+}
+
 export interface ChartPoint {
   key: string;
   label: string;
@@ -60,6 +104,15 @@ export type ChartMapping =
   | { status: 'ready'; points: ChartPoint[] }
   | { status: 'empty'; points: [] }
   | { status: 'unsupported-range'; points: []; reason: string };
+
+/** Returns only an in-range ECharts series datum index; axis/background clicks are ignored. */
+export function chartDataIndexFromEvent(event: unknown, pointCount: number): number | null {
+  if (typeof event !== 'object' || event === null || !('componentType' in event) || !('dataIndex' in event)) return null;
+  const click = event as { componentType?: unknown; dataIndex?: unknown };
+  if (click.componentType !== 'series' || typeof click.dataIndex !== 'number' || !Number.isInteger(click.dataIndex)
+    || click.dataIndex < 0 || click.dataIndex >= pointCount) return null;
+  return click.dataIndex;
+}
 
 const DECIMAL_INTEGER = /^(0|[1-9]\d*)$/;
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -242,6 +295,143 @@ export function parseAnalyticsQueryEnvelope(input: unknown): AnalyticsQueryEnvel
       : [],
   };
   return envelope;
+}
+
+export function buildSourceTransactionsRequest(
+  response: AnalyticsQueryResponse,
+  dimension: 'date' | 'product',
+  datumKey: string,
+  cursor?: string,
+  pageSize = 50,
+): SourceTransactionsQueryRequest {
+  if (response.dimension !== dimension) throw new Error('Chart datum dimension does not match its analytics query');
+  if (datumKey.length === 0 || datumKey.length > 200) throw new Error('Chart datum key is invalid');
+  if (!Number.isInteger(pageSize) || pageSize < 1 || pageSize > 100) throw new Error('Source transaction page size is invalid');
+  return {
+    dimension,
+    datum_key: datumKey,
+    ledger_revision: response.ledger_revision,
+    date_from: response.filters.date_from,
+    date_to: response.filters.date_to,
+    product_ids: [...response.filters.product_ids],
+    ...(cursor ? { cursor } : {}),
+    page_size: pageSize,
+  };
+}
+
+function sameFilters(left: AnalyticsQueryResponse['filters'], right: AnalyticsQueryResponse['filters']): boolean {
+  return left.date_from === right.date_from
+    && left.date_to === right.date_to
+    && left.product_ids.length === right.product_ids.length
+    && left.product_ids.every((value, index) => value === right.product_ids[index]);
+}
+
+/** Validates the owner-authorized source response against the exact chart query target. */
+export function parseSourceTransactionsEnvelope(
+  input: unknown,
+  request: SourceTransactionsQueryRequest,
+): SourceTransactionsResponse {
+  if (!isRecord(input) || input.status !== 'ok' || !isRecord(input.data)) {
+    throw new Error('Expected an authorized source-transactions response');
+  }
+  const data = input.data;
+  if (data.dimension !== 'date' && data.dimension !== 'product') throw new Error('Source transaction dimension is invalid');
+  if (data.dimension !== request.dimension || data.datum_key !== request.datum_key || data.ledger_revision !== request.ledger_revision) {
+    throw new Error('Source transactions do not match the selected chart datum');
+  }
+  const currency = data.currency;
+  if (currency !== 'IDR' && currency !== 'USD') throw new Error('Source transactions have an invalid currency');
+  if (!isDecimalInteger(data.ledger_revision) || typeof data.has_more !== 'boolean' || !Array.isArray(data.items)) {
+    throw new Error('Source transactions response is invalid');
+  }
+  if (data.next_cursor !== null && typeof data.next_cursor !== 'string') throw new Error('Source transaction cursor is invalid');
+  if ((data.has_more && !data.next_cursor) || (!data.has_more && data.next_cursor !== null)) {
+    throw new Error('Source transaction pagination state is invalid');
+  }
+  if (!isRecord(data.filters)) throw new Error('Source transaction filters are invalid');
+  const filters = data.filters;
+  if ((filters.date_from !== null && typeof filters.date_from !== 'string')
+    || (filters.date_to !== null && typeof filters.date_to !== 'string')
+    || !Array.isArray(filters.product_ids)
+    || !filters.product_ids.every((productId) => typeof productId === 'string')) {
+    throw new Error('Source transaction filters are invalid');
+  }
+  const normalizedFilters = {
+    date_from: filters.date_from as string | null,
+    date_to: filters.date_to as string | null,
+    product_ids: filters.product_ids as string[],
+  };
+  if (!sameFilters(normalizedFilters, request)) throw new Error('Source transaction filters differ from the selected chart');
+
+  const items = data.items.map((value, index): SourceTransaction => {
+    if (!isRecord(value)) throw new Error(`Source transaction ${index + 1} is invalid`);
+    const id = value.id;
+    const productId = value.product_id;
+    const productName = value.product_name;
+    const quantity = value.quantity;
+    const unitPrice = value.unit_price;
+    const lineRevenue = value.line_revenue;
+    const saleDate = value.sale_date;
+    const version = value.version;
+    if (typeof id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)
+      || typeof productId !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(productId)
+      || typeof productName !== 'string' || productName.length === 0
+      || !isDecimalInteger(quantity) || (unitPrice !== null && !isDecimalInteger(unitPrice))
+      || (lineRevenue !== null && !isDecimalInteger(lineRevenue)) || !isDecimalInteger(version)
+      || typeof saleDate !== 'string' || !ISO_DATE.test(saleDate)
+      || value.currency !== currency) {
+      throw new Error(`Source transaction ${index + 1} has invalid fields`);
+    }
+    if ((unitPrice === null && lineRevenue !== null)
+      || (unitPrice !== null && lineRevenue !== (BigInt(quantity) * BigInt(unitPrice)).toString())) {
+      throw new Error(`Source transaction ${index + 1} has inconsistent exact amounts`);
+    }
+    return {
+      id,
+      product_id: productId,
+      product_name: productName,
+      quantity,
+      unit_price: unitPrice,
+      line_revenue: lineRevenue,
+      sale_date: saleDate,
+      version,
+      currency,
+    };
+  });
+  if (items.length > request.page_size) throw new Error('Source transaction page exceeds requested size');
+  return {
+    items,
+    has_more: data.has_more,
+    next_cursor: data.next_cursor as string | null,
+    currency,
+    ledger_revision: data.ledger_revision,
+    dimension: data.dimension,
+    datum_key: request.datum_key,
+    filters: normalizedFilters,
+  };
+}
+
+async function postJson(path: string, payload: unknown): Promise<unknown> {
+  const response = await fetch(path, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new AnalyticsHttpError(response.status);
+  return response.json() as Promise<unknown>;
+}
+
+export async function fetchAnalyticsQuery(request: AnalyticsQueryRequest): Promise<AnalyticsQueryResponse> {
+  const envelope = parseAnalyticsQueryEnvelope(await postJson('/api/v1/analytics/query', request));
+  return envelope.data;
+}
+
+export async function fetchSourceTransactions(
+  request: SourceTransactionsQueryRequest,
+): Promise<SourceTransactionsResponse> {
+  const envelope = await postJson('/api/v1/analytics/source-transactions', request);
+  return parseSourceTransactionsEnvelope(envelope, request);
 }
 
 /** Converts only exact integer strings within Number's safe range for ECharts. */

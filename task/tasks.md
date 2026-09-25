@@ -38,7 +38,7 @@
 | **Day 22** | Sep 22 | **P2 Data First** | Manual ledger API (Fastify), tenant isolation & day-coverage semantics | `[x] Completed` |
 | **Day 23** | Sep 23 | **P3 Voice Agent** | AssemblyAI session bootstrap, authenticated HTTP tool gateway | `[x] Completed` |
 | **Day 24** | Sep 24 | **P3 Voice Agent** | Two-phase proposal state machine, ambiguity clarification & receipts | `[x] Completed` |
-| **Day 25** | Sep 25 | **P4 Builder** | React/Vite workspace initialized, ECharts widget renderer, deterministic query engine (line/bar/KPI) | `[/] In Progress` |
+| **Day 25** | Sep 25 | **P4 Builder** | React/Vite workspace initialized, ECharts widget renderer, deterministic query engine (line/bar/KPI) | `[x] Completed` |
 | **Day 26** | Sep 26 | **P4 Builder** | Responsive grid layout, voice/manual layout editing, dashboard persistence | `[ ] Pending` |
 | **Day 27** | Sep 27 | **P5 Validate** | End-to-end golden journey test, accessibility (390px/1280px), latency checks | `[ ] Pending` |
 | **Day 28** | Sep 28 | **P5 Validate** | Labeled synthetic demo fixtures, demo reset isolation & backup restore drill | `[ ] Pending` |
@@ -210,7 +210,7 @@
 
 ### Day 25 · Sep 25, 2026: Phase P4 — Dashboard Builder: Widgets & Query Engine
 - **Role:** Frontend & Analytics Engineer
-- **Status:** `[/] In Progress`
+- **Status:** `[x] Completed`
 - **What to Do:**
   - Initialize Vite + React 18 + TypeScript SPA workspace in `apps/web`.
   - Implement deterministic analytics query service in backend (sums, daily grouping, product breakdown).
@@ -221,7 +221,7 @@
   - [x] **TASK-25-02**: Implement `POST /api/v1/analytics/query`: executes parameterized queries grouped by date or product; computes exact totals and completeness flags.
   - [x] **TASK-25-03**: Implement ECharts renderers: Daily Revenue Line Chart, Product Sales Bar Chart, Total Revenue & Quantity KPI cards.
   - [x] **TASK-25-04**: Implement missing-versus-zero visualization: open days with no records render as gaps; complete zero-sale days render as 0.
-  - [ ] **TASK-25-05**: Implement chart datum tap-to-drilldown: tapping a bar/point opens modal showing authorized source transactions (FR-11, Test `T-05`).
+  - [x] **TASK-25-05**: Implement chart datum tap-to-drilldown: tapping a bar/point opens modal showing authorized source transactions (FR-11, Test `T-05`).
 - **Agent Execution Guidance:**
   - Refer to [`docs/07-Dashboard-and-UX.md`](file:///C:/Project/EasyLedger/docs/07-Dashboard-and-UX.md) and [`docs/05-Data-Model.md`](file:///C:/Project/EasyLedger/docs/05-Data-Model.md).
 - **Human Verification Checkpoint:**
@@ -234,6 +234,7 @@
   - **TASK-25-03 renderers (2026-09-25):** Apache ECharts 6 SVG line and horizontal bar charts replace the static plot and CSS bars. Typed analytics response parsing and exact string formatting feed the charts and Total revenue/Units sold cards; unsafe chart-number ranges show an explicit unsupported state. The existing desktop card palette, typography and layout remain in use. All five visible sample widgets open matching properties on click or keyboard selection; the SVG close button dismisses the inspector and restores focus. The preview is explicitly labeled as sample data because browser authentication and live analytics binding are not implemented in this task. Open-day coverage and authorized source drilldown remain assigned to **TASK-25-04** and **TASK-25-05**.
   - **TASK-25-03 verification:** `npm --prefix apps/web run build`, `git diff --check`, focused mapping assertions for ready/empty/null/zero/overflow and IDR/USD formatting, HTML tooltip escaping, and the existing seven API contract cases passed. Browser inspection at a 1280px viewport found both ECharts SVGs, no horizontal overflow, readable chart/table alternatives, matching chart/KPI inspector content, and the close control returning focus. The production build warns that the JavaScript chunk is over 500 kB; no load-time target was measured.
   - **TASK-25-04 verification (2026-09-25):** Bounded date analytics includes every requested local date and joins tenant-scoped day coverage. Open no-sale dates return null gaps; confirmed complete no-sale dates return exact zeroes; recorded sales with unknown prices remain distinct. The ECharts line keeps null points disconnected and the chart table and tooltip label all three states. `npm test` passed 17 domain and 13 API cases, `node --test tests/web/*.test.mjs` passed 2 mapping and rejection cases, and `node --test tests/database/day25_coverage_integration.mjs` passed against a disposable PostgreSQL 17-alpine container, including product and tenant filter boundaries. The web production build and `git diff --check` passed. Browser inspection at the desktop reference width showed the gap on 20 Sep and zero on 21 Sep with the existing card layout and palette.
+  - **TASK-25-05 verification (2026-09-25):** ECharts line points and product bars open a source-transactions modal; visible text tables provide keyboard datum selection. The API derives the tenant from the authentication adapter, applies the chart's date and product predicates, checks its ledger revision in a repeatable-read transaction, and pages exact source rows. `npm test` passed 17 domain and 17 API cases; `node --test tests/web/*.test.mjs` passed 6 cases; the source-transactions PostgreSQL integration test passed against a disposable PostgreSQL 17-alpine container, covering tenant boundaries, filters, paging, unknown prices and stale revision rejection. The web build passed. Browser checks opened the modal from a line point and product bar, confirmed the sample fixture does not claim source rows, and rendered an authorized live fixture row with exact unit price and line revenue. The existing desktop card layout, palette and ECharts styling remained in use. The default preview requires a configured authenticated API session to show live rows.
 - **Reflection:**
   - The prior neutral placeholder established routing but did not communicate the intended builder workflow. The refined shell adopts the friendly Google/Material direction from the approved Figma frame while keeping EasyLedger's trust signals prominent.
   - This pass intentionally stops at a desktop static template. It does not add ECharts, React Grid Layout, voice execution, dashboard persistence or live drilldown, and it does not claim 390px acceptance; those remain in their numbered Day 25–27 tasks.

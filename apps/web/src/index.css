@@ -774,9 +774,17 @@ dd {
 .chart-grid {
   display: grid;
   width: 100%;
-  height: 296px;
+  height: auto;
   grid-template-columns: minmax(0, 1.6127fr) minmax(0, 1fr);
+  align-items: start;
   gap: 16px;
+}
+
+.chart-column {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .selected-widget {
@@ -807,6 +815,12 @@ dd {
   outline-offset: -1px;
 }
 
+.selected-widget.widget-selected,
+.product-card.widget-selected {
+  outline: 2px solid var(--selected);
+  outline-offset: -1px;
+}
+
 .chart-card {
   display: block;
   width: 100%;
@@ -833,6 +847,20 @@ dd {
   min-height: 36px;
   align-items: flex-start;
   justify-content: space-between;
+}
+
+.chart-title-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.chart-title-button:hover {
+  color: #58634c;
 }
 
 .chart-card h3 {
@@ -1018,6 +1046,156 @@ dd {
   font-size: 9px;
   font-weight: 400;
   line-height: 12px;
+}
+
+.chart-data-details {
+  padding: 12px 14px;
+  border: 1px solid var(--outline);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ink-soft);
+  font-size: 11px;
+}
+
+.chart-data-details summary {
+  color: #58634c;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.chart-data-details table,
+.source-dialog-table {
+  width: 100%;
+  margin-top: 12px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.chart-data-details caption,
+.source-dialog-table caption {
+  margin-bottom: 8px;
+  color: var(--muted);
+  text-align: left;
+}
+
+.chart-data-details th,
+.chart-data-details td,
+.source-dialog-table th,
+.source-dialog-table td {
+  padding: 8px;
+  border-bottom: 1px solid var(--outline);
+  vertical-align: top;
+}
+
+.chart-data-details th,
+.source-dialog-table th {
+  color: #58634c;
+  font-weight: 500;
+}
+
+.chart-datum-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #50694b;
+  font-size: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.chart-datum-link:hover {
+  color: #30382c;
+}
+
+.source-dialog-backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(37, 39, 36, 0.42);
+}
+
+.source-dialog {
+  width: min(920px, calc(100vw - 48px));
+  max-height: min(82vh, 760px);
+  overflow: auto;
+  padding: 24px;
+  border: 1px solid var(--outline);
+  border-radius: 20px;
+  background: #fbfbf7;
+  box-shadow: 0 18px 60px rgba(37, 39, 36, 0.2);
+  color: var(--ink-soft);
+}
+
+.source-dialog-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.source-dialog-heading h2 {
+  color: var(--ink-soft);
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 26px;
+}
+
+.source-dialog-heading p,
+.source-dialog-revision {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.source-dialog-message {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #f0f3ea;
+  color: #53584f;
+  font-size: 13px;
+  line-height: 19px;
+}
+
+.source-dialog-sample,
+.source-dialog-unauthorized,
+.source-dialog-stale,
+.source-dialog-error {
+  background: var(--warm-note);
+  color: #72633e;
+}
+
+.source-dialog-revision {
+  margin-top: 14px;
+}
+
+.source-dialog-table-wrap {
+  max-height: 52vh;
+  overflow: auto;
+  margin-top: 16px;
+  border: 1px solid var(--outline);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.source-dialog-table {
+  min-width: 680px;
+  margin: 0;
+  font-size: 12px;
+}
+
+.source-dialog-table code {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.source-dialog-more {
+  margin-top: 14px;
 }
 
 .quality-notice {

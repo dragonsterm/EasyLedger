@@ -5,17 +5,24 @@ import type { EChartsType } from 'echarts/core';
 import { BarChart, LineChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent } from 'echarts/components';
 import { SVGRenderer } from 'echarts/renderers';
+import { chartDataIndexFromEvent } from './analytics';
 
 echarts.use([BarChart, LineChart, GridComponent, TooltipComponent, SVGRenderer]);
 
 interface EChartProps {
   option: EChartsOption;
   label: string;
+  dataPointCount: number;
+  onDataPointClick?: (dataIndex: number) => void;
 }
 
-export default function EChart({ option, label }: EChartProps) {
+export default function EChart({ option, label, dataPointCount, onDataPointClick }: EChartProps) {
   const elementRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<EChartsType | null>(null);
+  const onDataPointClickRef = useRef(onDataPointClick);
+  const dataPointCountRef = useRef(dataPointCount);
+  onDataPointClickRef.current = onDataPointClick;
+  dataPointCountRef.current = dataPointCount;
 
   useEffect(() => {
     const element = elementRef.current;
@@ -24,6 +31,11 @@ export default function EChart({ option, label }: EChartProps) {
     const chart = echarts.init(element, undefined, { renderer: 'svg' });
     chartRef.current = chart;
     chart.setOption(option, { notMerge: true });
+    const handleChartClick = (event: unknown) => {
+      const dataIndex = chartDataIndexFromEvent(event, dataPointCountRef.current);
+      if (dataIndex !== null) onDataPointClickRef.current?.(dataIndex);
+    };
+    chart.on('click', handleChartClick);
 
     const resizeObserver = typeof ResizeObserver === 'undefined'
       ? null
@@ -36,6 +48,7 @@ export default function EChart({ option, label }: EChartProps) {
     }
 
     return () => {
+      chart.off('click', handleChartClick);
       resizeObserver?.disconnect();
       if (!resizeObserver) window.removeEventListener('resize', handleWindowResize);
       chart.dispose();
