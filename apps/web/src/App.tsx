@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { EChartsOption } from 'echarts';
 import EChart from './EChart';
+import LedgerJournal from './Ledger';
 import {
   AnalyticsHttpError,
   buildSourceTransactionsRequest,
@@ -895,12 +896,25 @@ function Dashboard({
 }
 
 function App() {
+  const [activeNav, setActiveNav] = useState<'dashboard' | 'ledger' | 'catalog'>('dashboard');
   const [selectedWidget, setSelectedWidget] = useState<WidgetSelection | null>(null);
   const [dashboardAnalytics, setDashboardAnalytics] = useState<DashboardAnalytics | null>(null);
   const [liveStatus, setLiveStatus] = useState<'checking' | 'live' | 'unauthorized' | 'unavailable'>('checking');
   const [refreshCount, setRefreshCount] = useState(0);
   const isLive = dashboardAnalytics !== null;
   const currency = dashboardAnalytics?.revenue.currency ?? sampleDailyRevenue.currency;
+
+  useEffect(() => {
+    const handleHash = () => {
+      const hash = window.location.hash.replace('#', '').toLowerCase();
+      if (hash.includes('ledger')) setActiveNav('ledger');
+      else if (hash.includes('catalog')) setActiveNav('catalog');
+      else setActiveNav('dashboard');
+    };
+    handleHash();
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -943,16 +957,28 @@ function App() {
         </div>
 
         <nav className="primary-nav" aria-label="Primary navigation">
-          <a className="primary-link primary-link-overview" href="#overview">
-            <img src="/assets/nav-overview.svg" width="16" height="16" alt="" aria-hidden="true" />Overview
-          </a>
-          <a className="primary-link primary-link-ledger" href="#ledger">
-            <img src="/assets/nav-ledger.svg" width="16" height="16" alt="" aria-hidden="true" />Ledger
-          </a>
-          <a className="primary-link primary-link-dashboard primary-link-active" href="#dashboard" aria-current="page">
+          <a
+            className={`primary-link primary-link-dashboard ${activeNav === 'dashboard' ? 'primary-link-active' : ''}`}
+            href="#dashboard"
+            onClick={() => setActiveNav('dashboard')}
+            aria-current={activeNav === 'dashboard' ? 'page' : undefined}
+          >
             <img src="/assets/nav-dashboard.svg" width="16" height="16" alt="" aria-hidden="true" />Dashboard
           </a>
-          <a className="primary-link primary-link-catalog" href="#catalog">
+          <a
+            className={`primary-link primary-link-ledger ${activeNav === 'ledger' ? 'primary-link-active' : ''}`}
+            href="#ledger"
+            onClick={() => setActiveNav('ledger')}
+            aria-current={activeNav === 'ledger' ? 'page' : undefined}
+          >
+            <img src="/assets/nav-ledger.svg" width="16" height="16" alt="" aria-hidden="true" />Ledger
+          </a>
+          <a
+            className={`primary-link primary-link-catalog ${activeNav === 'catalog' ? 'primary-link-active' : ''}`}
+            href="#catalog"
+            onClick={() => setActiveNav('catalog')}
+            aria-current={activeNav === 'catalog' ? 'page' : undefined}
+          >
             <img src="/assets/nav-catalog.svg" width="16" height="16" alt="" aria-hidden="true" />Catalog
           </a>
         </nav>
@@ -971,16 +997,34 @@ function App() {
           <div className="rail-spacer-top" aria-hidden="true" />
 
           <nav className="rail-actions" aria-label="Builder actions">
-            <a className="rail-action rail-action-active" href="#dashboard" aria-label="Dashboard canvas">
+            <a
+              className={`rail-action ${activeNav === 'dashboard' ? 'rail-action-active' : ''}`}
+              href="#dashboard"
+              onClick={() => setActiveNav('dashboard')}
+              aria-label="Dashboard canvas"
+            >
               <img src="/assets/rail-dashboard.svg" width="18" height="18" alt="" aria-hidden="true" />
             </a>
-            <a className="rail-action" href="#voice-title" aria-label="Ask EasyLedger">
+            <a
+              className="rail-action"
+              href="#voice-title"
+              aria-label="Ask EasyLedger"
+            >
               <img src="/assets/rail-voice.svg" width="18" height="18" alt="" aria-hidden="true" />
             </a>
-            <a className="rail-action" href="#add-widget" aria-label="Add widget">
+            <a
+              className="rail-action"
+              href="#add-widget"
+              aria-label="Add widget"
+            >
               <img src="/assets/rail-add-widget.svg" width="18" height="18" alt="" aria-hidden="true" />
             </a>
-            <a className="rail-action" href="#source-sales" aria-label={isLive ? 'Source transaction drilldown' : 'Source preview'}>
+            <a
+              className={`rail-action ${activeNav === 'ledger' ? 'rail-action-active' : ''}`}
+              href="#ledger"
+              onClick={() => setActiveNav('ledger')}
+              aria-label="Sales Ledger journal"
+            >
               <img src="/assets/rail-source-sales.svg" width="18" height="18" alt="" aria-hidden="true" />
             </a>
           </nav>
@@ -1007,31 +1051,74 @@ function App() {
           <header className="dashboard-header">
             <div className="dashboard-header-inner">
               <div className="dashboard-heading">
-                <p className="breadcrumb">{isLive ? 'Authenticated workspace' : 'Sample workspace'} <span aria-hidden="true">/</span> Dashboard preview</p>
-                <h1>Weekly sales overview</h1>
-                <p>{isLive ? 'Authenticated business' : 'Example business'} <span aria-hidden="true">·</span> {currency} <span aria-hidden="true">·</span> {isLive ? 'Live analytics data.' : 'Sample data only.'}</p>
+                <p className="breadcrumb">
+                  {isLive ? 'Authenticated workspace' : 'Sample workspace'}{' '}
+                  <span aria-hidden="true">/</span>{' '}
+                  {activeNav === 'ledger' ? 'Ledger journal' : 'Dashboard preview'}
+                </p>
+                <h1>{activeNav === 'ledger' ? 'Sales Ledger Journal' : 'Weekly sales overview'}</h1>
+                <p>
+                  {isLive ? 'Authenticated business' : 'Example business'}{' '}
+                  <span aria-hidden="true">·</span> {currency}{' '}
+                  <span aria-hidden="true">·</span>{' '}
+                  {activeNav === 'ledger'
+                    ? 'Daily sales transaction logs · Fixture revision 142'
+                    : isLive
+                    ? 'Live analytics data.'
+                    : 'Sample data only.'}
+                </p>
               </div>
               <div className="dashboard-status" aria-label="Dashboard data status">
                 <div className="saved-status">
-                    <strong>{isLive ? 'Analytics connected' : liveStatus === 'checking' ? 'Checking connection' : liveStatus === 'unauthorized' ? 'Sign in required' : 'Sample preview'}</strong>
-                    <span>{isLive ? 'Authenticated ledger queries' : liveStatus === 'unauthorized' ? 'No authorized session' : liveStatus === 'checking' ? 'Sample values remain labeled during check' : 'Not connected to a live ledger'}</span>
-                  </div>
-                  <div className="refreshed-status">
-                    <strong>{isLive ? 'Live query snapshot' : 'Local sample values'}</strong>
-                    <span>{isLive ? `Ledger revision ${dashboardAnalytics.revenue.ledger_revision}` : 'Fixture revision 142 · example data'}</span>
-                  </div>
+                  <strong>
+                    {isLive
+                      ? 'Analytics connected'
+                      : liveStatus === 'checking'
+                      ? 'Checking connection'
+                      : liveStatus === 'unauthorized'
+                      ? 'Sign in required'
+                      : 'Sample preview'}
+                  </strong>
+                  <span>
+                    {isLive
+                      ? 'Authenticated ledger queries'
+                      : liveStatus === 'unauthorized'
+                      ? 'No authorized session'
+                      : liveStatus === 'checking'
+                      ? 'Sample values remain labeled during check'
+                      : 'Not connected to a live ledger'}
+                  </span>
+                </div>
+                <div className="refreshed-status">
+                  <strong>{isLive ? 'Live query snapshot' : 'Local sample values'}</strong>
+                  <span>
+                    {isLive
+                      ? `Ledger revision ${dashboardAnalytics.revenue.ledger_revision}`
+                      : 'Fixture revision 142 · example data'}
+                  </span>
+                </div>
               </div>
             </div>
           </header>
 
-          <Dashboard
-            widget={selectedWidget}
-            onSelect={setSelectedWidget}
-            onClose={closeInspector}
-            analytics={dashboardAnalytics}
-            liveStatus={liveStatus}
-            onRefresh={refreshCharts}
-          />
+          {activeNav === 'ledger' ? (
+            <div className="editor-body inspector-closed">
+              <main className="canvas" id="ledger">
+                <div className="canvas-inner">
+                  <LedgerJournal isLive={isLive} />
+                </div>
+              </main>
+            </div>
+          ) : (
+            <Dashboard
+              widget={selectedWidget}
+              onSelect={setSelectedWidget}
+              onClose={closeInspector}
+              analytics={dashboardAnalytics}
+              liveStatus={liveStatus}
+              onRefresh={refreshCharts}
+            />
+          )}
         </div>
       </div>
     </div>
