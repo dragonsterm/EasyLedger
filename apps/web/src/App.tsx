@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { EChartsOption } from 'echarts';
 import EChart from './EChart';
 import LedgerJournal from './Ledger';
+import Catalog, { type CatalogSection } from './Catalog';
 import {
   AnalyticsHttpError,
   buildSourceTransactionsRequest,
@@ -897,6 +898,7 @@ function Dashboard({
 
 function App() {
   const [activeNav, setActiveNav] = useState<'dashboard' | 'ledger' | 'catalog'>('dashboard');
+  const [catalogSection, setCatalogSection] = useState<CatalogSection>(null);
   const [selectedWidget, setSelectedWidget] = useState<WidgetSelection | null>(null);
   const [dashboardAnalytics, setDashboardAnalytics] = useState<DashboardAnalytics | null>(null);
   const [liveStatus, setLiveStatus] = useState<'checking' | 'live' | 'unauthorized' | 'unavailable'>('checking');
@@ -947,9 +949,14 @@ function App() {
 
   const closeInspector = () => setSelectedWidget(null);
   const refreshCharts = () => setRefreshCount((count) => count + 1);
+  const catalogSectionTitle = catalogSection === 'all-products'
+    ? 'All products'
+    : catalogSection === 'needs-price'
+    ? 'Needs a price'
+    : 'Product catalog';
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell${activeNav === 'catalog' ? ' app-shell-catalog' : ''}`}>
       <header className="builder-toolbar">
         <div className="rail-brand">
           <strong>EasyLedger</strong>
@@ -963,7 +970,7 @@ function App() {
             onClick={() => setActiveNav('dashboard')}
             aria-current={activeNav === 'dashboard' ? 'page' : undefined}
           >
-            <img src="/assets/nav-dashboard.svg" width="16" height="16" alt="" aria-hidden="true" />Dashboard
+            <img src={activeNav === 'catalog' ? '/assets/catalog-nav-dashboard.svg' : '/assets/nav-dashboard.svg'} width="16" height="16" alt="" aria-hidden="true" />Dashboard
           </a>
           <a
             className={`primary-link primary-link-ledger ${activeNav === 'ledger' ? 'primary-link-active' : ''}`}
@@ -971,7 +978,7 @@ function App() {
             onClick={() => setActiveNav('ledger')}
             aria-current={activeNav === 'ledger' ? 'page' : undefined}
           >
-            <img src="/assets/nav-ledger.svg" width="16" height="16" alt="" aria-hidden="true" />Ledger
+            <img src={activeNav === 'catalog' ? '/assets/catalog-nav-ledger.svg' : '/assets/nav-ledger.svg'} width="16" height="16" alt="" aria-hidden="true" />Ledger
           </a>
           <a
             className={`primary-link primary-link-catalog ${activeNav === 'catalog' ? 'primary-link-active' : ''}`}
@@ -979,21 +986,23 @@ function App() {
             onClick={() => setActiveNav('catalog')}
             aria-current={activeNav === 'catalog' ? 'page' : undefined}
           >
-            <img src="/assets/nav-catalog.svg" width="16" height="16" alt="" aria-hidden="true" />Catalog
+            <img src={activeNav === 'catalog' ? '/assets/catalog-nav.svg' : '/assets/nav-catalog.svg'} width="16" height="16" alt="" aria-hidden="true" />Catalog
           </a>
         </nav>
 
         <span className="toolbar-space" aria-hidden="true" />
 
-        <div className="builder-actions">
-          <span className="mode-pill">{isLive ? 'Live data · preview' : 'Sample preview'}</span>
-          <button className="button button-preview" type="button" disabled title="This dashboard is already in preview mode">Preview</button>
-          <button className="button button-save" type="button" disabled title="Dashboard saving is not connected in this preview">Save unavailable</button>
-        </div>
+        {activeNav !== 'catalog' && (
+          <div className="builder-actions">
+            <span className="mode-pill">{isLive ? 'Live data · preview' : 'Sample preview'}</span>
+            <button className="button button-preview" type="button" disabled title="This dashboard is already in preview mode">Preview</button>
+            <button className="button button-save" type="button" disabled title="Dashboard saving is not connected in this preview">Save unavailable</button>
+          </div>
+        )}
       </header>
 
       <div className="dashboard-shell">
-        <aside className="nav-rail" aria-label="Dashboard builder shortcuts">
+        <aside className="nav-rail" aria-label={activeNav === 'catalog' ? 'Catalog shortcuts' : 'Dashboard builder shortcuts'}>
           <div className="rail-spacer-top" aria-hidden="true" />
 
           <nav className="rail-actions" aria-label="Builder actions">
@@ -1003,21 +1012,21 @@ function App() {
               onClick={() => setActiveNav('dashboard')}
               aria-label="Dashboard canvas"
             >
-              <img src="/assets/rail-dashboard.svg" width="18" height="18" alt="" aria-hidden="true" />
+              <img src={activeNav === 'catalog' ? '/assets/catalog-nav-dashboard.svg' : '/assets/rail-dashboard.svg'} width={activeNav === 'catalog' ? 16 : 18} height={activeNav === 'catalog' ? 16 : 18} alt="" aria-hidden="true" />
             </a>
             <a
               className="rail-action"
               href="#voice-title"
               aria-label="Ask EasyLedger"
             >
-              <img src="/assets/rail-voice.svg" width="18" height="18" alt="" aria-hidden="true" />
+              <img src={activeNav === 'catalog' ? '/assets/catalog-rail-mic.svg' : '/assets/rail-voice.svg'} width={activeNav === 'catalog' ? 16 : 18} height={activeNav === 'catalog' ? 16 : 18} alt="" aria-hidden="true" />
             </a>
             <a
               className="rail-action"
               href="#add-widget"
               aria-label="Add widget"
             >
-              <img src="/assets/rail-add-widget.svg" width="18" height="18" alt="" aria-hidden="true" />
+              <img src={activeNav === 'catalog' ? '/assets/catalog-rail-add.svg' : '/assets/rail-add-widget.svg'} width={activeNav === 'catalog' ? 16 : 18} height={activeNav === 'catalog' ? 16 : 18} alt="" aria-hidden="true" />
             </a>
             <a
               className={`rail-action ${activeNav === 'ledger' ? 'rail-action-active' : ''}`}
@@ -1025,16 +1034,25 @@ function App() {
               onClick={() => setActiveNav('ledger')}
               aria-label="Sales Ledger journal"
             >
-              <img src="/assets/rail-source-sales.svg" width="18" height="18" alt="" aria-hidden="true" />
+              <img src={activeNav === 'catalog' ? '/assets/catalog-nav-ledger.svg' : '/assets/rail-source-sales.svg'} width={16} height={16} alt="" aria-hidden="true" />
             </a>
           </nav>
 
           <div className="rail-spacer" aria-hidden="true" />
 
           <aside className="rail-help">
-            <strong>Make it yours</strong>
-            <p>{isLive ? 'Chart and KPI values use live ledger data.' : 'Chart and KPI values are sample data.'}</p>
-            <p>Widget layout controls are unavailable.</p>
+            {activeNav === 'catalog' ? (
+              <>
+                <strong>Your catalog</strong>
+                <p>Your products, in one place.</p>
+              </>
+            ) : (
+              <>
+                <strong>Make it yours</strong>
+                <p>{isLive ? 'Chart and KPI values use live ledger data.' : 'Chart and KPI values are sample data.'}</p>
+                <p>Widget layout controls are unavailable.</p>
+              </>
+            )}
           </aside>
 
           <section className="rail-footer" aria-label={isLive ? 'Authenticated workspace' : 'Sample workspace'}>
@@ -1042,7 +1060,9 @@ function App() {
             <div className="rail-workspace">
               <strong>{isLive ? 'Authenticated business' : 'Example business'}</strong>
               <span>{currency}{isLive ? ' · live' : ' · sample'}</span>
-              <span>{isLive ? 'Owner session connected' : liveStatus === 'unauthorized' ? 'Sign in to connect a ledger' : 'No live ledger connection'}</span>
+              {activeNav !== 'catalog' && (
+                <span>{isLive ? 'Owner session connected' : liveStatus === 'unauthorized' ? 'Sign in to connect a ledger' : 'No live ledger connection'}</span>
+              )}
             </div>
           </section>
         </aside>
@@ -1054,50 +1074,71 @@ function App() {
                 <p className="breadcrumb">
                   {isLive ? 'Authenticated workspace' : 'Sample workspace'}{' '}
                   <span aria-hidden="true">/</span>{' '}
-                  {activeNav === 'ledger' ? 'Ledger journal' : 'Dashboard preview'}
+                  {activeNav === 'ledger' ? 'Ledger journal' : activeNav === 'catalog' ? 'Catalog' : 'Dashboard preview'}
+                  {activeNav === 'catalog' && catalogSection !== null && (
+                    <>
+                      <span aria-hidden="true">/</span>{' '}
+                      {catalogSectionTitle}
+                    </>
+                  )}
                 </p>
-                <h1>{activeNav === 'ledger' ? 'Sales Ledger Journal' : 'Weekly sales overview'}</h1>
+                <h1>{activeNav === 'ledger' ? 'Sales Ledger Journal' : activeNav === 'catalog' ? catalogSectionTitle : 'Weekly sales overview'}</h1>
                 <p>
-                  {isLive ? 'Authenticated business' : 'Example business'}{' '}
-                  <span aria-hidden="true">·</span> {currency}{' '}
-                  <span aria-hidden="true">·</span>{' '}
-                  {activeNav === 'ledger'
-                    ? 'Daily sales transaction logs · Fixture revision 142'
-                    : isLive
-                    ? 'Live analytics data.'
-                    : 'Sample data only.'}
+                  {activeNav === 'catalog'
+                    ? catalogSection === 'all-products'
+                      ? '2 products · Product names and default prices'
+                      : catalogSection === 'needs-price'
+                      ? '0 products · Default price review'
+                      : `${isLive ? 'Authenticated business' : 'Example business'} · ${currency} · Sample products`
+                    : <>
+                        {isLive ? 'Authenticated business' : 'Example business'}{' '}
+                        <span aria-hidden="true">·</span> {currency}{' '}
+                        <span aria-hidden="true">·</span>{' '}
+                        {activeNav === 'ledger'
+                          ? 'Daily sales transaction logs · Fixture revision 142'
+                          : isLive
+                          ? 'Live analytics data.'
+                          : 'Sample data only.'}
+                      </>}
                 </p>
               </div>
-              <div className="dashboard-status" aria-label="Dashboard data status">
-                <div className="saved-status">
-                  <strong>
-                    {isLive
-                      ? 'Analytics connected'
-                      : liveStatus === 'checking'
-                      ? 'Checking connection'
-                      : liveStatus === 'unauthorized'
-                      ? 'Sign in required'
-                      : 'Sample preview'}
-                  </strong>
-                  <span>
-                    {isLive
-                      ? 'Authenticated ledger queries'
-                      : liveStatus === 'unauthorized'
-                      ? 'No authorized session'
-                      : liveStatus === 'checking'
-                      ? 'Sample values remain labeled during check'
-                      : 'Not connected to a live ledger'}
-                  </span>
+              {activeNav === 'catalog' ? (
+                <div className="catalog-status" aria-label="Catalog sample data status">
+                  <strong>Sample preview</strong>
+                  <span>Local sample values</span>
                 </div>
-                <div className="refreshed-status">
-                  <strong>{isLive ? 'Live query snapshot' : 'Local sample values'}</strong>
-                  <span>
-                    {isLive
-                      ? `Ledger revision ${dashboardAnalytics.revenue.ledger_revision}`
-                      : 'Fixture revision 142 · example data'}
-                  </span>
+              ) : (
+                <div className="dashboard-status" aria-label="Dashboard data status">
+                  <div className="saved-status">
+                    <strong>
+                      {isLive
+                        ? 'Analytics connected'
+                        : liveStatus === 'checking'
+                        ? 'Checking connection'
+                        : liveStatus === 'unauthorized'
+                        ? 'Sign in required'
+                        : 'Sample preview'}
+                    </strong>
+                    <span>
+                      {isLive
+                        ? 'Authenticated ledger queries'
+                        : liveStatus === 'unauthorized'
+                        ? 'No authorized session'
+                        : liveStatus === 'checking'
+                        ? 'Sample values remain labeled during check'
+                        : 'Not connected to a live ledger'}
+                    </span>
+                  </div>
+                  <div className="refreshed-status">
+                    <strong>{isLive ? 'Live query snapshot' : 'Local sample values'}</strong>
+                    <span>
+                      {isLive
+                        ? `Ledger revision ${dashboardAnalytics.revenue.ledger_revision}`
+                        : 'Fixture revision 142 · example data'}
+                    </span>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </header>
 
@@ -1107,6 +1148,12 @@ function App() {
                 <div className="canvas-inner">
                   <LedgerJournal isLive={isLive} />
                 </div>
+              </main>
+            </div>
+          ) : activeNav === 'catalog' ? (
+            <div className="editor-body catalog-editor-body">
+              <main className="canvas catalog-canvas" id="catalog">
+                <Catalog currency={currency} section={catalogSection} onSectionChange={setCatalogSection} />
               </main>
             </div>
           ) : (
