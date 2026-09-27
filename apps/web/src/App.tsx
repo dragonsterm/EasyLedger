@@ -4,6 +4,7 @@ import type { EChartsOption } from 'echarts';
 import ReactGridLayout, { useContainerWidth } from 'react-grid-layout';
 import type { Layout } from 'react-grid-layout';
 import EChart from './EChart';
+import Icon from './Icon';
 import LedgerJournal from './Ledger';
 import Catalog, { type CatalogSection } from './Catalog';
 import {
@@ -1270,7 +1271,7 @@ function App() {
             onClick={() => setActiveNav('dashboard')}
             aria-current={activeNav === 'dashboard' ? 'page' : undefined}
           >
-            <img src={activeNav === 'catalog' ? '/assets/catalog-nav-dashboard.svg' : '/assets/nav-dashboard.svg'} width="16" height="16" alt="" aria-hidden="true" />Dashboard
+            <Icon name="dashboard" size={16} />Dashboard
           </a>
           <a
             className={`primary-link primary-link-ledger ${activeNav === 'ledger' ? 'primary-link-active' : ''}`}
@@ -1278,7 +1279,7 @@ function App() {
             onClick={() => setActiveNav('ledger')}
             aria-current={activeNav === 'ledger' ? 'page' : undefined}
           >
-            <img src={activeNav === 'catalog' ? '/assets/catalog-nav-ledger.svg' : '/assets/nav-ledger.svg'} width="16" height="16" alt="" aria-hidden="true" />Ledger
+            <Icon name="ledger" size={16} />Ledger
           </a>
           <a
             className={`primary-link primary-link-catalog ${activeNav === 'catalog' ? 'primary-link-active' : ''}`}
@@ -1286,7 +1287,7 @@ function App() {
             onClick={() => setActiveNav('catalog')}
             aria-current={activeNav === 'catalog' ? 'page' : undefined}
           >
-            <img src={activeNav === 'catalog' ? '/assets/catalog-nav.svg' : '/assets/nav-catalog.svg'} width="16" height="16" alt="" aria-hidden="true" />Catalog
+            <Icon name="catalog" size={16} />Catalog
           </a>
         </nav>
 
@@ -1325,18 +1326,18 @@ function App() {
               onClick={() => setActiveNav('dashboard')}
               aria-label="Dashboard canvas"
             >
-              <img src={activeNav === 'catalog' ? '/assets/catalog-nav-dashboard.svg' : '/assets/rail-dashboard.svg'} width={activeNav === 'catalog' ? 16 : 18} height={activeNav === 'catalog' ? 16 : 18} alt="" aria-hidden="true" />
+              <Icon name="dashboard" size={activeNav === 'catalog' ? 16 : 18} />
             </a>
             <a
               className="rail-action"
               href="#voice-title"
               aria-label="Ask EasyLedger"
             >
-              <img src={activeNav === 'catalog' ? '/assets/catalog-rail-mic.svg' : '/assets/rail-voice.svg'} width={activeNav === 'catalog' ? 16 : 18} height={activeNav === 'catalog' ? 16 : 18} alt="" aria-hidden="true" />
+              <Icon name="voice" size={activeNav === 'catalog' ? 16 : 18} />
             </a>
             {activeNav === 'dashboard' && dashboardMode === 'editing' && (
               <a className="rail-action" href="#add-widget" aria-label="Add widget">
-                <img src="/assets/rail-add-widget.svg" width="18" height="18" alt="" aria-hidden="true" />
+                <Icon name="add" size={18} />
               </a>
             )}
             <a
@@ -1345,7 +1346,7 @@ function App() {
               onClick={() => setActiveNav('ledger')}
               aria-label="Sales Ledger journal"
             >
-              <img src={activeNav === 'catalog' ? '/assets/catalog-nav-ledger.svg' : '/assets/rail-source-sales.svg'} width={16} height={16} alt="" aria-hidden="true" />
+              <Icon name="ledger" size={16} />
             </a>
           </nav>
 

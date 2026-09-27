@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <symbol id="dashboard" viewBox="0 0 16 16" fill="none">
+    <path d="M2.66666 2.66667H6.66666V6.66667H2.66666V2.66667ZM9.33332 2.66667H13.3333V6.66667H9.33332V2.66667ZM2.66666 9.33334H6.66666V13.3333H2.66666V9.33334ZM9.33332 9.33334H13.3333V13.3333H9.33332V9.33334Z" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" />
+  </symbol>
+  <symbol id="ledger" viewBox="0 0 16 16" fill="none">
+    <path d="M2 12C2 12.5304 2.21071 13.0391 2.58579 13.4142C2.96086 13.7893 3.46957 14 4 14H12.6667V2H4C3.46957 2 2.96086 2.21071 2.58579 2.58579C2.21071 2.96086 2 3.46957 2 4V12ZM2 12C2 11.4696 2.21071 10.9609 2.58579 10.5858C2.96086 10.2107 3.46957 10 4 10H12.6667M5.33333 4.66667H10M5.33333 6.66667H8.66667" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" />
+  </symbol>
+  <symbol id="catalog" viewBox="0 0 16 16" fill="none">
+    <path d="M8 14.6667L2 11.3333V5.33333L8 2L14 5.33333V11.3333L8 14.6667ZM14 5.33333L8 8.66667M8 8.66667L2 5.33333M8 8.66667V14.6667" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" />
+  </symbol>
+  <symbol id="voice" viewBox="0 0 18 18" fill="none">
+    <path d="M14.25 7.5V9C14.25 10.3924 13.6969 11.7277 12.7123 12.7123C11.7277 13.6969 10.3924 14.25 9 14.25C7.60761 14.25 6.27226 13.6969 5.28769 12.7123C4.30312 11.7277 3.75 10.3924 3.75 9V7.5M9 14.25V16.5M6 16.5H12M6.75 3.75C6.75 3.15326 6.98705 2.58097 7.40901 2.15901C7.83097 1.73705 8.40326 1.5 9 1.5C9.59674 1.5 10.169 1.73705 10.591 2.15901C11.0129 2.58097 11.25 3.15326 11.25 3.75V9C11.25 9.59674 11.0129 10.169 10.591 10.591C10.169 11.0129 9.59674 11.25 9 11.25C8.40326 11.25 7.83097 11.0129 7.40901 10.591C7.0129 10.169 6.75 9.59674 6.75 9V3.75Z" stroke="currentColor" stroke-width="1.2375" stroke-linecap="round" stroke-linejoin="round" />
+  </symbol>
+  <symbol id="add" viewBox="0 0 18 18" fill="none">
+    <path d="M9 3.75V14.25M3.75 9H14.25" stroke="currentColor" stroke-width="1.2375" stroke-linecap="round" stroke-linejoin="round" />
+  </symbol>
+  <symbol id="grid" viewBox="0 0 16 16" fill="none">
+    <path d="M6 2.66667H3.33333C2.96514 2.66667 2.66667 2.96514 2.66667 3.33333V6C2.66667 6.36819 2.96514 6.66667 3.33333 6.66667H6C6.36819 6.66667 6.66667 6.36819 6.66667 6V3.33333C6.66667 2.96514 6.36819 2.66667 6 2.66667Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M12.6667 2.66667H10C9.63181 2.66667 9.33333 2.96514 9.33333 3.33333V6C9.33333 6.36819 9.63181 6.66667 10 6.66667H12.6667C13.0349 6.66667 13.3333 6.36819 13.3333 6V3.33333C13.3333 2.96514 13.0349 2.66667 12.6667 2.66667Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M6 9.33333H3.33333C2.96514 9.33333 2.66667 9.63181 2.66667 10V12.6667C2.66667 13.0349 2.96514 13.3333 3.33333 13.3333H6C6.36819 13.3333 6.66667 13.0349 6.66667 12.6667V10C6.66667 9.63181 6.36819 9.33333 6 9.33333Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M12.6667 9.33333H10C9.63181 9.33333 9.33333 9.63181 9.33333 10V12.6667C9.33333 13.0349 9.63181 13.3333 10 13.3333H12.6667C13.0349 13.3333 13.3333 13.0349 13.3333 12.6667V10C13.3333 9.63181 13.0349 9.33333 12.6667 9.33333Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+  </symbol>
+  <symbol id="list" viewBox="0 0 16 16" fill="none">
+    <path d="M6 3.33333H14M6 8H14M6 12.6667H14M2 3.33333H2.66667M2 8H2.66667M2 12.6667H2.66667" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+  </symbol>
+</svg>

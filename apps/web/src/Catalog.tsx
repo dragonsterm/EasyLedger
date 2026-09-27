@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { formatMoneyMinor } from './analytics';
 import type { LedgerCurrency } from './analytics';
+import Icon from './Icon';
 
 export type CatalogSection = 'all-products' | 'needs-price' | null;
 
@@ -72,7 +73,7 @@ function CatalogViewToggle({ value, onChange }: { value: ViewMode; onChange: (va
         aria-label="Grid view"
         aria-pressed={value === 'grid'}
       >
-        <img src="/assets/catalog-nav-dashboard.svg" width="16" height="16" alt="" aria-hidden="true" />
+        <Icon name="grid" size={16} />
       </button>
       <button
         type="button"
@@ -81,7 +82,7 @@ function CatalogViewToggle({ value, onChange }: { value: ViewMode; onChange: (va
         aria-label="List view"
         aria-pressed={value === 'list'}
       >
-        <img src="/assets/catalog-list.svg" width="16" height="16" alt="" aria-hidden="true" />
+        <Icon name="list" size={16} />
       </button>
     </div>
   );

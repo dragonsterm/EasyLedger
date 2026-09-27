@@ -276,10 +276,13 @@
   - [ ] **TASK-27-01**: Run Playwright/Cypress E2E test covering the complete Golden Journey from [`docs/01-Product-Brief.md`](file:///C:/Project/EasyLedger/docs/01-Product-Brief.md).
   - [ ] **TASK-27-02**: Run accessibility audit (axe-core / keyboard navigation): test tab focus, visible labels, and screen reader text equivalents for charts (NFR-05, Test `T-09`).
   - [ ] **TASK-27-03**: Benchmark query latency with 10,000 seeded sales records; record p50 and p95 timings (NFR-02, Test `T-11`).
+  - [x] **TASK-27-04**: Replace primary navigation, shortcut rail and catalog view icons with shared SVG symbols that inherit their control color; retire color-specific asset references from these controls.
 - **Agent Execution Guidance:**
   - Record actual timings and test logs into a verification summary.
 - **Human Verification Checkpoint:**
   - Complete the full sales entry and correction flow with microphone permissions disabled.
+- **Verification Evidence:**
+  - **TASK-27-04 (2026-09-27):** Seven shared SVG symbols use `currentColor`; the sprite has no fixed icon colors, and source contains no obsolete navigation asset references. `npm --prefix apps/web run build` passed, `node --test tests/web/*.test.mjs` passed 18/18, and `git diff --check` passed. The focused SVG check confirmed all seven symbols and color inheritance. At 1114×890, browser inspection showed Dashboard, Ledger and Catalog selected icons follow their white labels on the dark pill while inactive icons remain muted. Keyboard selection of Catalog List view changed the checked state, retained the muted sage icon color, and showed a visible focus outline. Build output retains the large-chunk warning (821.25 kB; 270.32 kB gzip).
 
 ---
 

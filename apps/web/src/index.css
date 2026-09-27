@@ -163,7 +163,7 @@ dd {
   transition: background-color 120ms ease, color 120ms ease;
 }
 
-.primary-link img {
+.primary-link .app-icon {
   display: block;
   flex: 0 0 auto;
   width: 16px;
@@ -194,10 +194,6 @@ dd {
 .primary-link-active:hover {
   background: var(--ink);
   color: #fff;
-}
-
-.primary-link-active img {
-  filter: brightness(0) invert(1);
 }
 
 .toolbar-space {
@@ -350,7 +346,7 @@ dd {
   transition: background-color 120ms ease, color 120ms ease;
 }
 
-.rail-action img {
+.rail-action .app-icon {
   display: block;
   width: 18px;
   height: 18px;
@@ -364,10 +360,6 @@ dd {
 .rail-action-active:hover {
   background: var(--ink);
   color: #fff;
-}
-
-.rail-action-active img {
-  filter: brightness(0) invert(1);
 }
 
 .rail-spacer {
@@ -2682,7 +2674,7 @@ body:has(.app-shell-catalog) {
   margin: 0;
 }
 
-.app-shell-catalog .rail-action img {
+.app-shell-catalog .rail-action .app-icon {
   width: 16px;
   height: 16px;
 }
@@ -2962,6 +2954,7 @@ body:has(.app-shell-catalog) {
   border: 0;
   border-radius: 18px;
   background: transparent;
+  color: var(--muted);
   cursor: pointer;
 }
 
@@ -2973,7 +2966,7 @@ body:has(.app-shell-catalog) {
   background: #dfe9d8;
 }
 
-.catalog-view-toggle img {
+.catalog-view-toggle .app-icon {
   display: block;
   width: 16px;
   height: 16px;
