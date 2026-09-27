@@ -1,8 +1,22 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactNode, RefObject } from 'react';
 import type { EChartsOption } from 'echarts';
+import ReactGridLayout, { useContainerWidth } from 'react-grid-layout';
+import type { Layout } from 'react-grid-layout';
 import EChart from './EChart';
 import LedgerJournal from './Ledger';
 import Catalog, { type CatalogSection } from './Catalog';
+import {
+  createAppendedDashboardLayoutItem,
+  createDashboardWidget,
+  createInitialDashboardLayout,
+  createInitialDashboardWidgets,
+  createUniqueDashboardWidgetId,
+  dashboardWidgetOptions,
+  normalizeDashboardLayout,
+  removeDashboardLayoutItem,
+} from './dashboardLayout';
+import type { DashboardLayoutItem, DashboardWidgetDefinition, DashboardWidgetKind } from './dashboardLayout';
 import {
   AnalyticsHttpError,
   buildSourceTransactionsRequest,
@@ -19,16 +33,7 @@ import {
 } from './analytics';
 import type { AnalyticsQueryResponse, ChartMapping, ChartPoint, LedgerCurrency, SourceTransaction, SourceTransactionsResponse } from './analytics';
 
-type WidgetType = 'Line chart' | 'Bar chart' | 'KPI';
-type WidgetMetric = 'Revenue' | 'Units sold' | 'Day completeness';
-type WidgetDimension = 'Day' | 'Product' | 'None';
-
-interface WidgetSelection {
-  id: string;
-  title: string;
-  type: WidgetType;
-  metric: WidgetMetric;
-  dimension: WidgetDimension;
+interface WidgetSelection extends DashboardWidgetDefinition {
   data: AnalyticsQueryResponse | null;
   dataSource: 'sample' | 'live';
 }
@@ -58,58 +63,40 @@ type SourceDialogState =
   | { status: 'stale' }
   | { status: 'error' };
 
-const revenueWidget: WidgetSelection = {
-  id: 'total-revenue',
-  title: 'Total revenue',
-  type: 'KPI',
-  metric: 'Revenue',
-  dimension: 'None',
-  data: sampleTotalRevenue,
-  dataSource: 'sample',
-};
+function sampleDataForWidget(kind: DashboardWidgetKind): AnalyticsQueryResponse | null {
+  switch (kind) {
+    case 'revenue-kpi': return sampleTotalRevenue;
+    case 'units-kpi': return sampleTotalUnits;
+    case 'daily-revenue': return sampleDailyRevenue;
+    case 'product-sales': return sampleProductUnits;
+    case 'complete-days': return null;
+  }
+}
 
-const unitsWidget: WidgetSelection = {
-  id: 'total-units',
-  title: 'Units sold',
-  type: 'KPI',
-  metric: 'Units sold',
-  dimension: 'None',
-  data: sampleTotalUnits,
+const initialWidgetSelections: WidgetSelection[] = createInitialDashboardWidgets().map((widget) => ({
+  ...widget,
+  data: sampleDataForWidget(widget.kind),
   dataSource: 'sample',
-};
-
-const dailyRevenueWidget: WidgetSelection = {
-  id: 'daily-revenue',
-  title: 'Daily revenue',
-  type: 'Line chart',
-  metric: 'Revenue',
-  dimension: 'Day',
-  data: sampleDailyRevenue,
-  dataSource: 'sample',
-};
-
-const productSalesWidget: WidgetSelection = {
-  id: 'sales-by-product',
-  title: 'Sales by product',
-  type: 'Bar chart',
-  metric: 'Units sold',
-  dimension: 'Product',
-  data: sampleProductUnits,
-  dataSource: 'sample',
-};
-
-const completeDaysWidget: WidgetSelection = {
-  id: 'complete-days',
-  title: 'Complete days',
-  type: 'KPI',
-  metric: 'Day completeness',
-  dimension: 'Day',
-  data: null,
-  dataSource: 'sample',
-};
+}));
 
 function isReady(mapping: ChartMapping): mapping is Extract<ChartMapping, { status: 'ready' }> {
   return mapping.status === 'ready';
+}
+
+function dashboardLayoutsEqual(left: ReadonlyArray<DashboardLayoutItem>, right: ReadonlyArray<DashboardLayoutItem>): boolean {
+  return left.length === right.length && left.every((item, index) => {
+    const candidate = right[index];
+    return candidate !== undefined
+      && item.i === candidate.i
+      && item.x === candidate.x
+      && item.y === candidate.y
+      && item.w === candidate.w
+      && item.h === candidate.h
+      && item.minW === candidate.minW
+      && item.maxW === candidate.maxW
+      && item.minH === candidate.minH
+      && item.maxH === candidate.maxH;
+  });
 }
 
 function shortDateLabel(label: string): string {
@@ -318,12 +305,14 @@ function ChartTitleButton({ id, headingId, title, selected, onClick }: { id: str
 }
 
 function RevenueChart({
+  widget,
   data,
   isLive,
   selected,
   onSelect,
   onDatumSelect,
 }: {
+  widget: WidgetSelection;
   data: AnalyticsQueryResponse;
   isLive: boolean;
   selected: boolean;
@@ -338,6 +327,7 @@ function RevenueChart({
       ? mapping.reason
       : null;
   const points = isReady(mapping) ? mapping.points : [];
+  const titleId = `heading-${widget.id}`;
   const openDatum = (index: number, focusTarget: HTMLElement | null) => {
     const point = points[index];
     if (point) onDatumSelect('date', point.key, point.label, data, focusTarget);
@@ -346,10 +336,10 @@ function RevenueChart({
   return (
     <div className="chart-column">
       <div className={`selected-widget${selected ? ' widget-selected' : ''}`}>
-        <figure className="chart-card chart-card-line" aria-labelledby="daily-revenue-title">
+        <figure className="chart-card chart-card-line" aria-labelledby={titleId}>
           <div className="chart-card-heading">
             <div>
-              <ChartTitleButton id={`widget-${dailyRevenueWidget.id}`} headingId="daily-revenue-title" title="Daily revenue" selected={selected} onClick={() => onSelect({ ...dailyRevenueWidget, data, dataSource: isLive ? 'live' : 'sample' })} />
+              <ChartTitleButton id={`widget-${widget.id}`} headingId={titleId} title={widget.title} selected={selected} onClick={() => onSelect({ ...widget, data, dataSource: isLive ? 'live' : 'sample' })} />
               <p className="chart-subtitle">{isLive ? 'Live ledger' : 'Sample'} · Known-price revenue · {data.currency}</p>
             </div>
             {selected && <span className="selected-pill">Selected</span>}
@@ -360,7 +350,7 @@ function RevenueChart({
               option={option}
               label={`${isLive ? 'Live' : 'Sample'} daily known-price revenue line chart`}
               dataPointCount={points.length}
-              onDataPointClick={(index) => openDatum(index, document.getElementById(`widget-${dailyRevenueWidget.id}`))}
+              onDataPointClick={(index) => openDatum(index, document.getElementById(`widget-${widget.id}`))}
             /></div>}
           <p className="chart-data-note">Open no-sale days are gaps; complete no-sale days are zero. Unknown-price sales are labeled separately.</p>
         </figure>
@@ -402,12 +392,14 @@ function RevenueChart({
 }
 
 function ProductChart({
+  widget,
   data,
   isLive,
   selected,
   onSelect,
   onDatumSelect,
 }: {
+  widget: WidgetSelection;
   data: AnalyticsQueryResponse;
   isLive: boolean;
   selected: boolean;
@@ -422,6 +414,7 @@ function ProductChart({
       ? mapping.reason
       : null;
   const points = isReady(mapping) ? mapping.points : [];
+  const titleId = `heading-${widget.id}`;
   const openDatum = (index: number, focusTarget: HTMLElement | null) => {
     const point = points[index];
     if (point) onDatumSelect('product', point.key, point.label, data, focusTarget);
@@ -430,10 +423,10 @@ function ProductChart({
   return (
     <div className="chart-column">
       <article className={`chart-card product-card${selected ? ' widget-selected' : ''}`}>
-        <figure aria-labelledby="product-chart-title">
+        <figure aria-labelledby={titleId}>
           <div className="chart-card-heading product-card-heading">
             <div>
-              <ChartTitleButton id={`widget-${productSalesWidget.id}`} headingId="product-chart-title" title="Sales by product" selected={selected} onClick={() => onSelect({ ...productSalesWidget, data, dataSource: isLive ? 'live' : 'sample' })} />
+              <ChartTitleButton id={`widget-${widget.id}`} headingId={titleId} title={widget.title} selected={selected} onClick={() => onSelect({ ...widget, data, dataSource: isLive ? 'live' : 'sample' })} />
               <p className="chart-subtitle">{isLive ? 'Live ledger' : 'Sample'} · Units sold</p>
             </div>
             {selected && <span className="selected-pill">Selected</span>}
@@ -444,7 +437,7 @@ function ProductChart({
               option={option}
               label={`${isLive ? 'Live' : 'Sample'} units sold by product horizontal bar chart`}
               dataPointCount={points.length}
-              onDataPointClick={(index) => openDatum(index, document.getElementById(`widget-${productSalesWidget.id}`))}
+              onDataPointClick={(index) => openDatum(index, document.getElementById(`widget-${widget.id}`))}
             /></div>}
           <p className="product-card-footer">All quantities include rows with unknown prices</p>
         </figure>
@@ -470,9 +463,51 @@ function ProductChart({
   );
 }
 
-function DashboardFilters() {
+function DashboardWidgetCard({
+  widget,
+  onRemove,
+  children,
+}: {
+  widget: WidgetSelection;
+  onRemove: (id: string) => void;
+  children: ReactNode;
+}) {
   return (
-    <section className="canvas-toolbar" aria-label="Dashboard filters and actions">
+    <article className="dashboard-widget-card" aria-label={`${widget.title} widget`}>
+      <header className="dashboard-widget-tools">
+        <span className="widget-drag-handle" title={`Drag to move ${widget.title}`} aria-hidden="true">
+          <svg viewBox="0 0 16 16" width="16" height="16" focusable="false">
+            <circle cx="5" cy="3" r="1" /><circle cx="11" cy="3" r="1" />
+            <circle cx="5" cy="8" r="1" /><circle cx="11" cy="8" r="1" />
+            <circle cx="5" cy="13" r="1" /><circle cx="11" cy="13" r="1" />
+          </svg>
+        </span>
+        <span className="dashboard-widget-type">{widget.type}</span>
+        <button
+          className="widget-remove-button"
+          type="button"
+          aria-label={`Remove ${widget.title} widget`}
+          onClick={() => onRemove(widget.id)}
+        >
+          Remove
+        </button>
+      </header>
+      <div className="dashboard-widget-content">{children}</div>
+    </article>
+  );
+}
+
+function DashboardFilters({
+  widgetKind,
+  onWidgetKindChange,
+  onAddWidget,
+}: {
+  widgetKind: DashboardWidgetKind;
+  onWidgetKindChange: (kind: DashboardWidgetKind) => void;
+  onAddWidget: () => void;
+}) {
+  return (
+    <section className="canvas-toolbar dashboard-toolbar" aria-label="Dashboard filters and actions">
       <div className="filter-controls">
         <label className="filter-control">
           <span className="sr-only">Date range</span>
@@ -495,13 +530,13 @@ function DashboardFilters() {
       </div>
       <span className="filter-spacer" aria-hidden="true" />
       <div className="canvas-toolbar-actions">
-        <button className="button button-add" id="add-widget" type="button" disabled title="Widget creation is not connected in this preview">+ Add widget</button>
-        <label className="zoom-control">
-          <span className="sr-only">Canvas zoom</span>
-          <select defaultValue="100" aria-label="Canvas zoom" disabled>
-            <option value="100">100%</option>
+        <label className="filter-control add-widget-type">
+          <span className="sr-only">Widget type to add</span>
+          <select value={widgetKind} aria-label="Widget type to add" onChange={(event) => onWidgetKindChange(event.target.value as DashboardWidgetKind)}>
+            {dashboardWidgetOptions.map((option) => <option key={option.kind} value={option.kind}>{option.label}</option>)}
           </select>
         </label>
+        <button className="button button-add" id="add-widget" type="button" onClick={onAddWidget}>+ Add widget</button>
       </div>
     </section>
   );
@@ -680,7 +715,7 @@ function Inspector({ widget, onClose }: { widget: WidgetSelection | null; onClos
           : '5 of 7 days are shown as an illustrative sample. The analytics response does not provide day coverage.'}</p>
       </section>
 
-      <p className="inspector-preview-note">Editing, arranging and saving are not enabled in this preview.</p>
+      <p className="inspector-preview-note">Layout changes stay in this local draft. They do not change sales or save to an account.</p>
     </aside>
   );
 }
@@ -700,25 +735,49 @@ function Dashboard({
   liveStatus: 'checking' | 'live' | 'unauthorized' | 'unavailable';
   onRefresh: () => void;
 }) {
+  const [widgets, setWidgets] = useState(initialWidgetSelections);
+  const [layout, setLayout] = useState<DashboardLayoutItem[]>(createInitialDashboardLayout);
+  const [newWidgetKind, setNewWidgetKind] = useState<DashboardWidgetKind>('revenue-kpi');
+  const nextWidgetSequence = useRef(1);
+  const { width: gridWidth, containerRef: gridContainerRef, mounted: gridMounted } = useContainerWidth({ initialWidth: 920 });
+  // RGL's nullable element generic differs from @types/react 18's ref type; both use the same runtime ref contract.
+  const gridContainerRefForReact18 = gridContainerRef as unknown as RefObject<HTMLDivElement>;
   const isLive = analytics !== null;
   const revenueData = analytics?.totalRevenue ?? sampleTotalRevenue;
   const unitsData = analytics?.totalUnits ?? sampleTotalUnits;
   const lineData = analytics?.revenue ?? sampleDailyRevenue;
   const productData = analytics?.products ?? sampleProductUnits;
-  const currentWidget = widget
-    ? {
-      ...widget,
-      data: widget.id === revenueWidget.id
-        ? revenueData
-        : widget.id === unitsWidget.id
-          ? unitsData
-          : widget.id === dailyRevenueWidget.id
-            ? lineData
-            : widget.id === productSalesWidget.id
-              ? productData
-              : null,
-      dataSource: widget.id === completeDaysWidget.id ? 'sample' as const : isLive ? 'live' as const : 'sample' as const,
+  const widgetIds = useMemo(() => widgets.map((item) => item.id), [widgets]);
+  const gridLayout = useMemo<Layout>(() => normalizeDashboardLayout(layout, widgetIds), [layout, widgetIds]);
+  const layoutPositions = useMemo(() => new Map(gridLayout.map((item) => [item.i, item])), [gridLayout]);
+  const orderedWidgets = useMemo(() => [...widgets].sort((left, right) => {
+    const leftPosition = layoutPositions.get(left.id);
+    const rightPosition = layoutPositions.get(right.id);
+    if (!leftPosition || !rightPosition) return 0;
+    return leftPosition.y - rightPosition.y || leftPosition.x - rightPosition.x;
+  }), [widgets, layoutPositions]);
+  const isDesktopGrid = gridMounted && gridWidth >= 720;
+  const handleLayoutChange = useCallback((nextLayout: Layout) => {
+    const normalized = normalizeDashboardLayout(nextLayout, widgetIds);
+    setLayout((current) => dashboardLayoutsEqual(current, normalized) ? current : normalized);
+  }, [widgetIds]);
+
+  const dataForWidget = (item: DashboardWidgetDefinition): AnalyticsQueryResponse | null => {
+    switch (item.kind) {
+      case 'revenue-kpi': return revenueData;
+      case 'units-kpi': return unitsData;
+      case 'daily-revenue': return lineData;
+      case 'product-sales': return productData;
+      case 'complete-days': return null;
     }
+  };
+  const currentSelection = (item: WidgetSelection): WidgetSelection => ({
+    ...item,
+    data: dataForWidget(item),
+    dataSource: item.kind === 'complete-days' ? 'sample' : isLive ? 'live' : 'sample',
+  });
+  const currentWidget = widget
+    ? currentSelection(widget)
     : null;
   const [selectedDatum, setSelectedDatum] = useState<SelectedDatum | null>(null);
   const [sourceState, setSourceState] = useState<SourceDialogState | null>(null);
@@ -730,16 +789,58 @@ function Dashboard({
     ? 'Includes sales with unknown prices'
     : 'Complete quantity total';
   const selectWidget = (selection: WidgetSelection) => {
-    const data = selection.id === revenueWidget.id
-      ? revenueData
-      : selection.id === unitsWidget.id
-        ? unitsData
-        : selection.id === dailyRevenueWidget.id
-          ? lineData
-          : selection.id === productSalesWidget.id
-            ? productData
-            : null;
-    onSelect({ ...selection, data, dataSource: data && isLive ? 'live' : 'sample' });
+    onSelect(currentSelection(selection));
+  };
+
+  const addWidget = () => {
+    const nextId = createUniqueDashboardWidgetId(widgetIds, nextWidgetSequence.current);
+    nextWidgetSequence.current = nextId.nextSequence;
+    const definition = createDashboardWidget(newWidgetKind, nextId.id);
+    setWidgets((current) => {
+      const ordinal = current.filter((item) => item.kind === newWidgetKind).length + 1;
+      return [...current, {
+        ...createDashboardWidget(newWidgetKind, nextId.id, ordinal),
+        data: sampleDataForWidget(newWidgetKind),
+        dataSource: 'sample',
+      }];
+    });
+    setLayout((current) => [...current, createAppendedDashboardLayoutItem(current, definition)]);
+    window.requestAnimationFrame(() => document.getElementById(`widget-${nextId.id}`)?.focus());
+  };
+
+  const removeWidget = (id: string) => {
+    setWidgets((current) => current.filter((item) => item.id !== id));
+    setLayout((current) => removeDashboardLayoutItem(current, id));
+    if (widget?.id === id) onClose();
+    window.requestAnimationFrame(() => document.getElementById('add-widget')?.focus());
+  };
+
+  const renderWidget = (item: WidgetSelection) => {
+    const selection = currentSelection(item);
+    const selected = widget?.id === item.id;
+    let content: ReactNode;
+    switch (item.kind) {
+      case 'revenue-kpi':
+        content = <MetricCard widget={selection} value={formatAnalyticsTotal(revenueData)} note={revenueNote} tone="revenue" selected={selected} onSelect={selectWidget} />;
+        break;
+      case 'units-kpi':
+        content = <MetricCard widget={selection} value={formatAnalyticsTotal(unitsData)} note={unitsNote} tone="units" selected={selected} onSelect={selectWidget} />;
+        break;
+      case 'complete-days':
+        content = <MetricCard widget={selection} value="5 of 7" note="Example coverage values" tone="days" selected={selected} onSelect={selectWidget} />;
+        break;
+      case 'daily-revenue':
+        content = <RevenueChart widget={selection} data={lineData} isLive={isLive} selected={selected} onSelect={selectWidget} onDatumSelect={openDatum} />;
+        break;
+      case 'product-sales':
+        content = <ProductChart widget={selection} data={productData} isLive={isLive} selected={selected} onSelect={selectWidget} onDatumSelect={openDatum} />;
+        break;
+    }
+    return (
+      <div className={`dashboard-widget-frame dashboard-widget-${item.kind}`} key={item.id}>
+        <DashboardWidgetCard widget={selection} onRemove={removeWidget}>{content}</DashboardWidgetCard>
+      </div>
+    );
   };
 
   const openDatum = (dimension: 'date' | 'product', key: string, label: string, response: AnalyticsQueryResponse, focusTarget: HTMLElement | null) => {
@@ -807,39 +908,26 @@ function Dashboard({
             </button>
           </section>
 
-          <DashboardFilters />
+          <DashboardFilters widgetKind={newWidgetKind} onWidgetKindChange={setNewWidgetKind} onAddWidget={addWidget} />
+          <p className="layout-draft-note">Layout changes stay in this preview. They do not change sales or save to an account.</p>
 
-          <section className="stat-grid" aria-label={isLive ? 'Live sales summary with example coverage values' : 'Sample weekly sales summary'}>
-            <MetricCard
-              widget={revenueWidget}
-              value={formatAnalyticsTotal(revenueData)}
-              note={revenueNote}
-              tone="revenue"
-              selected={widget?.id === revenueWidget.id}
-              onSelect={selectWidget}
-            />
-            <MetricCard
-              widget={unitsWidget}
-              value={formatAnalyticsTotal(unitsData)}
-              note={unitsNote}
-              tone="units"
-              selected={widget?.id === unitsWidget.id}
-              onSelect={selectWidget}
-            />
-            <MetricCard
-              widget={completeDaysWidget}
-              value="5 of 7"
-              note="Example coverage values"
-              tone="days"
-              selected={widget?.id === completeDaysWidget.id}
-              onSelect={selectWidget}
-            />
-          </section>
-
-          <section className="chart-grid" aria-label={isLive ? 'Live dashboard charts' : 'Sample dashboard charts'}>
-            <RevenueChart data={lineData} isLive={isLive} selected={widget?.id === dailyRevenueWidget.id} onSelect={selectWidget} onDatumSelect={openDatum} />
-            <ProductChart data={productData} isLive={isLive} selected={widget?.id === productSalesWidget.id} onSelect={selectWidget} onDatumSelect={openDatum} />
-          </section>
+          <div className="dashboard-grid-container" ref={gridContainerRefForReact18} aria-label={isLive ? 'Live dashboard widgets' : 'Sample dashboard widgets'}>
+            {widgets.length === 0
+              ? <div className="dashboard-grid-empty" role="status">No widgets in this draft. Choose a widget type above and add it to the dashboard.</div>
+              : isDesktopGrid
+                ? <ReactGridLayout
+                  width={gridWidth}
+                  layout={gridLayout}
+                  gridConfig={{ cols: 12, rowHeight: 26, margin: [16, 16], containerPadding: [0, 0] }}
+                  dragConfig={{ enabled: true, bounded: true, handle: '.widget-drag-handle', cancel: 'button, a, input, select, textarea, details, summary' }}
+                  resizeConfig={{ enabled: true, handles: ['se'] }}
+                  className="dashboard-widget-grid"
+                  onLayoutChange={handleLayoutChange}
+                >
+                  {orderedWidgets.map(renderWidget)}
+                </ReactGridLayout>
+                : <div className="dashboard-widget-stack">{orderedWidgets.map(renderWidget)}</div>}
+          </div>
 
           <aside className="quality-notice" aria-label={isLive ? 'Live data quality notice' : 'Sample data quality notice'}>
             <div>
@@ -887,7 +975,7 @@ function Dashboard({
                     : 'Live source transactions are not connected in this preview.'}</p>
           </section>
 
-          <p className="canvas-footer">Select a chart or KPI title to view properties. Select a datum to open its source transaction details.</p>
+          <p className="canvas-footer">{isDesktopGrid ? 'Drag a widget by its grip or resize from the lower-right corner.' : 'Widgets stack at this width; arrange them from a desktop view.'} Select a title for properties, or a datum for source details.</p>
         </div>
       </main>
       <Inspector widget={currentWidget} onClose={onClose} />
@@ -1050,7 +1138,7 @@ function App() {
               <>
                 <strong>Make it yours</strong>
                 <p>{isLive ? 'Chart and KPI values use live ledger data.' : 'Chart and KPI values are sample data.'}</p>
-                <p>Widget layout controls are unavailable.</p>
+                <p>Add, move, resize, and remove widgets in this local preview.</p>
               </>
             )}
           </aside>

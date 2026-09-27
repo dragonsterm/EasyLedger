@@ -249,7 +249,7 @@
   - Connect voice commands and manual UI controls to widget add/move/resize/delete operations.
   - Implement dashboard saving, versioning, and reopening with current ledger data recomputation.
 - **Tasks to Do:**
-  - [ ] **TASK-26-01**: Integrate React Grid Layout in `apps/web`: support adding, moving, resizing, and removing widgets.
+  - [x] **TASK-26-01**: Integrate React Grid Layout in `apps/web`: support adding, moving, resizing, and removing widgets.
   - [ ] **TASK-26-02**: Implement keyboard/touch accessible layout controls (Move Up, Move Down, Size presets) for mobile screens (390px).
   - [ ] **TASK-26-03**: Connect voice tool `update_dashboard` to update layout drafts without altering ledger records (FR-12).
   - [x] **TASK-26-04**: Implement `save_dashboard` and `GET /api/dashboards/:id`: persist named dashboard JSON; reopening recomputes current data from ledger (FR-13, Test `T-06`).
@@ -258,6 +258,7 @@
 - **Human Verification Checkpoint:**
   - Save a dashboard named "Weekly Overview", record new sales, reopen the dashboard, and verify that widgets reflect updated totals.
 - **Verification Evidence:**
+  - **TASK-26-01 (2026-09-27):** React Grid Layout 2.2.4 powers a local dashboard draft with five add choices, unique IDs for duplicate widgets, drag handles, bounded resize handles, removal, and an empty state that can be populated again. Layout changes make no ledger mutation or dashboard save request. `npm --prefix apps/web run build`, `node --test tests/web/*.test.mjs` (11/11), and `git diff --check` passed. In a 1280px browser viewport, adding a duplicate KPI and line chart, dragging a chart to another column, resizing it to the readable minimum, removing all widgets and adding a chart back worked. The resized ECharts SVG fit without inner overflow; the text-table drilldown preserved gap, confirmed-zero and unknown-price labels and opened the sample fixture notice without inventing source rows. Authenticated live analytics, browser dashboard saving, voice layout changes, and mobile keyboard/touch controls were not verified by this task.
   - `npm test` passed 25 tests (15 domain, 10 API contract tests).
   - Verified Dashboard REST endpoints (`GET/POST /api/v1/dashboards`, `GET/PUT/DELETE /api/v1/dashboards/:id`) and voice tool `save_dashboard` with optimistic version locking (409 on stale version) and tenant isolation.
 
