@@ -19,6 +19,8 @@ import {
 } from '../../packages/domain/voice.ts';
 import {
   DashboardService,
+  createDefaultLayoutItems,
+  createDefaultWidgetSpecs,
   type DashboardDraftView,
   type DashboardOperation,
   type DashboardView,
@@ -1348,7 +1350,34 @@ export function createApp(options: AppOptions) {
     };
     const rep = reply as { code: (status: number) => { send: (payload: unknown) => unknown } };
     const dashboardId = req.body?.dashboard_id ?? req.easyLedger.voiceSession?.selected_dashboard_id ?? 'default';
-    const draft = await dashboards.getDashboardDraft(req.easyLedger.business.id, dashboardId);
+    let draft = await dashboards.getDashboardDraft(req.easyLedger.business.id, dashboardId);
+
+    // Voice reads should show the same starting point the first update_dashboard
+    // call will edit. Keep this view virtual: REST draft reads continue to mean
+    // an explicitly created in-memory draft, and this path never writes drafts.
+    if (!draft && dashboardId === 'default') {
+      const now = new Date().toISOString();
+      draft = {
+        id: 'default',
+        business_id: req.easyLedger.business.id,
+        name: 'Draft Dashboard',
+        schema_version: 1,
+        version: '1',
+        widgets: createDefaultWidgetSpecs(),
+        layout: createDefaultLayoutItems(),
+        is_draft: true,
+        selected_widget_id: null,
+        created_at: now,
+        updated_at: now,
+      };
+    } else if (!draft) {
+      const savedDashboard = await dashboards.getDashboard(req.easyLedger.business.id, dashboardId);
+      draft = {
+        ...savedDashboard,
+        is_draft: true,
+        selected_widget_id: null,
+      };
+    }
     return rep.code(200).send(successEnvelope(String(req.id), draft, {
       currency: req.easyLedger.business.currency,
       ledger_revision: req.easyLedger.business.ledger_revision,

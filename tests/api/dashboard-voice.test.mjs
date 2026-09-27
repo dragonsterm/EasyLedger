@@ -7,7 +7,7 @@ import { createApp } from '../../apps/api/app.ts';
 const owner = '00000000-0000-4000-8000-000000000101';
 const business = '00000000-0000-4000-8000-000000000001';
 
-function mockPool() {
+function mockPool(dashboards = []) {
   const businesses = [
     {
       id: business,
@@ -28,6 +28,10 @@ function mockPool() {
       }
       if (sql.includes('businesses') && sql.includes('WHERE id = $1')) {
         const found = businesses.filter((b) => b.id === values[0]);
+        return { rows: found, rowCount: found.length };
+      }
+      if (sql.includes('FROM dashboards') && sql.includes('WHERE business_id = $1 AND id = $2')) {
+        const found = dashboards.filter((d) => d.business_id === values[0] && d.id === values[1]);
         return { rows: found, rowCount: found.length };
       }
       return { rows: [], rowCount: 0 };
@@ -65,6 +69,32 @@ test('TASK-26-03: Voice tool update_dashboard updates layout drafts without alte
   });
   assert.equal(sessionRes.statusCode, 201);
   const sessionToken = sessionRes.json().data.session_token;
+
+  // A first voice read previews the exact default dashboard used by the first
+  // update, without creating the REST-visible in-memory draft.
+  const initialDraftRes = await app.inject({
+    method: 'POST',
+    url: '/api/v1/voice/tools/get_dashboard_draft',
+    headers: { 'x-session-token': sessionToken },
+    payload: {},
+  });
+  assert.equal(initialDraftRes.statusCode, 200);
+  const initialDraft = initialDraftRes.json().data;
+  assert.equal(initialDraft.is_draft, true);
+  assert.equal(initialDraft.id, 'default');
+  assert.deepEqual(initialDraft.widgets.map((widget) => widget.id), [
+    'total-revenue', 'total-units', 'complete-days', 'daily-revenue', 'sales-by-product',
+  ]);
+  assert.deepEqual(initialDraft.layout.map((item) => [item.i, item.x, item.y, item.w, item.h]), [
+    ['total-revenue', 0, 0, 4, 5],
+    ['total-units', 4, 0, 4, 5],
+    ['complete-days', 8, 0, 4, 5],
+    ['daily-revenue', 0, 5, 6, 10],
+    ['sales-by-product', 6, 5, 6, 10],
+  ]);
+  assert.equal(initialDraftRes.json().ledger_revision, '5');
+  const restDraftBeforeUpdate = await app.inject({ method: 'GET', url: '/api/v1/dashboards/draft' });
+  assert.equal(restDraftBeforeUpdate.statusCode, 404);
 
   // 3. Client-supplied or model-supplied business_id is strictly rejected (422)
   const spoofRes = await app.inject({
@@ -116,6 +146,11 @@ test('TASK-26-03: Voice tool update_dashboard updates layout drafts without alte
   assert.equal(addBody.ledger_revision, '5'); // UNCHANGED
   assert.equal(addBody.data.is_draft, true);
   assert.equal(addBody.data.widgets.length, 6);
+  assert.deepEqual(addBody.data.widgets.slice(0, 5).map((widget) => widget.id), initialDraft.widgets.map((widget) => widget.id));
+  assert.deepEqual(
+    addBody.data.layout.slice(0, 5).map((item) => [item.i, item.x, item.y, item.w, item.h]),
+    initialDraft.layout.map((item) => [item.i, item.x, item.y, item.w, item.h]),
+  );
   assert.equal(addBody.data.selected_widget_id, 'widget-profit-kpi');
 
   // 6. Edit the widget via dynamic tool route /api/voice/tools/:tool
@@ -242,4 +277,62 @@ test('TASK-26-03: Voice tool update_dashboard updates layout drafts without alte
   });
   assert.equal(finalContextRes.statusCode, 200);
   assert.equal(finalContextRes.json().data.ledger_revision, '5');
+});
+
+test('voice get_dashboard_draft previews a tenant-scoped saved dashboard and rejects unavailable IDs', async (t) => {
+  const savedId = '00000000-0000-4000-8000-000000000201';
+  const foreignId = '00000000-0000-4000-8000-000000000202';
+  const foreignBusiness = '00000000-0000-4000-8000-000000000002';
+  const savedDashboard = {
+    id: savedId,
+    business_id: business,
+    name: 'Owner dashboard',
+    schema_version: 1,
+    version: '7',
+    widgets: [{ id: 'saved-revenue', type: 'kpi', title: 'Revenue', metric: 'revenue', dimension: 'none' }],
+    layout: [{ i: 'saved-revenue', x: 0, y: 0, w: 12, h: 5 }],
+    created_at: '2026-01-01T00:00:00.000Z',
+    updated_at: '2026-02-01T00:00:00.000Z',
+  };
+  const foreignDashboard = { ...savedDashboard, id: foreignId, business_id: foreignBusiness };
+  const app = createApp({
+    pool: mockPool([savedDashboard, foreignDashboard]),
+    authAdapter: () => ({ userId: owner }),
+    assemblyTokenGenerator: () => 'mock_token_saved_dashboard',
+  });
+  t.after(() => app.close());
+
+  const sessionRes = await app.inject({ method: 'POST', url: '/api/v1/voice/sessions', payload: {} });
+  assert.equal(sessionRes.statusCode, 201);
+  const sessionToken = sessionRes.json().data.session_token;
+  const read = (dashboardId) => app.inject({
+    method: 'POST',
+    url: '/api/v1/voice/tools/get_dashboard_draft',
+    headers: { 'x-session-token': sessionToken },
+    payload: { dashboard_id: dashboardId },
+  });
+
+  const savedRes = await read(savedId);
+  assert.equal(savedRes.statusCode, 200);
+  assert.deepEqual(savedRes.json().data, {
+    ...savedDashboard,
+    is_draft: true,
+    selected_widget_id: null,
+  });
+  const restSavedDraft = await app.inject({ method: 'GET', url: `/api/v1/dashboards/${savedId}/draft` });
+  assert.equal(restSavedDraft.statusCode, 404);
+
+  const missingRes = await read('00000000-0000-4000-8000-000000000299');
+  assert.equal(missingRes.statusCode, 404);
+  const crossTenantRes = await read(foreignId);
+  assert.equal(crossTenantRes.statusCode, 404);
+  const malformedRes = await read('not-a-dashboard-id');
+  assert.equal(malformedRes.statusCode, 422);
+
+  const unauthenticatedRes = await app.inject({
+    method: 'POST',
+    url: '/api/v1/voice/tools/get_dashboard_draft',
+    payload: { dashboard_id: savedId },
+  });
+  assert.equal(unauthenticatedRes.statusCode, 401);
 });
