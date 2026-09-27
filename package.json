@@ -14,6 +14,7 @@
     "graph:query": "graphify query",
     "graph:serve": "node scripts/serve-graph.cjs",
     "security:scan": "node scripts/scan-bundle-security.mjs",
+    "audit:a11y": "node scripts/audit-accessibility.mjs",
     "rehearsal:backup": "node scripts/backup-restore-rehearsal.mjs",
     "test:web": "node --test tests/web/*.test.mjs",
     "test:domain": "node --test tests/domain/*.test.mjs",
@@ -24,7 +25,9 @@
     "test:database:day23": "node --test tests/database/day23_integration.mjs"
   },
   "devDependencies": {
-    "@sentropic/graphify": "0.18.0"
+    "@sentropic/graphify": "0.18.0",
+    "axe-core": "^4.13.0",
+    "jsdom": "^30.1.1"
   },
   "dependencies": {
     "fastify": "5.12.5",
