@@ -228,6 +228,18 @@ export class ProposalService {
     this.pool = pool;
   }
 
+  clearMemoryProposals(businessId?: string): void {
+    if (!businessId) {
+      this.memoryProposals.clear();
+      return;
+    }
+    for (const key of this.memoryProposals.keys()) {
+      if (key.startsWith(`${businessId}:`)) {
+        this.memoryProposals.delete(key);
+      }
+    }
+  }
+
   async createProposal(options: {
     business_id: string;
     session_id?: string | null;

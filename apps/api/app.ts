@@ -535,6 +535,14 @@ const toolUpdateDashboardSchema = {
   },
 };
 
+const demoResetSchema = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    confirm: { type: 'boolean' },
+  },
+};
+
 function text(value: unknown, field: string): string {
   if (typeof value !== 'string' || value.trim() === '') {
     throw new ApiError('VALIDATION_ERROR', `${field} is required`, { httpStatus: 422, fieldErrors: { [field]: 'required' } });
@@ -665,10 +673,10 @@ async function poolQuery<Row = Record<string, unknown>>(
 async function resolveBusiness(
   pool: DatabasePool & { query?: unknown },
   userId: string,
-): Promise<{ id: string; currency: 'IDR' | 'USD'; ledger_revision: string; name: string; timezone: string }> {
-  const result = await poolQuery<{ id: string; currency: 'IDR' | 'USD'; ledger_revision: string; name?: string; timezone?: string }>(
+): Promise<{ id: string; currency: 'IDR' | 'USD'; ledger_revision: string; name: string; timezone: string; is_demo: boolean }> {
+  const result = await poolQuery<{ id: string; currency: 'IDR' | 'USD'; ledger_revision: string; name?: string; timezone?: string; is_demo?: boolean }>(
     pool,
-    `SELECT id, currency, ledger_revision::text AS ledger_revision, name, timezone
+    `SELECT id, currency, ledger_revision::text AS ledger_revision, name, timezone, is_demo
        FROM businesses
       WHERE owner_user_id = $1
       ORDER BY created_at ASC, id ASC
@@ -683,16 +691,17 @@ async function resolveBusiness(
     ledger_revision: row.ledger_revision,
     name: row.name ?? 'EasyLedger Merchant',
     timezone: row.timezone ?? 'Asia/Jakarta',
+    is_demo: Boolean(row.is_demo),
   };
 }
 
 async function getBusinessById(
   pool: DatabasePool & { query?: unknown },
   businessId: string,
-): Promise<{ id: string; currency: 'IDR' | 'USD'; ledger_revision: string; name: string; timezone: string }> {
-  const result = await poolQuery<{ id: string; currency: 'IDR' | 'USD'; ledger_revision: string; name?: string; timezone?: string }>(
+): Promise<{ id: string; currency: 'IDR' | 'USD'; ledger_revision: string; name: string; timezone: string; is_demo: boolean }> {
+  const result = await poolQuery<{ id: string; currency: 'IDR' | 'USD'; ledger_revision: string; name?: string; timezone?: string; is_demo?: boolean }>(
     pool,
-    `SELECT id, currency, ledger_revision::text AS ledger_revision, name, timezone
+    `SELECT id, currency, ledger_revision::text AS ledger_revision, name, timezone, is_demo
        FROM businesses
       WHERE id = $1
       LIMIT 1`,
@@ -706,6 +715,7 @@ async function getBusinessById(
     ledger_revision: row.ledger_revision,
     name: row.name ?? 'EasyLedger Merchant',
     timezone: row.timezone ?? 'Asia/Jakarta',
+    is_demo: Boolean(row.is_demo),
   };
 }
 
@@ -1844,6 +1854,40 @@ export function createApp(options: AppOptions) {
       ledger_revision: context.business.ledger_revision,
     }));
   });
+
+  const registerDemoResetRoute = (routePath: string) => {
+    app.post(routePath, { schema: { body: demoResetSchema } }, async (request, reply) => {
+      const context = (request as unknown as { easyLedger: { business: { id: string; currency: 'IDR' | 'USD'; ledger_revision: string; name: string; is_demo: boolean } } }).easyLedger;
+      if (!context.business.is_demo) {
+        throw new ApiError('FORBIDDEN', 'Reset operation is restricted to demo workspaces only (FR-16)', { httpStatus: 403 });
+      }
+
+      await poolQuery(options.pool, 'DELETE FROM sale_revisions WHERE business_id = $1', [context.business.id]);
+      await poolQuery(options.pool, 'DELETE FROM sales WHERE business_id = $1', [context.business.id]);
+      await poolQuery(options.pool, 'DELETE FROM coverage_revisions WHERE business_id = $1', [context.business.id]);
+      await poolQuery(options.pool, 'DELETE FROM day_coverages WHERE business_id = $1', [context.business.id]);
+      await poolQuery(options.pool, 'DELETE FROM operations WHERE business_id = $1', [context.business.id]);
+      await poolQuery(options.pool, 'DELETE FROM proposals WHERE business_id = $1', [context.business.id]);
+      await poolQuery(options.pool, 'DELETE FROM dashboards WHERE business_id = $1', [context.business.id]);
+      await poolQuery(options.pool, 'UPDATE businesses SET ledger_revision = 0 WHERE id = $1', [context.business.id]);
+
+      proposals.clearMemoryProposals(context.business.id);
+
+      return reply.code(200).send(successEnvelope(String(request.id), {
+        business_id: context.business.id,
+        business_name: context.business.name,
+        is_demo: true,
+        ledger_revision: '0',
+        message: 'Demo workspace successfully reset to initial clean state',
+        reset_at: new Date().toISOString(),
+      }, {
+        currency: context.business.currency,
+        ledger_revision: '0',
+      }));
+    });
+  };
+  registerDemoResetRoute('/api/v1/demo/reset');
+  registerDemoResetRoute('/api/demo/reset');
 
   // A catalog row missing from the tenant is deliberately normalized to the
   // same 404 as an unknown ID.  Keep this explicit for callers that import
