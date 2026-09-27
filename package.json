@@ -13,6 +13,8 @@
     "docs:watch": "node scripts/watch-docs.cjs",
     "graph:query": "graphify query",
     "graph:serve": "node scripts/serve-graph.cjs",
+    "security:scan": "node scripts/scan-bundle-security.mjs",
+    "test:web": "node --test tests/web/*.test.mjs",
     "test:domain": "node --test tests/domain/*.test.mjs",
     "test:database:day21": "node --test tests/database/day21_integration.mjs",
     "test:api": "node --test tests/api/*.test.mjs",

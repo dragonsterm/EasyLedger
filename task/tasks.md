@@ -39,9 +39,9 @@
 | **Day 23** | Sep 23 | **P3 Voice Agent** | AssemblyAI session bootstrap, authenticated HTTP tool gateway | `[x] Completed` |
 | **Day 24** | Sep 24 | **P3 Voice Agent** | Two-phase proposal state machine, ambiguity clarification & receipts | `[x] Completed` |
 | **Day 25** | Sep 25 | **P4 Builder** | React/Vite workspace initialized, ECharts widget renderer, deterministic query engine (line/bar/KPI) | `[x] Completed` |
-| **Day 26** | Sep 26 | **P4 Builder** | Responsive grid layout, voice/manual layout editing, dashboard persistence | `[ ] Pending` |
-| **Day 27** | Sep 27 | **P5 Validate** | End-to-end golden journey test, accessibility (390px/1280px), latency checks | `[ ] Pending` |
-| **Day 28** | Sep 28 | **P5 Validate** | Labeled synthetic demo fixtures, demo reset isolation & backup restore drill | `[ ] Pending` |
+| **Day 26** | Sep 26 | **P4 Builder** | Responsive grid layout, voice/manual layout editing, dashboard persistence | `[/] In Progress` |
+| **Day 27** | Sep 27 | **P5 Validate** | End-to-end golden journey test, accessibility (390px/1280px), latency checks | `[/] In Progress` |
+| **Day 28** | Sep 28 | **P5 Validate** | Labeled synthetic demo fixtures, demo reset isolation & backup restore drill | `[/] In Progress` |
 | **Day 29** | Sep 29 | **P6 Submit** | Production deployment, video walkthrough (max 5 min), pitch deck (PDF) | `[ ] Pending` |
 | **Day 30** | Sep 30 | **P6 Submit** | Final submission on lablab.ai, public repo verification & buffer | `[ ] Pending` |
 
@@ -280,13 +280,14 @@
 - **Tasks to Do:**
   - [ ] **TASK-27-01**: Run Playwright/Cypress E2E test covering the complete Golden Journey from [`docs/01-Product-Brief.md`](file:///C:/Project/EasyLedger/docs/01-Product-Brief.md).
   - [ ] **TASK-27-02**: Run accessibility audit (axe-core / keyboard navigation): test tab focus, visible labels, and screen reader text equivalents for charts (NFR-05, Test `T-09`).
-  - [ ] **TASK-27-03**: Benchmark query latency with 10,000 seeded sales records; record p50 and p95 timings (NFR-02, Test `T-11`).
+  - [x] **TASK-27-03**: Benchmark query latency with 10,000 seeded sales records; record p50 and p95 timings (NFR-02, Test `T-11`).
   - [x] **TASK-27-04**: Replace primary navigation, shortcut rail and catalog view icons with shared SVG symbols that inherit their control color; place Catalog after Ledger in the shortcut rail and distinguish the Ask EasyLedger mic with its sage and ivory colors.
 - **Agent Execution Guidance:**
   - Record actual timings and test logs into a verification summary.
 - **Human Verification Checkpoint:**
   - Complete the full sales entry and correction flow with microphone permissions disabled.
 - **Verification Evidence:**
+  - **TASK-27-03 (2026-09-28):** Implemented `scripts/benchmark-analytics.mjs` and `tests/domain/benchmark.test.mjs`. Workload: 100 queries across 10,000 seeded synthetic sales records (260-day span, known/unknown prices, voided lines, multi-product grouping). Results observed on Intel Core i7-13620H (16 cores, Node v26.7.0): Cold Start 0.653 ms; Min 0.104 ms; p50 0.285 ms; p90 0.697 ms; p95 0.882 ms; p99 1.450 ms; Max 1.597 ms. SRS NFR-02 target (< 1000 ms) PASSED.
   - **TASK-27-04 follow-up (2026-09-27):** The latest web build passed; the bundle warning is 821.53 kB (270.35 kB gzip). `node --test tests/web/*.test.mjs` passed 18/18 and `git diff --check` passed. At 1114×890, the Catalog rail shortcut sits after Ledger and activates Catalog by keyboard in Preview and Editing modes; in Editing mode Add Widget remains before Ledger. The active Catalog icon is white on the dark pill. The mic shortcut has a sage outer circle, ivory inner circle and green icon, and its target follows the Dashboard, Ledger or Catalog Ask EasyLedger card.
   - **TASK-27-04 (2026-09-27):** Seven shared SVG symbols use `currentColor`; the sprite has no fixed icon colors, and source contains no obsolete navigation asset references. `npm --prefix apps/web run build` passed, `node --test tests/web/*.test.mjs` passed 18/18, and `git diff --check` passed. The focused SVG check confirmed all seven symbols and color inheritance. At 1114×890, browser inspection showed Dashboard, Ledger and Catalog selected icons follow their white labels on the dark pill while inactive icons remain muted. Keyboard selection of Catalog List view changed the checked state, retained the muted sage icon color, and showed a visible focus outline. Build output retains the large-chunk warning (821.25 kB; 270.32 kB gzip).
 
@@ -303,11 +304,13 @@
   - [ ] **TASK-28-01**: Implement synthetic demo fixtures with prominent `[DEMO DATA]` UI badges (FR-16).
   - [ ] **TASK-28-02**: Build demo reset endpoint: restricted to demo workspace; verify it cannot wipe real merchant records (Test `T-10`).
   - [ ] **TASK-28-03**: Execute PostgreSQL backup and restore rehearsal: verify all sales, revisions, and operations match pre-backup state (NFR-07).
-  - [ ] **TASK-28-04**: Run security scan on web bundle: confirm zero API keys, tokens, or environment credentials exist in client code.
+  - [x] **TASK-28-04**: Run security scan on web bundle: confirm zero API keys, tokens, or environment credentials exist in client code.
 - **Agent Execution Guidance:**
   - Refer to [`docs/08-Security-and-Operations.md`](file:///C:/Project/EasyLedger/docs/08-Security-and-Operations.md).
 - **Human Verification Checkpoint:**
   - Trigger demo reset and confirm that only synthetic records are reset.
+- **Verification Evidence:**
+  - **TASK-28-04 (2026-09-28):** Implemented `scripts/scan-bundle-security.mjs` and `tests/web/security-bundle-scan.test.mjs`. Scans production web bundle (`apps/web/dist/`) and client source (`apps/web/src/`) for secret leakage patterns (AssemblyAI raw API keys, PostgreSQL connection URIs with credentials, cryptographic private key blocks, server secret assignments, and live provider tokens). Confirmed zero server dependencies in `apps/web/package.json` (`pg`, `fastify`, `dotenv`). Scanner verified with 3 test cases including positive and negative injections; 0 secrets or leaks detected across all production bundle and client source files.
 
 ---
 
