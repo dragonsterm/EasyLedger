@@ -19,9 +19,12 @@ import {
 } from '../../packages/domain/voice.ts';
 import {
   DashboardService,
+  type DashboardDraftView,
+  type DashboardOperation,
   type DashboardView,
   type LayoutItem,
   type SaveDashboardInput,
+  type UpdateDashboardDraftInput,
   type WidgetSpec,
 } from '../../packages/domain/dashboards.ts';
 
@@ -422,6 +425,93 @@ const toolSaveDashboardSchema = {
     widgets: { type: 'array', maxItems: 20, items: widgetSchema },
     layout: { type: 'array', items: layoutItemSchema },
     idempotency_key: { type: 'string', minLength: 1, maxLength: 200 },
+  },
+};
+
+const operationLayoutItemSchema = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    i: { type: 'string', minLength: 1, maxLength: 100 },
+    x: { type: 'number', minimum: 0 },
+    y: { type: 'number', minimum: 0 },
+    w: { type: 'number', minimum: 1 },
+    h: { type: 'number', minimum: 1 },
+  },
+};
+
+const dashboardOperationSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['type'],
+  properties: {
+    type: { type: 'string', enum: ['add', 'edit', 'move', 'resize', 'remove', 'select'] },
+    widget_id: { type: 'string', minLength: 1, maxLength: 100 },
+    target: { type: 'string', minLength: 1, maxLength: 100 },
+    widget: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        id: { type: 'string', minLength: 1, maxLength: 100 },
+        type: { type: 'string', enum: ['line', 'bar', 'kpi', 'table'] },
+        title: { type: 'string', minLength: 1, maxLength: 200 },
+        metric: { type: 'string', enum: ['units', 'revenue'] },
+        dimension: { type: 'string', enum: ['date', 'product', 'none'] },
+        filters: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            date_from: dateSchema,
+            date_to: dateSchema,
+            product_ids: { type: 'array', items: uuidSchema, maxItems: 50 },
+          },
+        },
+        comparison: { type: 'string', minLength: 1, maxLength: 100 },
+        format: { type: 'string', minLength: 1, maxLength: 50 },
+        schema_version: { type: 'integer', minimum: 1 },
+      },
+    },
+    layout: operationLayoutItemSchema,
+    changes: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        title: { type: 'string', minLength: 1, maxLength: 200 },
+        type: { type: 'string', enum: ['line', 'bar', 'kpi', 'table'] },
+        metric: { type: 'string', enum: ['units', 'revenue'] },
+        dimension: { type: 'string', enum: ['date', 'product', 'none'] },
+        filters: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            date_from: dateSchema,
+            date_to: dateSchema,
+            product_ids: { type: 'array', items: uuidSchema, maxItems: 50 },
+          },
+        },
+      },
+    },
+    position: { type: 'string', enum: ['top', 'bottom', 'left', 'right'] },
+    x: { type: 'number', minimum: 0 },
+    y: { type: 'number', minimum: 0 },
+    w: { type: 'number', minimum: 1 },
+    h: { type: 'number', minimum: 1 },
+  },
+};
+
+const toolUpdateDashboardSchema = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    dashboard_id: uuidSchema,
+    expected_version: integerSchema,
+    selected_widget_id: { type: ['string', 'null'], maxLength: 100 },
+    operations: {
+      type: 'array',
+      maxItems: 20,
+      items: dashboardOperationSchema,
+    },
+    operation: dashboardOperationSchema,
   },
 };
 
@@ -1010,6 +1100,33 @@ export function createApp(options: AppOptions) {
         ledger_revision: context.business.ledger_revision,
       }));
     });
+
+    app.get(`${prefix}/dashboards/:id/draft`, { schema: { params: uuidParams } }, async (request, reply) => {
+      const context = (request as unknown as { easyLedger: { business: { id: string; currency: 'IDR' | 'USD'; ledger_revision: string } } }).easyLedger;
+      const params = request.params as { id: string };
+      const draft = await dashboards.getDashboardDraft(context.business.id, params.id);
+      if (!draft) {
+        throw new ApiError('NOT_FOUND', 'Draft is unavailable', { httpStatus: 404 });
+      }
+      return reply.code(200).send(successEnvelope(String(request.id), draft, {
+        currency: context.business.currency,
+        ledger_revision: context.business.ledger_revision,
+        dashboard_version: draft.version,
+      }));
+    });
+
+    app.get(`${prefix}/dashboards/draft`, async (request, reply) => {
+      const context = (request as unknown as { easyLedger: { business: { id: string; currency: 'IDR' | 'USD'; ledger_revision: string } } }).easyLedger;
+      const draft = await dashboards.getDashboardDraft(context.business.id, 'default');
+      if (!draft) {
+        throw new ApiError('NOT_FOUND', 'Draft is unavailable', { httpStatus: 404 });
+      }
+      return reply.code(200).send(successEnvelope(String(request.id), draft, {
+        currency: context.business.currency,
+        ledger_revision: context.business.ledger_revision,
+        dashboard_version: draft.version,
+      }));
+    });
   };
 
   // --- Day 25: Deterministic Analytics Query API ---
@@ -1517,6 +1634,63 @@ export function createApp(options: AppOptions) {
     }));
   };
 
+  const handleUpdateDashboard = async (request: unknown, reply: unknown) => {
+    const req = request as {
+      id: string;
+      body?: {
+        dashboard_id?: string;
+        expected_version?: bigint | number | string;
+        selected_widget_id?: string | null;
+        operations?: DashboardOperation[];
+        operation?: DashboardOperation;
+      };
+      easyLedger: {
+        business: {
+          id: string;
+          currency: 'IDR' | 'USD';
+          ledger_revision: string;
+        };
+        voiceSession?: VoiceSessionRecord;
+      };
+    };
+    const rep = reply as { code: (status: number) => { send: (payload: unknown) => unknown } };
+    const context = req.easyLedger;
+    const body = req.body ?? {};
+
+    const operations = body.operations ?? (body.operation ? [body.operation] : []);
+    if (!operations.length) {
+      throw new ApiError('VALIDATION_ERROR', 'At least one operation is required', {
+        httpStatus: 422,
+        fieldErrors: { operations: 'required' },
+      });
+    }
+
+    try {
+      const draft = await dashboards.updateDashboardDraft({
+        business_id: context.business.id,
+        dashboard_id: body.dashboard_id ?? context.voiceSession?.selected_dashboard_id ?? undefined,
+        expected_version: body.expected_version,
+        selected_widget_id: body.selected_widget_id,
+        operations,
+      });
+
+      return rep.code(200).send(successEnvelope(String(req.id), draft, {
+        currency: context.business.currency,
+        ledger_revision: context.business.ledger_revision,
+        dashboard_version: draft.version,
+      }));
+    } catch (err) {
+      if (err instanceof OperationError) {
+        throw new ApiError(err.code, err.message, {
+          httpStatus: err.httpStatus ?? 422,
+          fieldErrors: err.fieldErrors,
+          currentVersion: err.currentVersion,
+        });
+      }
+      throw err;
+    }
+  };
+
   for (const prefix of ['/api/v1/voice/tools', '/api/voice/tools']) {
     app.post(`${prefix}/get_context`, { schema: { body: toolGetContextSchema } }, handleGetContext);
     app.get(`${prefix}/get_context`, handleGetContext);
@@ -1526,6 +1700,7 @@ export function createApp(options: AppOptions) {
     app.post(`${prefix}/commit_correction`, { schema: { body: toolCommitCorrectionSchema } }, handleCommitCorrection);
     app.post(`${prefix}/query_sales`, { schema: { body: toolQuerySalesSchema } }, handleQuerySales);
     app.post(`${prefix}/save_dashboard`, { schema: { body: toolSaveDashboardSchema } }, handleSaveDashboard);
+    app.post(`${prefix}/update_dashboard`, { schema: { body: toolUpdateDashboardSchema } }, handleUpdateDashboard);
     app.post(`${prefix}/cancel_proposal`, { schema: { body: toolCancelProposalSchema } }, handleCancelProposal);
 
     app.post(`${prefix}/:tool`, async (request, reply) => {
@@ -1543,6 +1718,8 @@ export function createApp(options: AppOptions) {
           return handleCommitCorrection(request, reply);
         case 'save_dashboard':
           return handleSaveDashboard(request, reply);
+        case 'update_dashboard':
+          return handleUpdateDashboard(request, reply);
         case 'cancel_proposal':
           return handleCancelProposal(request, reply);
         case 'query_sales':

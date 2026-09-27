@@ -91,6 +91,12 @@ Verification on 2026-09-27: `npm --prefix apps/web run build` passed, `node --te
 
 Follow-up verification on 2026-09-27: the web production build passed and reported an 821.53 kB JavaScript bundle (270.35 kB gzip); `node --test tests/web/*.test.mjs` passed 18/18 and `git diff --check` passed. At 1114×890, browser checks showed Catalog below Ledger in Preview and Editing modes, with Add Widget before Ledger in Editing mode. Keyboard activation of the Catalog shortcut opened Catalog and showed its white icon on the dark selected pill. The mic shortcut displayed the sage outer circle, ivory inner circle and green icon, and linked to the Ask EasyLedger card in Dashboard, Ledger and Catalog. The build retains a warning for a JavaScript bundle above 500 kB; load time was not measured.
 
+## Implemented TASK-26-03 voice update_dashboard tool
+
+`POST /api/v1/voice/tools/update_dashboard`, `POST /api/voice/tools/update_dashboard`, and dynamic tool route `/:tool` (`update_dashboard`) connect the voice agent to layout draft updates. `DashboardService.updateDashboardDraft` in `packages/domain/dashboards.ts` applies sequential typed operations (`add`, `edit`, `move`, `resize`, `remove`, `select`) on in-memory draft state without mutating ledger rows (`sales`, `sale_revisions`, `day_coverages`, `operations`) or incrementing `business.ledger_revision`. Adding widgets enforces the 20-widget ceiling with `422 VALIDATION_ERROR`. Ambiguous references such as "that chart" and omitted targets with multiple unselected widgets return `422 NEEDS_CLARIFICATION` (`field_errors: { widget_id: 'ambiguous_target' }`). Stale `expected_version` returns `409 CONFLICT`. Saving a dashboard without explicit widgets or layout commits the active draft and cleans up draft state. `GET /api/v1/dashboards/:id/draft` and `GET /api/v1/dashboards/draft` allow inspecting the active draft.
+
+Verification on 2026-09-27: `npm test` passed 22 domain and 18 API cases (40/40), `node --test tests/web/*.test.mjs` passed 18/18, and `git diff --check` passed. Domain unit tests verified add, edit, move, resize, remove, select, 20-widget cap, ambiguity detection, and tenant isolation. API contract tests verified session authentication (401), client-supplied `business_id` rejection (422), draft mutations via voice tool and REST, and confirmed that `business.ledger_revision` is unchanged.
+
 ## Integration spike exit checklist
 
 - Authenticate a demo owner and bind business identity on the server.
@@ -108,4 +114,3 @@ Deploy to Render as decided in [[docs/04-Decisions]] (ADR-011): provision a Rend
 On incident: stop new unsafe mutations, preserve receipts/audit IDs, identify whether the provider, API or database failed, and expose an honest status to users. Recover the database from a verified backup only with an explicit recovery plan; reconcile operations since that backup before reopening writes. Roll back a failed application release with schema compatibility checked. Rehearse these steps before real merchant data is accepted.
 
 Secrets/config names are a future design choice; do not add guessed working credentials. Record an environment-variable template with names/descriptions once integration selects the actual SDK/API. Delivery owners and gates: [[docs/10-Delivery-Plan]]. Safety boundaries: [[docs/08-Security-and-Operations]]. Submission requirements: [[docs/11-Hackathon-and-License]].
-
