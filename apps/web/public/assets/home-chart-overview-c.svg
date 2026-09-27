@@ -1,0 +1,10 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="72" height="28.12" viewBox="0 0 72 28.12" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Vector chart">
+<g id="Vector">
+<path d="M3.6 23.0073H68.4ZM3.6 14.4861H68.4ZM3.6 5.96485H68.4Z" fill="black"/>
+<path d="M3.6 23.0073H68.4M3.6 14.4861H68.4M3.6 5.96485H68.4" stroke="#E5E8DF"/>
+</g>
+<path id="Vector_2" d="M3.6 22.1552L15.3 16.6164L26.55 18.7467L38.25 8.94727L49.5 12.3558L67.5 3.83455" stroke="#6B8760" stroke-width="2.5"/>
+<path id="Vector_3" opacity="0.6" d="M3.6 22.1552L15.3 16.6164L26.55 18.7467L38.25 8.94727L49.5 12.3558L67.5 3.83455V25.9897H3.6V22.1552Z" fill="#DFE9D8"/>
+</g>
+</svg>

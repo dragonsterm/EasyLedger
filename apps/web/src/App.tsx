@@ -7,6 +7,7 @@ import EChart from './EChart';
 import Icon from './Icon';
 import LedgerJournal from './Ledger';
 import Catalog, { type CatalogSection } from './Catalog';
+import HomeWorkspace from './HomeWorkspace';
 import {
   createAppendedDashboardLayoutItem,
   createDashboardWidget,
@@ -1197,8 +1198,9 @@ function Dashboard({
 }
 
 function App() {
-  const [activeNav, setActiveNav] = useState<'dashboard' | 'ledger' | 'catalog'>('dashboard');
+  const [activeNav, setActiveNav] = useState<'home' | 'dashboard' | 'ledger' | 'catalog'>('home');
   const [dashboardMode, setDashboardMode] = useState<DashboardMode>('preview');
+  const [activeDashboardName, setActiveDashboardName] = useState('Weekly sales overview');
   const [catalogSection, setCatalogSection] = useState<CatalogSection>(null);
   const [selectedWidget, setSelectedWidget] = useState<WidgetSelection | null>(null);
   const [dashboardAnalytics, setDashboardAnalytics] = useState<DashboardAnalytics | null>(null);
@@ -1212,7 +1214,8 @@ function App() {
       const hash = window.location.hash.replace('#', '').toLowerCase();
       if (hash.includes('ledger')) setActiveNav('ledger');
       else if (hash.includes('catalog')) setActiveNav('catalog');
-      else setActiveNav('dashboard');
+      else if (hash.includes('dashboard') || hash === 'voice-title' || hash === 'add-widget') setActiveNav('dashboard');
+      else setActiveNav('home');
     };
     handleHash();
     window.addEventListener('hashchange', handleHash);
@@ -1255,9 +1258,16 @@ function App() {
     : catalogSection === 'needs-price'
     ? 'Needs a price'
     : 'Product catalog';
+  const openDashboardFromHome = (dashboard: { id: string; name: string }, created: boolean) => {
+    setActiveDashboardName(dashboard.name);
+    setDashboardMode(created ? 'editing' : 'preview');
+    setSelectedWidget(null);
+    setActiveNav('dashboard');
+    window.location.hash = 'dashboard';
+  };
 
   return (
-    <div className={`app-shell${activeNav === 'catalog' ? ' app-shell-catalog' : ''}`}>
+    <div className={`app-shell${activeNav === 'catalog' ? ' app-shell-catalog' : ''}${activeNav === 'home' ? ' app-shell-home' : ''}`}>
       <header className="builder-toolbar">
         <div className="rail-brand">
           <strong>EasyLedger</strong>
@@ -1265,6 +1275,14 @@ function App() {
         </div>
 
         <nav className="primary-nav" aria-label="Primary navigation">
+          <a
+            className={`primary-link primary-link-home ${activeNav === 'home' ? 'primary-link-active' : ''}`}
+            href="#home"
+            onClick={() => setActiveNav('home')}
+            aria-current={activeNav === 'home' ? 'page' : undefined}
+          >
+            <img className="home-primary-nav-icon" src="/assets/home-nav-home.svg" alt="" aria-hidden="true" />Home
+          </a>
           <a
             className={`primary-link primary-link-dashboard ${activeNav === 'dashboard' ? 'primary-link-active' : ''}`}
             href="#dashboard"
@@ -1293,7 +1311,12 @@ function App() {
 
         <span className="toolbar-space" aria-hidden="true" />
 
-        {activeNav !== 'catalog' && (
+        {activeNav === 'home' ? (
+          <div className="home-toolbar-workspace" aria-label="Current workspace">
+            <span className="home-toolbar-business"><span>Example business</span><img src="/assets/home-chevron.svg" alt="" aria-hidden="true" /></span>
+            <span className="home-toolbar-avatar" aria-hidden="true">EB</span>
+          </div>
+        ) : activeNav !== 'catalog' && (
           <div className="builder-actions">
             <span className="mode-pill" aria-label={isLive ? 'Live data status' : 'Sample data status'}>{isLive ? 'Live data' : 'Sample data'}</span>
             {activeNav === 'dashboard' && (
@@ -1315,7 +1338,7 @@ function App() {
         )}
       </header>
 
-      <div className="dashboard-shell">
+      <div className={`dashboard-shell${activeNav === 'home' ? ' dashboard-shell-home' : ''}`}>
         <aside className="nav-rail" aria-label="Workspace shortcuts">
           <div className="rail-spacer-top" aria-hidden="true" />
 
@@ -1391,6 +1414,10 @@ function App() {
         </aside>
 
         <div className="workspace">
+          {activeNav === 'home' ? (
+            <HomeWorkspace workspaceLabel="Example business" currency={currency} onOpenDashboard={openDashboardFromHome} />
+          ) : (
+            <>
           <header className="dashboard-header">
             <div className="dashboard-header-inner">
               <div className="dashboard-heading">
@@ -1405,7 +1432,7 @@ function App() {
                     </>
                   )}
                 </p>
-                <h1>{activeNav === 'ledger' ? 'Sales Ledger Journal' : activeNav === 'catalog' ? catalogSectionTitle : 'Weekly sales overview'}</h1>
+                <h1>{activeNav === 'ledger' ? 'Sales Ledger Journal' : activeNav === 'catalog' ? catalogSectionTitle : activeDashboardName}</h1>
                 <p>
                   {activeNav === 'catalog'
                     ? catalogSection === 'all-products'
@@ -1490,6 +1517,8 @@ function App() {
               onRefresh={refreshCharts}
             />
           )}
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -1497,4 +1526,3 @@ function App() {
 }
 
 export default App;
-
