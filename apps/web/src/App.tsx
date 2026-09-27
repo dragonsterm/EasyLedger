@@ -12,11 +12,18 @@ import {
   createInitialDashboardLayout,
   createInitialDashboardWidgets,
   createUniqueDashboardWidgetId,
+  canMoveDashboardLayoutItem,
+  dashboardWidgetKindForType,
+  dashboardWidgetKindsForType,
+  moveDashboardLayoutItem,
   dashboardWidgetOptions,
   normalizeDashboardLayout,
+  reconfigureDashboardWidget,
   removeDashboardLayoutItem,
+  sanitizeDashboardWidgetTitle,
+  updateDashboardLayoutForWidgetKind,
 } from './dashboardLayout';
-import type { DashboardLayoutItem, DashboardWidgetDefinition, DashboardWidgetKind } from './dashboardLayout';
+import type { DashboardLayoutItem, DashboardWidgetDefinition, DashboardWidgetKind, DashboardWidgetMetric, DashboardWidgetStyle, DashboardWidgetType } from './dashboardLayout';
 import {
   AnalyticsHttpError,
   buildSourceTransactionsRequest,
@@ -62,6 +69,8 @@ type SourceDialogState =
   | { status: 'unauthorized' }
   | { status: 'stale' }
   | { status: 'error' };
+
+type DashboardMode = 'preview' | 'editing';
 
 function sampleDataForWidget(kind: DashboardWidgetKind): AnalyticsQueryResponse | null {
   switch (kind) {
@@ -465,33 +474,37 @@ function ProductChart({
 
 function DashboardWidgetCard({
   widget,
+  isEditing,
   onRemove,
   children,
 }: {
   widget: WidgetSelection;
+  isEditing: boolean;
   onRemove: (id: string) => void;
   children: ReactNode;
 }) {
   return (
-    <article className="dashboard-widget-card" aria-label={`${widget.title} widget`}>
-      <header className="dashboard-widget-tools">
-        <span className="widget-drag-handle" title={`Drag to move ${widget.title}`} aria-hidden="true">
-          <svg viewBox="0 0 16 16" width="16" height="16" focusable="false">
-            <circle cx="5" cy="3" r="1" /><circle cx="11" cy="3" r="1" />
-            <circle cx="5" cy="8" r="1" /><circle cx="11" cy="8" r="1" />
-            <circle cx="5" cy="13" r="1" /><circle cx="11" cy="13" r="1" />
-          </svg>
-        </span>
-        <span className="dashboard-widget-type">{widget.type}</span>
-        <button
-          className="widget-remove-button"
-          type="button"
-          aria-label={`Remove ${widget.title} widget`}
-          onClick={() => onRemove(widget.id)}
-        >
-          Remove
-        </button>
-      </header>
+    <article className={`dashboard-widget-card dashboard-widget-style-${widget.style}`} aria-label={`${widget.title} widget`}>
+      {isEditing && (
+        <header className="dashboard-widget-tools">
+          <span className="widget-drag-handle" title={`Drag to move ${widget.title}`} aria-hidden="true">
+            <svg viewBox="0 0 16 16" width="16" height="16" focusable="false">
+              <circle cx="5" cy="3" r="1" /><circle cx="11" cy="3" r="1" />
+              <circle cx="5" cy="8" r="1" /><circle cx="11" cy="8" r="1" />
+              <circle cx="5" cy="13" r="1" /><circle cx="11" cy="13" r="1" />
+            </svg>
+          </span>
+          <span className="dashboard-widget-type">{widget.type}</span>
+          <button
+            className="widget-remove-button"
+            type="button"
+            aria-label={`Remove ${widget.title} widget`}
+            onClick={() => onRemove(widget.id)}
+          >
+            Remove
+          </button>
+        </header>
+      )}
       <div className="dashboard-widget-content">{children}</div>
     </article>
   );
@@ -499,15 +512,17 @@ function DashboardWidgetCard({
 
 function DashboardFilters({
   widgetKind,
+  editable,
   onWidgetKindChange,
   onAddWidget,
 }: {
   widgetKind: DashboardWidgetKind;
+  editable: boolean;
   onWidgetKindChange: (kind: DashboardWidgetKind) => void;
   onAddWidget: () => void;
 }) {
   return (
-    <section className="canvas-toolbar dashboard-toolbar" aria-label="Dashboard filters and actions">
+    <section className={`canvas-toolbar dashboard-toolbar${editable ? ' dashboard-toolbar-editing' : ' dashboard-toolbar-preview'}`} aria-label="Dashboard filters and actions">
       <div className="filter-controls">
         <label className="filter-control">
           <span className="sr-only">Date range</span>
@@ -529,15 +544,17 @@ function DashboardFilters({
         </label>
       </div>
       <span className="filter-spacer" aria-hidden="true" />
-      <div className="canvas-toolbar-actions">
-        <label className="filter-control add-widget-type">
-          <span className="sr-only">Widget type to add</span>
-          <select value={widgetKind} aria-label="Widget type to add" onChange={(event) => onWidgetKindChange(event.target.value as DashboardWidgetKind)}>
-            {dashboardWidgetOptions.map((option) => <option key={option.kind} value={option.kind}>{option.label}</option>)}
-          </select>
-        </label>
-        <button className="button button-add" id="add-widget" type="button" onClick={onAddWidget}>+ Add widget</button>
-      </div>
+      {editable && (
+        <div className="canvas-toolbar-actions">
+          <label className="filter-control add-widget-type">
+            <span className="sr-only">Widget type to add</span>
+            <select value={widgetKind} aria-label="Widget type to add" onChange={(event) => onWidgetKindChange(event.target.value as DashboardWidgetKind)}>
+              {dashboardWidgetOptions.map((option) => <option key={option.kind} value={option.kind}>{option.label}</option>)}
+            </select>
+          </label>
+          <button className="button button-add" id="add-widget" type="button" onClick={onAddWidget}>+ Add widget</button>
+        </div>
+      )}
     </section>
   );
 }
@@ -663,8 +680,36 @@ function SourceTransactionsDialog({
   );
 }
 
-function Inspector({ widget, onClose }: { widget: WidgetSelection | null; onClose: () => void }) {
+function Inspector({
+  widget,
+  mode,
+  canMoveLeft,
+  canMoveRight,
+  onClose,
+  onTitleChange,
+  onKindChange,
+  onStyleChange,
+  onMove,
+  onRemove,
+}: {
+  widget: WidgetSelection | null;
+  mode: DashboardMode;
+  canMoveLeft: boolean;
+  canMoveRight: boolean;
+  onClose: () => void;
+  onTitleChange: (id: string, title: string) => void;
+  onKindChange: (id: string, kind: DashboardWidgetKind) => void;
+  onStyleChange: (id: string, style: DashboardWidgetStyle) => void;
+  onMove: (id: string, direction: 'left' | 'right') => void;
+  onRemove: (id: string) => void;
+}) {
+  const [activeTab, setActiveTab] = useState<'setup' | 'style'>('setup');
+  useEffect(() => { setActiveTab('setup'); }, [widget?.id, mode]);
   if (!widget) return null;
+  const isEditing = mode === 'editing';
+  const editChoices = dashboardWidgetKindsForType(widget.type).map((kind) => createDashboardWidget(kind, `choice-${kind}`));
+  const metrics = [...new Set(editChoices.map((choice) => choice.metric))];
+  const dimensions = [...new Set(editChoices.filter((choice) => choice.metric === widget.metric).map((choice) => choice.dimension))];
   const completeness = widget.data
     ? widget.metric === 'Units sold'
       ? widget.data.has_unknown_prices
@@ -676,6 +721,21 @@ function Inspector({ widget, onClose }: { widget: WidgetSelection | null; onClos
     onClose();
     window.requestAnimationFrame(() => document.getElementById(`widget-${widget.id}`)?.focus());
   };
+  const selectMetric = (metric: string) => {
+    const choice = editChoices.find((candidate) => candidate.metric === metric);
+    if (choice) onKindChange(widget.id, choice.kind);
+  };
+  const selectDimension = (dimension: string) => {
+    const choice = editChoices.find((candidate) => candidate.dimension === dimension && candidate.metric === widget.metric);
+    if (choice) onKindChange(widget.id, choice.kind);
+  };
+  const fallbackTitle = createDashboardWidget(widget.kind, widget.id).title;
+  const typeOptions: ReadonlyArray<{ type: DashboardWidgetType; label: string }> = [
+    { type: 'Line chart', label: 'Line' },
+    { type: 'Bar chart', label: 'Bar' },
+    { type: 'KPI', label: 'KPI' },
+  ];
+  const metricLabel = (metric: DashboardWidgetMetric) => metric === 'Revenue' ? 'Known-price revenue' : metric;
 
   return (
     <aside className="inspector" aria-label={`${widget.title} widget properties`} aria-labelledby="inspector-title">
@@ -698,30 +758,127 @@ function Inspector({ widget, onClose }: { widget: WidgetSelection | null; onClos
           : widget.data ? 'This widget is not connected to a live ledger.' : 'Coverage values are examples and are not connected to day coverage.'}</p>
       </section>
 
-      <dl className="inspector-properties">
-        <div><dt>Title</dt><dd>{widget.title}</dd></div>
-        <div><dt>Widget type</dt><dd>{widget.type}</dd></div>
-        <div><dt>Metric</dt><dd>{widget.metric}</dd></div>
-        <div><dt>Group by</dt><dd>{widget.dimension}</dd></div>
-        <div><dt>Currency</dt><dd>{widget.data?.currency ?? 'Not applicable'}</dd></div>
-        <div><dt>Completeness</dt><dd>{completeness}</dd></div>
-        <div><dt>Revision</dt><dd>{widget.data ? `${widget.dataSource === 'live' ? 'Ledger' : 'Sample fixture'} · ${widget.data.ledger_revision}` : 'No API revision'}</dd></div>
-      </dl>
+      {isEditing ? (
+        <>
+          <div className="inspector-tabs" role="tablist" aria-label="Widget settings">
+            <button className={`inspector-tab${activeTab === 'setup' ? ' inspector-tab-active' : ''}`} type="button" role="tab" aria-selected={activeTab === 'setup'} onClick={() => setActiveTab('setup')}>Setup</button>
+            <button className={`inspector-tab${activeTab === 'style' ? ' inspector-tab-active' : ''}`} type="button" role="tab" aria-selected={activeTab === 'style'} onClick={() => setActiveTab('style')}>Style</button>
+          </div>
 
-      <section className="inspector-rules" aria-label={widget.dataSource === 'live' ? 'How live values are shown' : 'How this sample is shown'}>
-        <h3>How values are shown</h3>
-        <p>{widget.data
-          ? 'Open no-sale days are gaps; complete no-sale days show 0. Unknown-price sales are flagged separately and excluded from known-price revenue.'
-          : '5 of 7 days are shown as an illustrative sample. The analytics response does not provide day coverage.'}</p>
-      </section>
+          {activeTab === 'setup' ? (
+            <>
+              <label className="inspector-field">
+                <span>Widget title</span>
+                <input
+                  type="text"
+                  value={widget.title}
+                  maxLength={80}
+                  aria-label="Widget title"
+                  onChange={(event) => onTitleChange(widget.id, event.target.value)}
+                  onBlur={() => onTitleChange(widget.id, sanitizeDashboardWidgetTitle(widget.title, fallbackTitle))}
+                />
+              </label>
 
-      <p className="inspector-preview-note">Layout changes stay in this local draft. They do not change sales or save to an account.</p>
+              <fieldset className="chart-type-field">
+                <legend>Chart type</legend>
+                <div className="chart-type-options">
+                  {typeOptions.map(({ type, label }) => (
+                    <button
+                      key={type}
+                      className={widget.type === type ? 'chart-type-active' : ''}
+                      type="button"
+                      aria-pressed={widget.type === type}
+                      onClick={() => onKindChange(widget.id, dashboardWidgetKindForType(type, widget.metric))}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+
+              <label className="inspector-field inspector-select-field">
+                <span>Metric</span>
+                <select aria-label="Metric" value={widget.metric} disabled={metrics.length < 2} onChange={(event) => selectMetric(event.target.value)}>
+                  {metrics.map((metric) => <option key={metric} value={metric}>{metricLabel(metric)}</option>)}
+                </select>
+              </label>
+
+              <label className="inspector-field inspector-select-field">
+                <span>Group by</span>
+                <select aria-label="Group by" value={widget.dimension} disabled={dimensions.length < 2} onChange={(event) => selectDimension(event.target.value)}>
+                  {dimensions.map((dimension) => <option key={dimension} value={dimension}>{dimension}</option>)}
+                </select>
+              </label>
+
+              <section className="inspector-rules" aria-label="Supported data mapping">
+                <h3>Supported data mapping</h3>
+                <p>{widget.metric === 'Day completeness'
+                  ? 'Illustrative sample only. Live day coverage is not available for this widget.'
+                  : widget.metric === 'Revenue'
+                    ? widget.dimension === 'Day'
+                      ? 'Known-price revenue by day excludes unknown-price sales and preserves open gaps and confirmed zero days.'
+                      : 'This KPI uses the known-price revenue total; unknown-price sales are excluded.'
+                    : 'Units include sales with unknown prices. This view uses the returned analytics query and revision.'}</p>
+              </section>
+            </>
+          ) : (
+            <fieldset className="chart-type-field widget-style-field">
+              <legend>Widget card style</legend>
+              <div className="chart-type-options widget-style-options">
+                <button className={widget.style === 'sage' ? 'chart-type-active' : ''} type="button" aria-pressed={widget.style === 'sage'} onClick={() => onStyleChange(widget.id, 'sage')}>Sage</button>
+                <button className={widget.style === 'warm' ? 'chart-type-active' : ''} type="button" aria-pressed={widget.style === 'warm'} onClick={() => onStyleChange(widget.id, 'warm')}>Warm paper</button>
+              </div>
+              <p className="inspector-preview-note">Both styles use EasyLedger’s existing sage and warm paper palette.</p>
+            </fieldset>
+          )}
+
+          <section className="position-controls" aria-label="Widget position">
+            <h3>Position</h3>
+            <div>
+              <button type="button" disabled={!canMoveLeft} onClick={() => onMove(widget.id, 'left')}>Move left</button>
+              <button type="button" disabled={!canMoveRight} onClick={() => onMove(widget.id, 'right')}>Move right</button>
+            </div>
+          </section>
+
+          <section className="inspector-source" aria-label={widget.dataSource === 'live' ? 'Connected ledger source' : 'Sample widget source'}>
+            <h3>{widget.dataSource === 'live' ? 'Connected to your ledger' : 'Sample widget source'}</h3>
+            <p>{widget.data
+              ? `${widget.dataSource === 'live' ? 'Ledger' : 'Sample fixture'} revision ${widget.data.ledger_revision} · same query filters.`
+              : 'Sample fixture · no live day coverage revision.'}</p>
+            <p>Widget changes stay in this local draft.</p>
+          </section>
+
+          <button className="remove-widget" type="button" onClick={() => onRemove(widget.id)}>Remove widget</button>
+        </>
+      ) : (
+        <>
+          <dl className="inspector-properties">
+            <div><dt>Title</dt><dd>{widget.title}</dd></div>
+            <div><dt>Widget type</dt><dd>{widget.type}</dd></div>
+            <div><dt>Metric</dt><dd>{widget.metric}</dd></div>
+            <div><dt>Group by</dt><dd>{widget.dimension}</dd></div>
+            <div><dt>Currency</dt><dd>{widget.data?.currency ?? 'Not applicable'}</dd></div>
+            <div><dt>Completeness</dt><dd>{completeness}</dd></div>
+            <div><dt>Revision</dt><dd>{widget.data ? `${widget.dataSource === 'live' ? 'Ledger' : 'Sample fixture'} · ${widget.data.ledger_revision}` : 'No API revision'}</dd></div>
+          </dl>
+
+          <section className="inspector-rules" aria-label={widget.dataSource === 'live' ? 'How live values are shown' : 'How this sample is shown'}>
+            <h3>How values are shown</h3>
+            <p>{widget.data
+              ? 'Open no-sale days are gaps; complete no-sale days show 0. Unknown-price sales are flagged separately and excluded from known-price revenue.'
+              : '5 of 7 days are shown as an illustrative sample. The analytics response does not provide day coverage.'}</p>
+          </section>
+
+          <p className="inspector-preview-note">Layout changes stay in this local draft. They do not change sales or save to an account.</p>
+        </>
+      )}
     </aside>
   );
 }
 
 function Dashboard({
   widget,
+  mode,
   onSelect,
   onClose,
   analytics,
@@ -729,6 +886,7 @@ function Dashboard({
   onRefresh,
 }: {
   widget: WidgetSelection | null;
+  mode: DashboardMode;
   onSelect: (widget: WidgetSelection) => void;
   onClose: () => void;
   analytics: DashboardAnalytics | null;
@@ -742,6 +900,7 @@ function Dashboard({
   const { width: gridWidth, containerRef: gridContainerRef, mounted: gridMounted } = useContainerWidth({ initialWidth: 920 });
   // RGL's nullable element generic differs from @types/react 18's ref type; both use the same runtime ref contract.
   const gridContainerRefForReact18 = gridContainerRef as unknown as RefObject<HTMLDivElement>;
+  const isEditing = mode === 'editing';
   const isLive = analytics !== null;
   const revenueData = analytics?.totalRevenue ?? sampleTotalRevenue;
   const unitsData = analytics?.totalUnits ?? sampleTotalUnits;
@@ -758,9 +917,10 @@ function Dashboard({
   }), [widgets, layoutPositions]);
   const isDesktopGrid = gridMounted && gridWidth >= 720;
   const handleLayoutChange = useCallback((nextLayout: Layout) => {
+    if (!isEditing) return;
     const normalized = normalizeDashboardLayout(nextLayout, widgetIds);
     setLayout((current) => dashboardLayoutsEqual(current, normalized) ? current : normalized);
-  }, [widgetIds]);
+  }, [isEditing, widgetIds]);
 
   const dataForWidget = (item: DashboardWidgetDefinition): AnalyticsQueryResponse | null => {
     switch (item.kind) {
@@ -776,9 +936,8 @@ function Dashboard({
     data: dataForWidget(item),
     dataSource: item.kind === 'complete-days' ? 'sample' : isLive ? 'live' : 'sample',
   });
-  const currentWidget = widget
-    ? currentSelection(widget)
-    : null;
+  const selectedDefinition = widget ? widgets.find((item) => item.id === widget.id) ?? null : null;
+  const currentWidget = selectedDefinition ? currentSelection(selectedDefinition) : null;
   const [selectedDatum, setSelectedDatum] = useState<SelectedDatum | null>(null);
   const [sourceState, setSourceState] = useState<SourceDialogState | null>(null);
   const drilldownRequest = useRef(0);
@@ -793,6 +952,7 @@ function Dashboard({
   };
 
   const addWidget = () => {
+    if (!isEditing) return;
     const nextId = createUniqueDashboardWidgetId(widgetIds, nextWidgetSequence.current);
     nextWidgetSequence.current = nextId.nextSequence;
     const definition = createDashboardWidget(newWidgetKind, nextId.id);
@@ -809,11 +969,38 @@ function Dashboard({
   };
 
   const removeWidget = (id: string) => {
+    if (!isEditing) return;
     setWidgets((current) => current.filter((item) => item.id !== id));
     setLayout((current) => removeDashboardLayoutItem(current, id));
     if (widget?.id === id) onClose();
     window.requestAnimationFrame(() => document.getElementById('add-widget')?.focus());
   };
+
+  const changeWidgetTitle = (id: string, title: string) => {
+    if (!isEditing) return;
+    setWidgets((current) => current.map((item) => item.id === id ? { ...item, title } : item));
+  };
+
+  const changeWidgetKind = (id: string, kind: DashboardWidgetKind) => {
+    if (!isEditing) return;
+    const existingWidget = widgets.find((item) => item.id === id);
+    if (!existingWidget) return;
+    setLayout((layoutItems) => updateDashboardLayoutForWidgetKind(layoutItems, id, existingWidget.kind, kind));
+    setWidgets((currentWidgets) => currentWidgets.map((item) => item.id === id ? reconfigureDashboardWidget(item, kind) as WidgetSelection : item));
+  };
+
+  const changeWidgetStyle = (id: string, style: DashboardWidgetStyle) => {
+    if (!isEditing) return;
+    setWidgets((current) => current.map((item) => item.id === id ? { ...item, style } : item));
+  };
+
+  const moveWidget = (id: string, direction: 'left' | 'right') => {
+    if (!isEditing) return;
+    setLayout((current) => moveDashboardLayoutItem(current, id, direction));
+  };
+
+  const canMoveSelectedWidget = (direction: 'left' | 'right') => currentWidget !== null
+    && canMoveDashboardLayoutItem(layout, currentWidget.id, direction);
 
   const renderWidget = (item: WidgetSelection) => {
     const selection = currentSelection(item);
@@ -838,7 +1025,7 @@ function Dashboard({
     }
     return (
       <div className={`dashboard-widget-frame dashboard-widget-${item.kind}`} key={item.id}>
-        <DashboardWidgetCard widget={selection} onRemove={removeWidget}>{content}</DashboardWidgetCard>
+        <DashboardWidgetCard widget={selection} isEditing={isEditing} onRemove={removeWidget}>{content}</DashboardWidgetCard>
       </div>
     );
   };
@@ -894,7 +1081,7 @@ function Dashboard({
   };
 
   return (
-    <div className={`editor-body${widget ? ' inspector-open' : ' inspector-closed'}`}>
+    <div className={`editor-body${currentWidget ? ' inspector-open' : ' inspector-closed'}`}>
       <main className="canvas" id="dashboard">
         <div className="canvas-inner">
           <section className="voice-card" aria-labelledby="voice-title">
@@ -908,19 +1095,21 @@ function Dashboard({
             </button>
           </section>
 
-          <DashboardFilters widgetKind={newWidgetKind} onWidgetKindChange={setNewWidgetKind} onAddWidget={addWidget} />
-          <p className="layout-draft-note">Layout changes stay in this preview. They do not change sales or save to an account.</p>
+          <DashboardFilters editable={isEditing} widgetKind={newWidgetKind} onWidgetKindChange={setNewWidgetKind} onAddWidget={addWidget} />
+          <p className="layout-draft-note">{isEditing
+            ? 'Widget and layout changes stay in this local draft. They do not change sales or save to an account.'
+            : 'Preview mode is read-only. Switch to Editing mode to change this local dashboard draft.'}</p>
 
           <div className="dashboard-grid-container" ref={gridContainerRefForReact18} aria-label={isLive ? 'Live dashboard widgets' : 'Sample dashboard widgets'}>
             {widgets.length === 0
-              ? <div className="dashboard-grid-empty" role="status">No widgets in this draft. Choose a widget type above and add it to the dashboard.</div>
+              ? <div className="dashboard-grid-empty" role="status">{isEditing ? 'No widgets in this draft. Choose a widget type above and add it to the dashboard.' : 'No widgets in this dashboard draft. Switch to Editing mode to add a widget.'}</div>
               : isDesktopGrid
                 ? <ReactGridLayout
                   width={gridWidth}
                   layout={gridLayout}
                   gridConfig={{ cols: 12, rowHeight: 26, margin: [16, 16], containerPadding: [0, 0] }}
-                  dragConfig={{ enabled: true, bounded: true, handle: '.widget-drag-handle', cancel: 'button, a, input, select, textarea, details, summary' }}
-                  resizeConfig={{ enabled: true, handles: ['se'] }}
+                  dragConfig={{ enabled: isEditing, bounded: true, handle: '.widget-drag-handle', cancel: 'button, a, input, select, textarea, details, summary' }}
+                  resizeConfig={{ enabled: isEditing, handles: ['se'] }}
                   className="dashboard-widget-grid"
                   onLayoutChange={handleLayoutChange}
                 >
@@ -975,10 +1164,23 @@ function Dashboard({
                     : 'Live source transactions are not connected in this preview.'}</p>
           </section>
 
-          <p className="canvas-footer">{isDesktopGrid ? 'Drag a widget by its grip or resize from the lower-right corner.' : 'Widgets stack at this width; arrange them from a desktop view.'} Select a title for properties, or a datum for source details.</p>
+          <p className="canvas-footer">{isEditing
+            ? isDesktopGrid ? 'Drag a widget by its grip or resize from the lower-right corner.' : 'Widgets stack at this width; use the inspector to move them.'
+            : 'Widget layout is read-only in Preview mode.'} Select a title for properties, or a datum for source details.</p>
         </div>
       </main>
-      <Inspector widget={currentWidget} onClose={onClose} />
+      <Inspector
+        widget={currentWidget}
+        mode={mode}
+        canMoveLeft={canMoveSelectedWidget('left')}
+        canMoveRight={canMoveSelectedWidget('right')}
+        onClose={onClose}
+        onTitleChange={changeWidgetTitle}
+        onKindChange={changeWidgetKind}
+        onStyleChange={changeWidgetStyle}
+        onMove={moveWidget}
+        onRemove={removeWidget}
+      />
       {selectedDatum && sourceState && <SourceTransactionsDialog datum={selectedDatum} state={sourceState} onClose={closeSourceDialog} onLoadMore={loadMore} onRefresh={onRefresh} />}
     </div>
   );
@@ -986,6 +1188,7 @@ function Dashboard({
 
 function App() {
   const [activeNav, setActiveNav] = useState<'dashboard' | 'ledger' | 'catalog'>('dashboard');
+  const [dashboardMode, setDashboardMode] = useState<DashboardMode>('preview');
   const [catalogSection, setCatalogSection] = useState<CatalogSection>(null);
   const [selectedWidget, setSelectedWidget] = useState<WidgetSelection | null>(null);
   const [dashboardAnalytics, setDashboardAnalytics] = useState<DashboardAnalytics | null>(null);
@@ -1082,8 +1285,21 @@ function App() {
 
         {activeNav !== 'catalog' && (
           <div className="builder-actions">
-            <span className="mode-pill">{isLive ? 'Live data · preview' : 'Sample preview'}</span>
-            <button className="button button-preview" type="button" disabled title="This dashboard is already in preview mode">Preview</button>
+            <span className="mode-pill" aria-label={isLive ? 'Live data status' : 'Sample data status'}>{isLive ? 'Live data' : 'Sample data'}</span>
+            {activeNav === 'dashboard' && (
+              <button
+                className="button button-preview"
+                type="button"
+                role="switch"
+                aria-label={dashboardMode === 'editing' ? 'Editing mode' : 'Preview mode'}
+                aria-checked={dashboardMode === 'editing'}
+                aria-controls="dashboard"
+                onClick={() => setDashboardMode((current) => current === 'preview' ? 'editing' : 'preview')}
+              >
+                <span className="mode-switch-label">{dashboardMode === 'editing' ? 'Editing mode' : 'Preview mode'}</span>
+                <span className="mode-switch-track" aria-hidden="true"><span className="mode-switch-thumb" /></span>
+              </button>
+            )}
             <button className="button button-save" type="button" disabled title="Dashboard saving is not connected in this preview">Save unavailable</button>
           </div>
         )}
@@ -1109,13 +1325,11 @@ function App() {
             >
               <img src={activeNav === 'catalog' ? '/assets/catalog-rail-mic.svg' : '/assets/rail-voice.svg'} width={activeNav === 'catalog' ? 16 : 18} height={activeNav === 'catalog' ? 16 : 18} alt="" aria-hidden="true" />
             </a>
-            <a
-              className="rail-action"
-              href="#add-widget"
-              aria-label="Add widget"
-            >
-              <img src={activeNav === 'catalog' ? '/assets/catalog-rail-add.svg' : '/assets/rail-add-widget.svg'} width={activeNav === 'catalog' ? 16 : 18} height={activeNav === 'catalog' ? 16 : 18} alt="" aria-hidden="true" />
-            </a>
+            {activeNav === 'dashboard' && dashboardMode === 'editing' && (
+              <a className="rail-action" href="#add-widget" aria-label="Add widget">
+                <img src="/assets/rail-add-widget.svg" width="18" height="18" alt="" aria-hidden="true" />
+              </a>
+            )}
             <a
               className={`rail-action ${activeNav === 'ledger' ? 'rail-action-active' : ''}`}
               href="#ledger"
@@ -1138,7 +1352,9 @@ function App() {
               <>
                 <strong>Make it yours</strong>
                 <p>{isLive ? 'Chart and KPI values use live ledger data.' : 'Chart and KPI values are sample data.'}</p>
-                <p>Add, move, resize, and remove widgets in this local preview.</p>
+                <p>{dashboardMode === 'editing'
+                  ? 'Add, move, resize, and remove widgets in this local draft.'
+                  : 'Dashboard widgets are read-only in Preview mode.'}</p>
               </>
             )}
           </aside>
@@ -1162,7 +1378,7 @@ function App() {
                 <p className="breadcrumb">
                   {isLive ? 'Authenticated workspace' : 'Sample workspace'}{' '}
                   <span aria-hidden="true">/</span>{' '}
-                  {activeNav === 'ledger' ? 'Ledger journal' : activeNav === 'catalog' ? 'Catalog' : 'Dashboard preview'}
+                  {activeNav === 'ledger' ? 'Ledger journal' : activeNav === 'catalog' ? 'Catalog' : `Dashboard ${dashboardMode} mode`}
                   {activeNav === 'catalog' && catalogSection !== null && (
                     <>
                       <span aria-hidden="true">/</span>{' '}
@@ -1247,6 +1463,7 @@ function App() {
           ) : (
             <Dashboard
               widget={selectedWidget}
+              mode={dashboardMode}
               onSelect={setSelectedWidget}
               onClose={closeInspector}
               analytics={dashboardAnalytics}

@@ -207,11 +207,11 @@ dd {
 
 .builder-actions {
   display: flex;
-  width: 340px;
+  width: 388px;
   height: 36px;
-  flex: 0 0 340px;
+  flex: 0 0 388px;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
 }
 
 .mode-pill,
@@ -237,13 +237,53 @@ dd {
 }
 
 .button-preview {
-  width: 88px;
+  width: 136px;
+  gap: 8px;
   background: #f0f0eb;
   cursor: pointer;
 }
 
 .button-preview:hover {
   background: #e7e8e1;
+}
+
+.mode-switch-label {
+  flex: 0 0 auto;
+}
+
+.mode-switch-track {
+  display: inline-flex;
+  width: 34px;
+  height: 18px;
+  flex: 0 0 34px;
+  align-items: center;
+  padding: 2px;
+  border-radius: 9px;
+  background: #d9ddd3;
+  transition: background-color 150ms ease;
+}
+
+.mode-switch-thumb {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(38, 47, 33, 0.2);
+  transition: transform 150ms ease;
+}
+
+.button-preview[aria-checked="true"] {
+  background: #e5edde;
+  color: #4d6944;
+}
+
+.button-preview[aria-checked="true"] .mode-switch-track {
+  background: #8ea27c;
+}
+
+.button-preview[aria-checked="true"] .mode-switch-thumb {
+  transform: translateX(16px);
 }
 
 .button-save {
@@ -772,6 +812,25 @@ dd {
   border-radius: 22px;
   background: #fff;
   box-shadow: var(--shadow);
+}
+
+.dashboard-widget-style-warm {
+  background: #fffaf1;
+}
+
+.dashboard-widget-style-warm .dashboard-widget-tools {
+  border-bottom-color: #e9e3d7;
+  background: #f4f0dc;
+}
+
+.dashboard-widget-style-warm .stat-card:not(.stat-card-days),
+.dashboard-widget-style-warm .chart-card,
+.dashboard-widget-style-warm .product-card {
+  background: #fffaf1;
+}
+
+.dashboard-widget-style-warm .stat-card-days {
+  background: #f4f0dc;
 }
 
 .dashboard-widget-tools {
@@ -1812,6 +1871,23 @@ dd {
   color: #4d6944;
 }
 
+.widget-style-field {
+  height: auto;
+  flex: 0 0 auto;
+}
+
+.widget-style-options {
+  height: auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.widget-style-options button {
+  min-height: 32px;
+  height: auto;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+
 .inspector-rules {
   display: flex;
   height: auto;
@@ -2119,21 +2195,21 @@ dd {
   }
 
   .builder-actions {
-    width: 276px;
-    flex-basis: 276px;
-    gap: 8px;
+    width: 330px;
+    flex-basis: 330px;
+    gap: 6px;
   }
 
   .mode-pill {
-    width: 68px;
-  }
-
-  .button-preview {
     width: 76px;
   }
 
+  .button-preview {
+    width: 136px;
+  }
+
   .button-save {
-    width: 116px;
+    width: 106px;
   }
 
   .dashboard-header {
