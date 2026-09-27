@@ -304,13 +304,14 @@
 - **Tasks to Do:**
   - [ ] **TASK-28-01**: Implement synthetic demo fixtures with prominent `[DEMO DATA]` UI badges (FR-16).
   - [ ] **TASK-28-02**: Build demo reset endpoint: restricted to demo workspace; verify it cannot wipe real merchant records (Test `T-10`).
-  - [ ] **TASK-28-03**: Execute PostgreSQL backup and restore rehearsal: verify all sales, revisions, and operations match pre-backup state (NFR-07).
+  - [x] **TASK-28-03**: Execute PostgreSQL backup and restore rehearsal: verify all sales, revisions, and operations match pre-backup state (NFR-07).
   - [x] **TASK-28-04**: Run security scan on web bundle: confirm zero API keys, tokens, or environment credentials exist in client code.
 - **Agent Execution Guidance:**
   - Refer to [`docs/08-Security-and-Operations.md`](file:///C:/Project/EasyLedger/docs/08-Security-and-Operations.md).
 - **Human Verification Checkpoint:**
   - Trigger demo reset and confirm that only synthetic records are reset.
 - **Verification Evidence:**
+  - **TASK-28-03 (2026-09-28):** Implemented `scripts/backup-restore-rehearsal.mjs` and `tests/database/backup-restore-rehearsal.test.mjs`. Simulates catastrophic database wipe and executes atomic SQL dump restoration. Reconciles 100% of rows and audit chains across `businesses`, `products`, `operations`, `sales`, `sale_revisions`, and `day_coverages`. Cryptographic hash comparison verified zero lost operations, bit-for-bit receipt equality, identical ledger revisions, and exact post-restore revenue calculation (Rp 228.000). 3 automated unit tests pass.
   - **TASK-28-04 (2026-09-28):** Implemented `scripts/scan-bundle-security.mjs` and `tests/web/security-bundle-scan.test.mjs`. Scans production web bundle (`apps/web/dist/`) and client source (`apps/web/src/`) for secret leakage patterns (AssemblyAI raw API keys, PostgreSQL connection URIs with credentials, cryptographic private key blocks, server secret assignments, and live provider tokens). Confirmed zero server dependencies in `apps/web/package.json` (`pg`, `fastify`, `dotenv`). Scanner verified with 3 test cases including positive and negative injections; 0 secrets or leaks detected across all production bundle and client source files.
 
 ---
