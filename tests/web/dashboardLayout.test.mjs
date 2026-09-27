@@ -2,8 +2,10 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   canMoveDashboardLayoutItem,
+  computePreviewLayout,
   createDashboardWidget,
   createInitialDashboardLayout,
+  createInitialDashboardWidgets,
   dashboardWidgetKindForType,
   dashboardWidgetKindsForType,
   moveDashboardLayoutItem,
@@ -96,6 +98,36 @@ test('chart conversions grow to chart minimums and resolve collisions while pres
   assert.equal(kpi.minW, 3);
   assert.equal(kpi.minH, 5);
   assertNoOverlaps(backToKpi);
+});
+
+test('preview layout removes editing wrapper height overhead and compacts rows without gaps or overlaps', () => {
+  const widgets = createInitialDashboardWidgets();
+  const editingLayout = createInitialDashboardLayout();
+  const previewLayout = computePreviewLayout(editingLayout, widgets);
+
+  // In editing mode, KPI widgets are h: 5 and charts are h: 10
+  assert.equal(editingLayout.find((item) => item.i === 'total-revenue')?.h, 5);
+  assert.equal(editingLayout.find((item) => item.i === 'daily-revenue')?.h, 10);
+  assert.equal(editingLayout.find((item) => item.i === 'daily-revenue')?.y, 5);
+
+  // In preview mode without the editing tools header, KPI widgets fit cleanly at h: 4 and charts at h: 9
+  const previewRevenueKpi = previewLayout.find((item) => item.i === 'total-revenue');
+  const previewUnitsKpi = previewLayout.find((item) => item.i === 'total-units');
+  const previewDaysKpi = previewLayout.find((item) => item.i === 'complete-days');
+  const previewDailyChart = previewLayout.find((item) => item.i === 'daily-revenue');
+  const previewProductChart = previewLayout.find((item) => item.i === 'sales-by-product');
+
+  assert.equal(previewRevenueKpi?.h, 4);
+  assert.equal(previewUnitsKpi?.h, 4);
+  assert.equal(previewDaysKpi?.h, 4);
+
+  // Subsequent rows shift up vertically so there are no empty row gaps
+  assert.equal(previewDailyChart?.y, 4);
+  assert.equal(previewDailyChart?.h, 9);
+  assert.equal(previewProductChart?.y, 4);
+  assert.equal(previewProductChart?.h, 9);
+
+  assertNoOverlaps(previewLayout);
 });
 
 function assertNoOverlaps(layout) {

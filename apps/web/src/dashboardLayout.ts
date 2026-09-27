@@ -315,6 +315,44 @@ export function normalizeDashboardLayout(
   return result;
 }
 
+/**
+ * Adapts an editing layout for preview mode by removing the height reserved
+ * for the editing tools header (drag handle, type label, remove button) and compacting
+ * the grid items vertically so widgets do not appear oversized with large empty gaps.
+ */
+export function computePreviewLayout(
+  layout: ReadonlyArray<DashboardLayoutItem>,
+  widgets: ReadonlyArray<DashboardWidgetDefinition>,
+  cols = 12,
+): DashboardLayoutItem[] {
+  if (!Number.isSafeInteger(cols) || cols < 1) throw new RangeError('Grid columns must be a positive integer');
+  const widgetMap = new Map(widgets.map((widget) => [widget.id, widget]));
+  const sorted = [...layout].sort((left, right) => left.y - right.y || left.x - right.x);
+  const placed: DashboardLayoutItem[] = [];
+
+  for (const item of sorted) {
+    const widget = widgetMap.get(item.i);
+    const isChart = widget ? isChartWidgetKind(widget.kind) : (item.minW ?? 0) >= 5 || item.h >= 8;
+    const previewMinH = isChart ? 8 : 4;
+    const previewH = Math.max(previewMinH, item.h - 1);
+
+    let targetY = 0;
+    while (placed.some((existing) => dashboardLayoutItemsOverlap(existing, { ...item, y: targetY, h: previewH }))) {
+      targetY += 1;
+    }
+
+    placed.push({
+      ...item,
+      y: targetY,
+      h: previewH,
+      minH: previewMinH,
+    });
+  }
+
+  const placedMap = new Map(placed.map((item) => [item.i, item]));
+  return layout.map((item) => placedMap.get(item.i) ?? item);
+}
+
 function clampInteger(value: number | undefined, minimum: number, maximum: number, fallback: number): number {
   if (value === undefined || !Number.isFinite(value)) return fallback;
   return Math.min(maximum, Math.max(minimum, Math.round(value)));

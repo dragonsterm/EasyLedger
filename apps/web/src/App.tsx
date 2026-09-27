@@ -13,6 +13,7 @@ import {
   createInitialDashboardWidgets,
   createUniqueDashboardWidgetId,
   canMoveDashboardLayoutItem,
+  computePreviewLayout,
   dashboardWidgetKindForType,
   dashboardWidgetKindsForType,
   moveDashboardLayoutItem,
@@ -475,16 +476,21 @@ function ProductChart({
 function DashboardWidgetCard({
   widget,
   isEditing,
+  selected,
   onRemove,
   children,
 }: {
   widget: WidgetSelection;
   isEditing: boolean;
+  selected?: boolean;
   onRemove: (id: string) => void;
   children: ReactNode;
 }) {
   return (
-    <article className={`dashboard-widget-card dashboard-widget-style-${widget.style}`} aria-label={`${widget.title} widget`}>
+    <article
+      className={`dashboard-widget-card dashboard-widget-card-${widget.kind} dashboard-widget-style-${widget.style}${isEditing ? ' dashboard-widget-editing' : ' dashboard-widget-preview'}${selected ? ' widget-selected' : ''}`}
+      aria-label={`${widget.title} widget`}
+    >
       {isEditing && (
         <header className="dashboard-widget-tools">
           <span className="widget-drag-handle" title={`Drag to move ${widget.title}`} aria-hidden="true">
@@ -907,7 +913,10 @@ function Dashboard({
   const lineData = analytics?.revenue ?? sampleDailyRevenue;
   const productData = analytics?.products ?? sampleProductUnits;
   const widgetIds = useMemo(() => widgets.map((item) => item.id), [widgets]);
-  const gridLayout = useMemo<Layout>(() => normalizeDashboardLayout(layout, widgetIds), [layout, widgetIds]);
+  const gridLayout = useMemo<Layout>(() => {
+    const normalized = normalizeDashboardLayout(layout, widgetIds);
+    return isEditing ? normalized : computePreviewLayout(normalized, widgets);
+  }, [isEditing, layout, widgetIds, widgets]);
   const layoutPositions = useMemo(() => new Map(gridLayout.map((item) => [item.i, item])), [gridLayout]);
   const orderedWidgets = useMemo(() => [...widgets].sort((left, right) => {
     const leftPosition = layoutPositions.get(left.id);
@@ -1025,7 +1034,7 @@ function Dashboard({
     }
     return (
       <div className={`dashboard-widget-frame dashboard-widget-${item.kind}`} key={item.id}>
-        <DashboardWidgetCard widget={selection} isEditing={isEditing} onRemove={removeWidget}>{content}</DashboardWidgetCard>
+        <DashboardWidgetCard widget={selection} isEditing={isEditing} selected={selected} onRemove={removeWidget}>{content}</DashboardWidgetCard>
       </div>
     );
   };
@@ -1081,7 +1090,7 @@ function Dashboard({
   };
 
   return (
-    <div className={`editor-body${currentWidget ? ' inspector-open' : ' inspector-closed'}`}>
+    <div className={`editor-body${currentWidget ? ' inspector-open' : ' inspector-closed'} dashboard-mode-${mode}`}>
       <main className="canvas" id="dashboard">
         <div className="canvas-inner">
           <section className="voice-card" aria-labelledby="voice-title">
@@ -1100,7 +1109,7 @@ function Dashboard({
             ? 'Widget and layout changes stay in this local draft. They do not change sales or save to an account.'
             : 'Preview mode is read-only. Switch to Editing mode to change this local dashboard draft.'}</p>
 
-          <div className="dashboard-grid-container" ref={gridContainerRefForReact18} aria-label={isLive ? 'Live dashboard widgets' : 'Sample dashboard widgets'}>
+          <div className={`dashboard-grid-container dashboard-grid-${mode}`} ref={gridContainerRefForReact18} aria-label={isLive ? 'Live dashboard widgets' : 'Sample dashboard widgets'}>
             {widgets.length === 0
               ? <div className="dashboard-grid-empty" role="status">{isEditing ? 'No widgets in this draft. Choose a widget type above and add it to the dashboard.' : 'No widgets in this dashboard draft. Switch to Editing mode to add a widget.'}</div>
               : isDesktopGrid

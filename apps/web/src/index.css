@@ -812,24 +812,25 @@ dd {
   border-radius: 22px;
   background: #fff;
   box-shadow: var(--shadow);
+  transition: box-shadow 150ms ease, background-color 150ms ease;
+}
+
+.dashboard-widget-card.widget-selected {
+  outline: 2px solid var(--selected);
+  outline-offset: -2px;
+}
+
+.dashboard-widget-card-complete-days,
+.dashboard-widget-complete-days .dashboard-widget-card {
+  background: var(--kpi-mint);
 }
 
 .dashboard-widget-style-warm {
   background: #fffaf1;
 }
 
-.dashboard-widget-style-warm .dashboard-widget-tools {
-  border-bottom-color: #e9e3d7;
-  background: #f4f0dc;
-}
-
-.dashboard-widget-style-warm .stat-card:not(.stat-card-days),
-.dashboard-widget-style-warm .chart-card,
-.dashboard-widget-style-warm .product-card {
-  background: #fffaf1;
-}
-
-.dashboard-widget-style-warm .stat-card-days {
+.dashboard-widget-style-warm.dashboard-widget-card-complete-days,
+.dashboard-widget-complete-days .dashboard-widget-style-warm {
   background: #f4f0dc;
 }
 
@@ -842,6 +843,23 @@ dd {
   padding: 0 12px;
   border-bottom: 1px solid var(--outline);
   background: #f7f8f3;
+}
+
+.dashboard-widget-style-warm .dashboard-widget-tools {
+  border-bottom-color: #e9e3d7;
+  background: #f4f0dc;
+}
+
+.dashboard-widget-card-complete-days .dashboard-widget-tools,
+.dashboard-widget-complete-days .dashboard-widget-tools {
+  background: rgba(0, 0, 0, 0.035);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.dashboard-widget-style-warm.dashboard-widget-card-complete-days .dashboard-widget-tools,
+.dashboard-widget-complete-days .dashboard-widget-style-warm .dashboard-widget-tools {
+  background: rgba(0, 0, 0, 0.035);
+  border-bottom-color: #e9e3d7;
 }
 
 .widget-drag-handle {
@@ -898,39 +916,79 @@ dd {
 }
 
 .dashboard-widget-content {
+  display: flex;
   min-width: 0;
   min-height: 0;
   flex: 1 1 auto;
+  flex-direction: column;
   overflow: auto;
-  padding: 8px;
+  padding: 0;
 }
 
 .dashboard-widget-content > .stat-card {
+  display: flex;
   width: 100%;
   height: 100%;
-  min-height: 142px;
+  min-height: 0;
+  flex-direction: column;
+  padding: 20px;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
 }
 
-.dashboard-widget-revenue-kpi .dashboard-widget-content,
-.dashboard-widget-units-kpi .dashboard-widget-content,
-.dashboard-widget-complete-days .dashboard-widget-content {
-  padding-block: 0;
+.dashboard-widget-content > .stat-card:focus-visible {
+  outline: none;
 }
 
 .dashboard-widget-content .chart-column {
+  display: flex;
+  width: 100%;
   height: 100%;
+  min-height: 0;
+  flex-direction: column;
 }
 
-.dashboard-widget-content .selected-widget,
+.dashboard-widget-content .selected-widget {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  outline: none;
+}
+
+.dashboard-widget-content .chart-card {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
 .dashboard-widget-content .product-card {
-  height: auto;
-  min-height: 180px;
-  flex: 1 1 180px;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
 }
 
 .dashboard-widget-content .chart-visual {
   top: 64px;
-  bottom: 48px;
+  bottom: 44px;
+}
+
+.dashboard-widget-preview .dashboard-widget-content .chart-visual {
+  top: 68px;
+  bottom: 40px;
 }
 
 .dashboard-widget-content .chart-data-note {
@@ -940,6 +998,7 @@ dd {
 .dashboard-widget-content .chart-data-details {
   min-width: 0;
   max-width: 100%;
+  margin: 8px 12px 12px;
   overflow-x: auto;
 }
 
@@ -951,11 +1010,20 @@ dd {
 }
 
 .dashboard-widget-stack .dashboard-widget-frame {
-  height: 210px;
+  height: 152px;
 }
 
 .dashboard-widget-stack .dashboard-widget-daily-revenue,
 .dashboard-widget-stack .dashboard-widget-product-sales {
+  height: 380px;
+}
+
+.dashboard-mode-editing .dashboard-widget-stack .dashboard-widget-frame {
+  height: 210px;
+}
+
+.dashboard-mode-editing .dashboard-widget-stack .dashboard-widget-daily-revenue,
+.dashboard-mode-editing .dashboard-widget-stack .dashboard-widget-product-sales {
   height: 440px;
 }
 
