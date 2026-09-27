@@ -334,10 +334,14 @@ export class ProposalService {
     business_id: string;
     proposal_id: string;
     confirmation_token: string;
+    session_id?: string;
   }): Promise<ProposalRecord> {
     const proposal = await this.getProposal(options.business_id, options.proposal_id);
     if (!proposal) {
       throw new OperationError('NOT_FOUND', 'Proposal was not found', { httpStatus: 404 });
+    }
+    if (options.session_id !== undefined && proposal.session_id !== options.session_id) {
+      throw new OperationError('FORBIDDEN', 'Proposal belongs to a different voice session', { httpStatus: 403 });
     }
     if (proposal.status === 'committed') {
       return proposal;
@@ -383,11 +387,15 @@ export class ProposalService {
   async cancelProposal(options: {
     business_id: string;
     proposal_id: string;
+    session_id?: string;
     reason?: string;
   }): Promise<{ proposal_id: string; status: 'cancelled' | 'already_committed' }> {
     const proposal = await this.getProposal(options.business_id, options.proposal_id);
     if (!proposal) {
       throw new OperationError('NOT_FOUND', 'Proposal was not found', { httpStatus: 404 });
+    }
+    if (options.session_id !== undefined && proposal.session_id !== options.session_id) {
+      throw new OperationError('FORBIDDEN', 'Proposal belongs to a different voice session', { httpStatus: 403 });
     }
     if (proposal.status === 'committed') {
       return { proposal_id: options.proposal_id, status: 'already_committed' };
@@ -782,12 +790,13 @@ export class SalesQueryService {
 }
 
 /**
- * Requests an ephemeral client token from AssemblyAI Streaming API.
+ * Requests a short-lived, single-use client token from AssemblyAI Voice Agent API.
  * Never exposes the long-lived API key to client browsers.
  */
 export async function fetchAssemblyAiToken(
   apiKey: string,
-  expiresInSeconds = 600,
+  expiresInSeconds = 60,
+  maxSessionDurationSeconds = 600,
 ): Promise<{ token: string; expires_in_seconds: number }> {
   if (!apiKey || typeof apiKey !== 'string' || apiKey.trim() === '') {
     throw new OperationError('PROVIDER_UNAVAILABLE', 'AssemblyAI API key is missing or not configured', {
@@ -796,20 +805,32 @@ export async function fetchAssemblyAiToken(
     });
   }
 
-  const endpoint = `https://streaming.assemblyai.com/v3/token?expires_in_seconds=${Math.min(Math.max(expiresInSeconds, 60), 3600)}`;
+  if (!Number.isInteger(expiresInSeconds) || expiresInSeconds < 1 || expiresInSeconds > 600) {
+    throw new OperationError('VALIDATION_ERROR', 'Voice Agent token expiry must be between 1 and 600 seconds', {
+      httpStatus: 422,
+    });
+  }
+  if (!Number.isInteger(maxSessionDurationSeconds) || maxSessionDurationSeconds < 60 || maxSessionDurationSeconds > 10_800) {
+    throw new OperationError('VALIDATION_ERROR', 'Voice Agent session duration must be between 60 and 10800 seconds', {
+      httpStatus: 422,
+    });
+  }
+
+  const endpoint = new URL('https://agents.assemblyai.com/v1/token');
+  endpoint.searchParams.set('expires_in_seconds', String(expiresInSeconds));
+  endpoint.searchParams.set('max_session_duration_seconds', String(maxSessionDurationSeconds));
   try {
     const response = await fetch(endpoint, {
       method: 'GET',
       headers: {
-        Authorization: apiKey.trim(),
+        Authorization: `Bearer ${apiKey.trim()}`,
       },
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
       throw new OperationError(
         'PROVIDER_UNAVAILABLE',
-        `AssemblyAI session token generation failed: ${response.status} ${errorText.slice(0, 100)}`,
+        `AssemblyAI Voice Agent token generation failed (${response.status})`,
         { httpStatus: 503, retryable: true },
       );
     }
@@ -824,11 +845,11 @@ export async function fetchAssemblyAiToken(
 
     return {
       token: body.token,
-      expires_in_seconds: body.expires_in_seconds ?? expiresInSeconds,
+      expires_in_seconds: expiresInSeconds,
     };
   } catch (error) {
     if (error instanceof OperationError) throw error;
-    throw new OperationError('PROVIDER_UNAVAILABLE', `AssemblyAI connectivity error: ${(error as Error).message}`, {
+    throw new OperationError('PROVIDER_UNAVAILABLE', 'AssemblyAI Voice Agent is unavailable', {
       httpStatus: 503,
       retryable: true,
     });

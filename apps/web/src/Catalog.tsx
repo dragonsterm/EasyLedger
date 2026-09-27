@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react';
 import { formatMoneyMinor } from './analytics';
 import type { LedgerCurrency } from './analytics';
 import Icon from './Icon';
+import { VoiceControl } from './VoiceControl';
+import type { VoiceAgentController } from './VoiceControl';
 
 export type CatalogSection = 'all-products' | 'needs-price' | null;
 
@@ -203,10 +205,12 @@ export default function Catalog({
   currency,
   section,
   onSectionChange,
+  voiceControl,
 }: {
   currency: LedgerCurrency;
   section: CatalogSection;
   onSectionChange: (section: CatalogSection) => void;
+  voiceControl: VoiceAgentController;
 }) {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortMode>('name');
@@ -251,16 +255,12 @@ export default function Catalog({
 
   return (
     <div className="catalog-content">
-      <section className="voice-card catalog-voice-card" aria-labelledby="catalog-voice-title">
-        <img className="voice-icon" src="/assets/catalog-voice-mic.svg" width="24" height="24" alt="" aria-hidden="true" />
-        <div className="voice-copy">
-          <h2 id="catalog-voice-title">Ask EasyLedger</h2>
-          <p>Try “show my products” or “find orange juice”</p>
-        </div>
-        <button className="voice-shortcut" type="button" disabled title="Voice controls are not connected in this preview">
-          Voice preview only
-        </button>
-      </section>
+      <VoiceControl
+        controller={voiceControl}
+        headingId="catalog-voice-title"
+        description="Try “show my products” or “find orange juice”"
+        catalog
+      />
 
       <CatalogToolbar
         section={section}

@@ -357,3 +357,66 @@ function clampInteger(value: number | undefined, minimum: number, maximum: numbe
   if (value === undefined || !Number.isFinite(value)) return fallback;
   return Math.min(maximum, Math.max(minimum, Math.round(value)));
 }
+
+export interface VoiceDraftWidget {
+  id: string;
+  type: 'line' | 'bar' | 'kpi' | 'table';
+  title: string;
+  metric: 'units' | 'revenue';
+  dimension?: 'date' | 'product' | 'none';
+  filters?: { date_from?: string | null; date_to?: string | null; product_ids?: string[] };
+}
+
+export interface VoiceDraftLayoutItem {
+  i: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+export interface MappedVoiceDashboardDraft {
+  widgets: DashboardWidgetDefinition[];
+  layout: DashboardLayoutItem[];
+  unsupportedWidgets: VoiceDraftWidget[];
+}
+
+function supportedVoiceWidgetKind(widget: VoiceDraftWidget): DashboardWidgetKind | null {
+  if (widget.filters && (
+    (widget.filters.date_from !== undefined && widget.filters.date_from !== null)
+    || (widget.filters.date_to !== undefined && widget.filters.date_to !== null)
+    || (widget.filters.product_ids?.length ?? 0) > 0
+  )) return null;
+  if (widget.type === 'kpi' && (!widget.dimension || widget.dimension === 'none')) {
+    if (widget.metric === 'revenue') return 'revenue-kpi';
+    if (widget.metric === 'units') return 'units-kpi';
+  }
+  if (widget.type === 'line' && widget.metric === 'revenue' && widget.dimension === 'date') return 'daily-revenue';
+  if (widget.type === 'bar' && widget.metric === 'units' && widget.dimension === 'product') return 'product-sales';
+  return null;
+}
+
+/** Maps only server widget queries this dashboard can render without changing their meaning. */
+export function mapVoiceDashboardDraft(draft: {
+  widgets: VoiceDraftWidget[];
+  layout: VoiceDraftLayoutItem[];
+}): MappedVoiceDashboardDraft {
+  const widgets: DashboardWidgetDefinition[] = [];
+  const unsupportedWidgets: VoiceDraftWidget[] = [];
+
+  for (const item of draft.widgets) {
+    const kind = supportedVoiceWidgetKind(item);
+    if (!kind) {
+      unsupportedWidgets.push(item);
+      continue;
+    }
+    const definition = createDashboardWidget(kind, item.id);
+    widgets.push({ ...definition, title: sanitizeDashboardWidgetTitle(item.title, definition.title) });
+  }
+
+  return {
+    widgets,
+    layout: normalizeDashboardLayout(draft.layout, widgets.map((widget) => widget.id)),
+    unsupportedWidgets,
+  };
+}

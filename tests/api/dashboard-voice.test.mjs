@@ -141,6 +141,15 @@ test('TASK-26-03: Voice tool update_dashboard updates layout drafts without alte
   const updatedWidget = editBody.data.widgets.find((w) => w.id === 'widget-profit-kpi');
   assert.equal(updatedWidget.title, 'Updated Gross Profit');
 
+  const getDraftRes = await app.inject({
+    method: 'POST',
+    url: '/api/v1/voice/tools/get_dashboard_draft',
+    headers: { authorization: `Bearer ${sessionToken}` },
+    payload: {},
+  });
+  assert.equal(getDraftRes.statusCode, 200);
+  assert.equal(getDraftRes.json().data.widgets.find((w) => w.id === 'widget-profit-kpi').title, 'Updated Gross Profit');
+
   // 7. Move and Resize via single operation object or operations array
   const moveResizeRes = await app.inject({
     method: 'POST',

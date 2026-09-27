@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react';
+import { VoiceControl } from './VoiceControl';
+import type { VoiceAgentController } from './VoiceControl';
 
 export interface LedgerSaleItem {
   id: string;
@@ -109,9 +111,10 @@ function formatHumanDate(dateStr: string): string {
 
 interface LedgerProps {
   isLive?: boolean;
+  voiceControl: VoiceAgentController;
 }
 
-export function LedgerJournal({ isLive = false }: LedgerProps) {
+export function LedgerJournal({ isLive = false, voiceControl }: LedgerProps) {
   const [sales, setSales] = useState<LedgerSaleItem[]>(initialSalesData);
   const [searchQuery, setSearchQuery] = useState('');
   const [productFilter, setProductFilter] = useState('all');
@@ -227,17 +230,11 @@ export function LedgerJournal({ isLive = false }: LedgerProps) {
 
   return (
     <>
-      {/* Voice Card matching Dashboard exactly */}
-      <section className="voice-card" aria-labelledby="ledger-voice-title">
-        <img className="voice-icon" src="/assets/voice-waveform.svg" width="32" height="32" alt="" aria-hidden="true" />
-        <div className="voice-copy">
-          <h2 id="ledger-voice-title">Ask EasyLedger</h2>
-          <p>Try “show transactions with missing price” or “record ten orange juices today”</p>
-        </div>
-        <button className="voice-shortcut" type="button" aria-label="Voice controls are not connected in this preview" disabled>
-          Voice preview only
-        </button>
-      </section>
+      <VoiceControl
+        controller={voiceControl}
+        headingId="ledger-voice-title"
+        description="Try “show transactions with missing price” or “record ten orange juices today”"
+      />
 
       {/* Canvas Toolbar matching Dashboard filters and actions */}
       <section className="canvas-toolbar" aria-label="Ledger filters and actions">

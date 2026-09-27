@@ -8,6 +8,8 @@ import Icon from './Icon';
 import LedgerJournal from './Ledger';
 import Catalog, { type CatalogSection } from './Catalog';
 import HomeWorkspace from './HomeWorkspace';
+import { VoiceControl, useVoiceAgent } from './VoiceControl';
+import type { VoiceDashboardDraft } from './VoiceControl';
 import {
   createAppendedDashboardLayoutItem,
   createDashboardWidget,
@@ -20,6 +22,7 @@ import {
   dashboardWidgetKindsForType,
   moveDashboardLayoutItem,
   dashboardWidgetOptions,
+  mapVoiceDashboardDraft,
   normalizeDashboardLayout,
   reconfigureDashboardWidget,
   removeDashboardLayoutItem,
@@ -892,6 +895,8 @@ function Dashboard({
   analytics,
   liveStatus,
   onRefresh,
+  voiceControl,
+  voiceDashboardDraft,
 }: {
   widget: WidgetSelection | null;
   mode: DashboardMode;
@@ -900,10 +905,13 @@ function Dashboard({
   analytics: DashboardAnalytics | null;
   liveStatus: 'checking' | 'live' | 'unauthorized' | 'unavailable';
   onRefresh: () => void;
+  voiceControl: ReturnType<typeof useVoiceAgent>;
+  voiceDashboardDraft: VoiceDashboardDraft | null;
 }) {
   const [widgets, setWidgets] = useState(initialWidgetSelections);
   const [layout, setLayout] = useState<DashboardLayoutItem[]>(createInitialDashboardLayout);
   const [newWidgetKind, setNewWidgetKind] = useState<DashboardWidgetKind>('revenue-kpi');
+  const [unsupportedVoiceWidgets, setUnsupportedVoiceWidgets] = useState<Array<{ id: string; title: string }>>([]);
   const nextWidgetSequence = useRef(1);
   const { width: gridWidth, containerRef: gridContainerRef, mounted: gridMounted } = useContainerWidth({ initialWidth: 920 });
   // RGL's nullable element generic differs from @types/react 18's ref type; both use the same runtime ref contract.
@@ -927,6 +935,18 @@ function Dashboard({
     return leftPosition.y - rightPosition.y || leftPosition.x - rightPosition.x;
   }), [widgets, layoutPositions]);
   const isDesktopGrid = gridMounted && gridWidth >= 720;
+
+  useEffect(() => {
+    if (!voiceDashboardDraft) return;
+    const mapped = mapVoiceDashboardDraft(voiceDashboardDraft);
+    setWidgets(mapped.widgets.map((item) => ({
+      ...item,
+      data: sampleDataForWidget(item.kind),
+      dataSource: 'sample',
+    })));
+    setLayout(mapped.layout);
+    setUnsupportedVoiceWidgets(mapped.unsupportedWidgets.map(({ id, title }) => ({ id, title })));
+  }, [voiceDashboardDraft]);
   const handleLayoutChange = useCallback((nextLayout: Layout) => {
     if (!isEditing) return;
     const normalized = normalizeDashboardLayout(nextLayout, widgetIds);
@@ -1095,23 +1115,29 @@ function Dashboard({
     <div className={`editor-body${currentWidget ? ' inspector-open' : ' inspector-closed'} dashboard-mode-${mode}`}>
       <main className="canvas" id="dashboard">
         <div className="canvas-inner">
-          <section className="voice-card" aria-labelledby="voice-title">
-            <img className="voice-icon" src="/assets/voice-waveform.svg" width="32" height="32" alt="" aria-hidden="true" />
-            <div className="voice-copy">
-              <h2 id="voice-title">Ask EasyLedger</h2>
-              <p>Try “show revenue this week”</p>
-            </div>
-            <button className="voice-shortcut" type="button" aria-label="Voice controls are not connected in this preview" disabled>
-              Voice preview only
-            </button>
-          </section>
+          <VoiceControl
+            controller={voiceControl}
+            headingId="voice-title"
+            description="Try “show revenue this week”"
+          />
 
           <DashboardFilters editable={isEditing} widgetKind={newWidgetKind} onWidgetKindChange={setNewWidgetKind} onAddWidget={addWidget} />
           <p className="layout-draft-note">{isEditing
             ? 'Widget and layout changes stay in this local draft. They do not change sales or save to an account.'
             : 'Preview mode is read-only. Switch to Editing mode to change this local dashboard draft.'}</p>
 
-          <div className={`dashboard-grid-container dashboard-grid-${mode}`} ref={gridContainerRefForReact18} aria-label={isLive ? 'Live dashboard widgets' : 'Sample dashboard widgets'}>
+          {voiceDashboardDraft && (
+            <p className="layout-draft-note voice-grid-source-note" role="status">
+              Showing server draft version {voiceDashboardDraft.version}. Manual widget edits stay in this browser and do not change the server draft; the visible voice Save button saves the server draft.
+            </p>
+          )}
+          {unsupportedVoiceWidgets.length > 0 && (
+            <p className="layout-draft-note voice-grid-source-note" role="status">
+              {unsupportedVoiceWidgets.length} server-draft widget{unsupportedVoiceWidgets.length === 1 ? '' : 's'} cannot be charted in this canvas: {unsupportedVoiceWidgets.map((item) => item.title || item.id).join(', ')}. The server draft details remain visible in the Ask EasyLedger card.
+            </p>
+          )}
+
+          <div className={`dashboard-grid-container dashboard-grid-${mode}`} ref={gridContainerRefForReact18} aria-label={voiceDashboardDraft ? `Server dashboard draft version ${voiceDashboardDraft.version}` : isLive ? 'Live dashboard widgets' : 'Sample dashboard widgets'}>
             {widgets.length === 0
               ? <div className="dashboard-grid-empty" role="status">{isEditing ? 'No widgets in this draft. Choose a widget type above and add it to the dashboard.' : 'No widgets in this dashboard draft. Switch to Editing mode to add a widget.'}</div>
               : isDesktopGrid
@@ -1208,6 +1234,18 @@ function App() {
   const [refreshCount, setRefreshCount] = useState(0);
   const isLive = dashboardAnalytics !== null;
   const currency = dashboardAnalytics?.revenue.currency ?? sampleDailyRevenue.currency;
+  const voiceControl = useVoiceAgent({
+    onLedgerCommitted: () => setRefreshCount((count) => count + 1),
+    onDashboardDraft: (draft) => {
+      setActiveDashboardName(draft.name);
+      setDashboardMode('editing');
+      setActiveNav('dashboard');
+      window.location.hash = 'dashboard';
+    },
+    onDashboardSaved: (dashboard) => {
+      setActiveDashboardName(dashboard.name);
+    },
+  });
 
   useEffect(() => {
     const handleHash = () => {
@@ -1265,6 +1303,26 @@ function App() {
     setActiveNav('dashboard');
     window.location.hash = 'dashboard';
   };
+  const voiceActive = voiceControl.status === 'connecting'
+    || voiceControl.status === 'listening'
+    || voiceControl.status === 'processing';
+  const voiceNeedsReview = Boolean(voiceControl.proposal || voiceControl.dashboardSave);
+  const handleRailVoiceAction = () => {
+    if (voiceActive) {
+      voiceControl.stop();
+      return;
+    }
+    voiceControl.start();
+    if (activeNav === 'home') {
+      setActiveNav('dashboard');
+      window.location.hash = 'dashboard';
+    }
+  };
+  const railVoiceLabel = voiceActive
+    ? `Stop microphone and voice session (${voiceControl.status})`
+    : voiceNeedsReview
+    ? 'Review the pending EasyLedger action before starting voice'
+    : `Start microphone and voice session (${voiceControl.status})`;
 
   return (
     <div className={`app-shell${activeNav === 'catalog' ? ' app-shell-catalog' : ''}${activeNav === 'home' ? ' app-shell-home' : ''}`}>
@@ -1351,13 +1409,17 @@ function App() {
             >
               <Icon name="dashboard" size={activeNav === 'catalog' ? 16 : 18} />
             </a>
-            <a
+            <button
               className="rail-action rail-action-voice"
-              href={activeNav === 'catalog' ? '#catalog-voice-title' : activeNav === 'ledger' ? '#ledger-voice-title' : '#voice-title'}
-              aria-label="Ask EasyLedger"
+              type="button"
+              aria-label={railVoiceLabel}
+              title={railVoiceLabel}
+              aria-pressed={voiceActive}
+              disabled={!voiceActive && voiceNeedsReview}
+              onClick={handleRailVoiceAction}
             >
               <Icon name="voice" size={activeNav === 'catalog' ? 16 : 18} />
-            </a>
+            </button>
             {activeNav === 'dashboard' && dashboardMode === 'editing' && (
               <a className="rail-action" href="#add-widget" aria-label="Add widget">
                 <Icon name="add" size={18} />
@@ -1496,14 +1558,14 @@ function App() {
             <div className="editor-body inspector-closed">
               <main className="canvas" id="ledger">
                 <div className="canvas-inner">
-                  <LedgerJournal isLive={isLive} />
+                  <LedgerJournal isLive={isLive} voiceControl={voiceControl} />
                 </div>
               </main>
             </div>
           ) : activeNav === 'catalog' ? (
             <div className="editor-body catalog-editor-body">
               <main className="canvas catalog-canvas" id="catalog">
-                <Catalog currency={currency} section={catalogSection} onSectionChange={setCatalogSection} />
+                <Catalog currency={currency} section={catalogSection} onSectionChange={setCatalogSection} voiceControl={voiceControl} />
               </main>
             </div>
           ) : (
@@ -1515,6 +1577,8 @@ function App() {
               analytics={dashboardAnalytics}
               liveStatus={liveStatus}
               onRefresh={refreshCharts}
+              voiceControl={voiceControl}
+              voiceDashboardDraft={voiceControl.dashboardDraft}
             />
           )}
             </>

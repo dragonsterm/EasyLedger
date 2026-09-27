@@ -113,7 +113,7 @@ test('ProposalService enforces two-phase confirmation tokens and payload hashing
   );
 });
 
-test('fetchAssemblyAiToken validates API key and handles errors safely', async () => {
+test('fetchAssemblyAiToken uses the Voice Agent token endpoint and redacts provider failures', async (t) => {
   await assert.rejects(
     async () => {
       await fetchAssemblyAiToken('');
@@ -121,11 +121,31 @@ test('fetchAssemblyAiToken validates API key and handles errors safely', async (
     (err) => err.code === 'PROVIDER_UNAVAILABLE' && err.httpStatus === 503,
   );
 
+  const originalFetch = globalThis.fetch;
+  t.after(() => { globalThis.fetch = originalFetch; });
+  let capturedUrl;
+  let capturedHeaders;
+  globalThis.fetch = async (url, init) => {
+    capturedUrl = String(url);
+    capturedHeaders = init.headers;
+    return { ok: true, json: async () => ({ token: 'temporary-voice-token' }) };
+  };
+
+  const token = await fetchAssemblyAiToken('  secret-key  ', 60, 600);
+  const parsedUrl = new URL(capturedUrl);
+  assert.equal(parsedUrl.origin, 'https://agents.assemblyai.com');
+  assert.equal(parsedUrl.pathname, '/v1/token');
+  assert.equal(parsedUrl.searchParams.get('expires_in_seconds'), '60');
+  assert.equal(parsedUrl.searchParams.get('max_session_duration_seconds'), '600');
+  assert.equal(capturedHeaders.Authorization, 'Bearer secret-key');
+  assert.deepEqual(token, { token: 'temporary-voice-token', expires_in_seconds: 60 });
+
+  globalThis.fetch = async () => ({ ok: false, status: 401, text: async () => 'secret-key echoed by provider' });
   await assert.rejects(
-    async () => {
-      await fetchAssemblyAiToken('invalid_key_12345');
-    },
-    (err) => err.code === 'PROVIDER_UNAVAILABLE' && err.httpStatus === 503,
+    async () => fetchAssemblyAiToken('secret-key', 60, 600),
+    (err) => err.code === 'PROVIDER_UNAVAILABLE'
+      && err.httpStatus === 503
+      && !err.message.includes('secret-key'),
   );
 });
 

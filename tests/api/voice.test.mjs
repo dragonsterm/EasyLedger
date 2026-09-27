@@ -87,6 +87,21 @@ function mockPool() {
         const found = sales.filter((s) => s.business_id === values[0] && s.id === values[1]);
         return { rows: found, rowCount: found.length };
       }
+      if (sql.includes('s.id AS sale_id')) {
+        return {
+          rows: [{
+            sale_id: sales[0].id,
+            product_id: sales[0].product_id,
+            product_name: sales[0].product_name,
+            quantity: sales[0].quantity,
+            unit_price: sales[0].unit_price,
+            sale_date: sales[0].sale_date,
+            version: sales[0].version,
+            voided: sales[0].voided,
+          }],
+          rowCount: 1,
+        };
+      }
       if (sql.includes('FROM sales s')) {
         return {
           rows: [
@@ -130,7 +145,8 @@ test('TASK-23-01: POST /api/v1/voice/sessions authenticates merchant and issues 
   assert.ok(body.data.session_token.startsWith('easysess_'));
   assert.equal(body.data.provider_token, 'mock_provider_token_xyz');
   assert.equal(body.data.expires_in_seconds, 900);
-  assert.ok(body.data.websocket_url);
+  assert.equal(body.data.provider_token_expires_in_seconds, 60);
+  assert.equal(body.data.websocket_url, 'wss://agents.assemblyai.com/v1/ws');
 
   // Alias /api/voice/sessions works identically
   const aliasRes = await app.inject({
@@ -139,6 +155,20 @@ test('TASK-23-01: POST /api/v1/voice/sessions authenticates merchant and issues 
     payload: {},
   });
   assert.equal(aliasRes.statusCode, 201);
+});
+
+test('voice session bootstrap returns 503 when provider credentials are not configured', async (t) => {
+  const app = createApp({
+    pool: mockPool(),
+    authAdapter: () => ({ userId: owner }),
+    assemblyApiKey: '',
+  });
+  t.after(() => app.close());
+
+  const res = await app.inject({ method: 'POST', url: '/api/v1/voice/sessions', payload: {} });
+  assert.equal(res.statusCode, 503);
+  assert.equal(res.json().code, 'PROVIDER_UNAVAILABLE');
+  assert.equal(res.json().data, undefined);
 });
 
 test('TASK-23-04: Tool endpoints require valid voice session tokens (401 on missing/expired/invalid)', async (t) => {
@@ -332,6 +362,81 @@ test('TASK-23-02: HTTP tool gateway supports propose_sales, propose_correction, 
   });
   assert.equal(dispatchRes.statusCode, 200);
 });
+
+test('voice proposals are bound to the session that created them', async (t) => {
+  const app = createApp({
+    pool: mockPool(),
+    authAdapter: () => ({ userId: owner }),
+    assemblyTokenGenerator: () => 'mock_provider_token',
+  });
+  t.after(() => app.close());
+
+  const firstSession = await app.inject({ method: 'POST', url: '/api/v1/voice/sessions', payload: {} });
+  const secondSession = await app.inject({ method: 'POST', url: '/api/v1/voice/sessions', payload: {} });
+  const firstToken = firstSession.json().data.session_token;
+  const secondToken = secondSession.json().data.session_token;
+
+  const proposed = await app.inject({
+    method: 'POST',
+    url: '/api/v1/voice/tools/propose_sales',
+    headers: { authorization: `Bearer ${firstToken}` },
+    payload: { lines: [{ product_id: orangeProduct, quantity: '2', sale_date: '2026-09-23' }] },
+  });
+  assert.equal(proposed.statusCode, 200);
+  const { proposal_id: proposalId, confirmation_token: confirmationToken } = proposed.json().data;
+
+  const stolenSessionCommit = await app.inject({
+    method: 'POST',
+    url: '/api/v1/voice/tools/commit_sales',
+    headers: { authorization: `Bearer ${secondToken}` },
+    payload: { proposal_id: proposalId, confirmation_token: confirmationToken, idempotency_key: 'wrong-session' },
+  });
+  assert.equal(stolenSessionCommit.statusCode, 403);
+  assert.equal(stolenSessionCommit.json().code, 'FORBIDDEN');
+
+  const stolenSessionCancel = await app.inject({
+    method: 'POST',
+    url: '/api/v1/voice/tools/cancel_proposal',
+    headers: { authorization: `Bearer ${secondToken}` },
+    payload: { proposal_id: proposalId },
+  });
+  assert.equal(stolenSessionCancel.statusCode, 403);
+  assert.equal(stolenSessionCancel.json().code, 'FORBIDDEN');
+});
+
+test('voice gateway exposes bounded, tenant-scoped sale lookup for explicit corrections', async (t) => {
+  const app = createApp({
+    pool: mockPool(),
+    authAdapter: () => ({ userId: owner }),
+    assemblyTokenGenerator: () => 'mock_provider_token',
+  });
+  t.after(() => app.close());
+  const session = await app.inject({ method: 'POST', url: '/api/v1/voice/sessions', payload: {} });
+  const sessionToken = session.json().data.session_token;
+
+  const res = await app.inject({
+    method: 'POST',
+    url: '/api/v1/voice/tools/list_sales',
+    headers: { authorization: `Bearer ${sessionToken}` },
+    payload: { page_size: 10, date_from: '2026-09-01', date_to: '2026-09-30' },
+  });
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.json().data.items[0].id, salesId());
+  assert.equal(res.json().data.items[0].version, '1');
+
+  const oversized = await app.inject({
+    method: 'POST',
+    url: '/api/v1/voice/tools/list_sales',
+    headers: { authorization: `Bearer ${sessionToken}` },
+    payload: { page_size: 21 },
+  });
+  assert.equal(oversized.statusCode, 422);
+  assert.equal(oversized.json().code, 'VALIDATION_ERROR');
+});
+
+function salesId() {
+  return '00000000-0000-4000-8000-000000000051';
+}
 
 test('TASK-24-02: ambiguity detection triggers NEEDS_CLARIFICATION without ledger mutation', async (t) => {
   const app = createApp({

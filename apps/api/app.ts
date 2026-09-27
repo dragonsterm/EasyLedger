@@ -52,7 +52,7 @@ export interface AppOptions {
   auth?: AuthenticationAdapter;
   logger?: boolean;
   assemblyApiKey?: string;
-  assemblyTokenGenerator?: (options?: { expiresInSeconds?: number }) => Promise<string> | string;
+  assemblyTokenGenerator?: (options?: { expiresInSeconds?: number; maxSessionDurationSeconds?: number }) => Promise<string> | string;
 }
 
 class ApiError extends Error {
@@ -241,6 +241,24 @@ const toolGetContextSchema = {
   properties: {
     dashboard_id: uuidSchema,
   },
+};
+
+const toolListSalesSchema = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    date_from: dateSchema,
+    date_to: dateSchema,
+    product_id: uuidSchema,
+    cursor: { type: 'string', minLength: 1, maxLength: 500 },
+    page_size: { type: 'integer', minimum: 1, maximum: 20 },
+  },
+};
+
+const toolGetDashboardDraftSchema = {
+  type: 'object',
+  additionalProperties: false,
+  properties: { dashboard_id: uuidSchema },
 };
 
 const toolSaleLineSchema = {
@@ -881,6 +899,13 @@ export function createApp(options: AppOptions) {
     }
     const normalized = toError(error);
     const status = normalized instanceof OperationError ? normalized.httpStatus : normalized.httpStatus;
+    if (normalized instanceof OperationError && normalized.code === 'PROVIDER_UNAVAILABLE') {
+      return reply.code(503).send(errorEnvelope(requestId, new ApiError(
+        'PROVIDER_UNAVAILABLE',
+        'Voice provider is unavailable',
+        { httpStatus: 503, retryable: true },
+      )));
+    }
     if (status >= 500) {
       return reply.code(500).send(errorEnvelope(requestId, new ApiError('INTERNAL_ERROR', 'The request could not be completed', { httpStatus: 500, retryable: true })));
     }
@@ -1228,18 +1253,18 @@ export function createApp(options: AppOptions) {
       const body = (request.body ?? {}) as { selected_dashboard_id?: string; ttl_seconds?: number };
 
       const ttl = body.ttl_seconds ?? 600;
+      const providerTokenExpiry = 60;
       let providerToken: string;
 
       if (options.assemblyTokenGenerator) {
-        providerToken = await options.assemblyTokenGenerator({ expiresInSeconds: ttl });
+        providerToken = await options.assemblyTokenGenerator({
+          expiresInSeconds: providerTokenExpiry,
+          maxSessionDurationSeconds: ttl,
+        });
       } else {
         const apiKey = options.assemblyApiKey ?? process.env.ASSEMBLYAI_API_KEY;
-        if (apiKey) {
-          const res = await fetchAssemblyAiToken(apiKey, ttl);
-          providerToken = res.token;
-        } else {
-          providerToken = `mock_aai_${randomUUID().replaceAll('-', '')}`;
-        }
+        const res = await fetchAssemblyAiToken(apiKey ?? '', providerTokenExpiry, ttl);
+        providerToken = res.token;
       }
 
       const session = await voiceSessions.createSession({
@@ -1255,7 +1280,8 @@ export function createApp(options: AppOptions) {
         provider_token: providerToken,
         expires_at: session.expires_at,
         expires_in_seconds: session.expires_in_seconds,
-        websocket_url: 'wss://streaming.assemblyai.com/v3/ws',
+        provider_token_expires_in_seconds: providerTokenExpiry,
+        websocket_url: 'wss://agents.assemblyai.com/v1/ws',
       }));
     });
   };
@@ -1269,7 +1295,7 @@ export function createApp(options: AppOptions) {
     const context = req.easyLedger;
     const body = req.body ?? {};
     const products = await catalog.listProducts(context.business.id, { active: true });
-    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date());
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: context.business.timezone }).format(new Date());
 
     const data = {
       business_id: context.business.id,
@@ -1289,6 +1315,44 @@ export function createApp(options: AppOptions) {
     return rep.code(200).send(successEnvelope(String(req.id), data, {
       currency: context.business.currency,
       ledger_revision: context.business.ledger_revision,
+    }));
+  };
+
+  const handleListVoiceSales = async (request: unknown, reply: unknown) => {
+    const req = request as {
+      id: string;
+      body?: { date_from?: string; date_to?: string; product_id?: string; cursor?: string; page_size?: number };
+      easyLedger: { business: { id: string; currency: 'IDR' | 'USD'; ledger_revision: string } };
+    };
+    const rep = reply as { code: (status: number) => { send: (payload: unknown) => unknown } };
+    const body = req.body ?? {};
+    const data = await listSales(options.pool, req.easyLedger.business, {
+      ...body,
+      page_size: String(body.page_size ?? 20),
+      include_voided: 'false',
+    });
+    return rep.code(200).send(successEnvelope(String(req.id), data, {
+      currency: data.currency,
+      ledger_revision: data.ledger_revision,
+    }));
+  };
+
+  const handleGetDashboardDraft = async (request: unknown, reply: unknown) => {
+    const req = request as {
+      id: string;
+      body?: { dashboard_id?: string };
+      easyLedger: {
+        business: { id: string; currency: 'IDR' | 'USD'; ledger_revision: string };
+        voiceSession?: VoiceSessionRecord;
+      };
+    };
+    const rep = reply as { code: (status: number) => { send: (payload: unknown) => unknown } };
+    const dashboardId = req.body?.dashboard_id ?? req.easyLedger.voiceSession?.selected_dashboard_id ?? 'default';
+    const draft = await dashboards.getDashboardDraft(req.easyLedger.business.id, dashboardId);
+    return rep.code(200).send(successEnvelope(String(req.id), draft, {
+      currency: req.easyLedger.business.currency,
+      ledger_revision: req.easyLedger.business.ledger_revision,
+      dashboard_version: draft?.version ?? null,
     }));
   };
 
@@ -1403,7 +1467,7 @@ export function createApp(options: AppOptions) {
   };
 
   const handleCommitSales = async (request: unknown, reply: unknown) => {
-    const req = request as { id: string; body: { proposal_id: string; confirmation_token: string; idempotency_key: string }; easyLedger: { userId: string; business: { id: string; currency: 'IDR' | 'USD'; ledger_revision: string } } };
+    const req = request as { id: string; body: { proposal_id: string; confirmation_token: string; idempotency_key: string }; easyLedger: { userId: string; business: { id: string; currency: 'IDR' | 'USD'; ledger_revision: string }; voiceSession?: VoiceSessionRecord } };
     const rep = reply as { code: (status: number) => { send: (payload: unknown) => unknown } };
     const context = req.easyLedger;
     const body = req.body;
@@ -1412,6 +1476,7 @@ export function createApp(options: AppOptions) {
       business_id: context.business.id,
       proposal_id: body.proposal_id,
       confirmation_token: body.confirmation_token,
+      session_id: req.easyLedger.voiceSession?.id,
     });
 
     if (proposal.normalized_payload.type !== 'sale_batch') {
@@ -1527,7 +1592,7 @@ export function createApp(options: AppOptions) {
   };
 
   const handleCommitCorrection = async (request: unknown, reply: unknown) => {
-    const req = request as { id: string; body: { proposal_id: string; confirmation_token: string; idempotency_key: string }; easyLedger: { userId: string; business: { id: string; currency: 'IDR' | 'USD'; ledger_revision: string } } };
+    const req = request as { id: string; body: { proposal_id: string; confirmation_token: string; idempotency_key: string }; easyLedger: { userId: string; business: { id: string; currency: 'IDR' | 'USD'; ledger_revision: string }; voiceSession?: VoiceSessionRecord } };
     const rep = reply as { code: (status: number) => { send: (payload: unknown) => unknown } };
     const context = req.easyLedger;
     const body = req.body;
@@ -1536,6 +1601,7 @@ export function createApp(options: AppOptions) {
       business_id: context.business.id,
       proposal_id: body.proposal_id,
       confirmation_token: body.confirmation_token,
+      session_id: req.easyLedger.voiceSession?.id,
     });
 
     if (proposal.normalized_payload.type !== 'correction') {
@@ -1568,7 +1634,7 @@ export function createApp(options: AppOptions) {
   };
 
   const handleCancelProposal = async (request: unknown, reply: unknown) => {
-    const req = request as { id: string; body: { proposal_id: string; reason?: string }; easyLedger: { business: { id: string; currency: 'IDR' | 'USD'; ledger_revision: string } } };
+    const req = request as { id: string; body: { proposal_id: string; reason?: string }; easyLedger: { business: { id: string; currency: 'IDR' | 'USD'; ledger_revision: string }; voiceSession?: VoiceSessionRecord } };
     const rep = reply as { code: (status: number) => { send: (payload: unknown) => unknown } };
     const context = req.easyLedger;
     const body = req.body;
@@ -1576,6 +1642,7 @@ export function createApp(options: AppOptions) {
     const result = await proposals.cancelProposal({
       business_id: context.business.id,
       proposal_id: body.proposal_id,
+      session_id: req.easyLedger.voiceSession?.id,
       reason: body.reason,
     });
 
@@ -1694,6 +1761,8 @@ export function createApp(options: AppOptions) {
   for (const prefix of ['/api/v1/voice/tools', '/api/voice/tools']) {
     app.post(`${prefix}/get_context`, { schema: { body: toolGetContextSchema } }, handleGetContext);
     app.get(`${prefix}/get_context`, handleGetContext);
+    app.post(`${prefix}/list_sales`, { schema: { body: toolListSalesSchema } }, handleListVoiceSales);
+    app.post(`${prefix}/get_dashboard_draft`, { schema: { body: toolGetDashboardDraftSchema } }, handleGetDashboardDraft);
     app.post(`${prefix}/propose_sales`, { schema: { body: toolProposeSalesSchema } }, handleProposeSales);
     app.post(`${prefix}/commit_sales`, { schema: { body: toolCommitSalesSchema } }, handleCommitSales);
     app.post(`${prefix}/propose_correction`, { schema: { body: toolProposeCorrectionSchema } }, handleProposeCorrection);
@@ -1708,6 +1777,10 @@ export function createApp(options: AppOptions) {
       switch (toolName) {
         case 'get_context':
           return handleGetContext(request, reply);
+        case 'list_sales':
+          return handleListVoiceSales(request, reply);
+        case 'get_dashboard_draft':
+          return handleGetDashboardDraft(request, reply);
         case 'propose_sales':
           return handleProposeSales(request, reply);
         case 'commit_sales':
