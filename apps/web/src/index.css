@@ -324,8 +324,8 @@ dd {
 .rail-actions {
   display: flex;
   width: 44px;
-  height: 184px;
-  flex: 0 0 184px;
+  height: auto;
+  flex: 0 0 auto;
   flex-direction: column;
   align-items: center;
   gap: 8px;
@@ -354,6 +354,32 @@ dd {
 
 .rail-action:hover {
   background: #e6e9e1;
+}
+
+.rail-action-voice {
+  position: relative;
+  background: var(--voice);
+  color: #4f6942;
+}
+
+.rail-action-voice::before {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #f4f8ec;
+  content: '';
+}
+
+.rail-action-voice .app-icon {
+  position: relative;
+  z-index: 1;
+  color: #4f6942;
+}
+
+.rail-action-voice:hover {
+  background: #d3e0cc;
+  color: #3f5e34;
 }
 
 .rail-action-active,
@@ -3340,3 +3366,4 @@ body:has(.app-shell-catalog) {
 .dashboard-widget-grid > .react-grid-item > .react-resizable-handle::after {
   border-color: #718364;
 }
+

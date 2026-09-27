@@ -1316,10 +1316,10 @@ function App() {
       </header>
 
       <div className="dashboard-shell">
-        <aside className="nav-rail" aria-label={activeNav === 'catalog' ? 'Catalog shortcuts' : 'Dashboard builder shortcuts'}>
+        <aside className="nav-rail" aria-label="Workspace shortcuts">
           <div className="rail-spacer-top" aria-hidden="true" />
 
-          <nav className="rail-actions" aria-label="Builder actions">
+          <nav className="rail-actions" aria-label="Workspace navigation">
             <a
               className={`rail-action ${activeNav === 'dashboard' ? 'rail-action-active' : ''}`}
               href="#dashboard"
@@ -1329,8 +1329,8 @@ function App() {
               <Icon name="dashboard" size={activeNav === 'catalog' ? 16 : 18} />
             </a>
             <a
-              className="rail-action"
-              href="#voice-title"
+              className="rail-action rail-action-voice"
+              href={activeNav === 'catalog' ? '#catalog-voice-title' : activeNav === 'ledger' ? '#ledger-voice-title' : '#voice-title'}
               aria-label="Ask EasyLedger"
             >
               <Icon name="voice" size={activeNav === 'catalog' ? 16 : 18} />
@@ -1347,6 +1347,15 @@ function App() {
               aria-label="Sales Ledger journal"
             >
               <Icon name="ledger" size={16} />
+            </a>
+            <a
+              className={`rail-action ${activeNav === 'catalog' ? 'rail-action-active' : ''}`}
+              href="#catalog"
+              onClick={() => setActiveNav('catalog')}
+              aria-label="Catalog"
+              aria-current={activeNav === 'catalog' ? 'page' : undefined}
+            >
+              <Icon name="catalog" size={16} />
             </a>
           </nav>
 
@@ -1488,3 +1497,4 @@ function App() {
 }
 
 export default App;
+
