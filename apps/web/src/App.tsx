@@ -8,6 +8,7 @@ import Icon from './Icon';
 import LedgerJournal from './Ledger';
 import Catalog, { type CatalogSection } from './Catalog';
 import HomeWorkspace from './HomeWorkspace';
+import { AuthModal, type MerchantIdentity } from './AuthModal';
 import { VoiceControl, useVoiceAgent } from './VoiceControl';
 import type { VoiceDashboardDraft } from './VoiceControl';
 import {
@@ -1258,6 +1259,19 @@ function App() {
   const [dashboardAnalytics, setDashboardAnalytics] = useState<DashboardAnalytics | null>(null);
   const [liveStatus, setLiveStatus] = useState<'checking' | 'live' | 'unauthorized' | 'unavailable'>('checking');
   const [refreshCount, setRefreshCount] = useState(0);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [currentMerchant, setCurrentMerchant] = useState<MerchantIdentity | null>(null);
+
+  useEffect(() => {
+    fetch('/api/v1/auth/session')
+      .then((res) => res.json())
+      .then((payload) => {
+        if (payload.data?.authenticated && payload.data.business) {
+          setCurrentMerchant(payload.data.business);
+        }
+      })
+      .catch(() => {});
+  }, []);
   const isLive = dashboardAnalytics !== null;
   const currency = dashboardAnalytics?.revenue.currency ?? sampleDailyRevenue.currency;
   const voiceControl = useVoiceAgent({
@@ -1395,15 +1409,10 @@ function App() {
 
         <span className="toolbar-space" aria-hidden="true" />
 
-        {activeNav === 'home' ? (
-          <div className="home-toolbar-workspace" aria-label="Current workspace">
-            <span className="home-toolbar-business"><span>Example business</span><img src="/assets/home-chevron.svg" alt="" aria-hidden="true" /></span>
-            <span className="home-toolbar-avatar" aria-hidden="true">EB</span>
-          </div>
-        ) : activeNav !== 'catalog' && (
-          <div className="builder-actions">
-            <span className="mode-pill" aria-label={isLive ? 'Live data status' : 'Sample data status'}>{isLive ? 'Live data' : 'Sample data'}</span>
-            {activeNav === 'dashboard' && (
+        <div className="builder-actions">
+          {activeNav === 'dashboard' && (
+            <>
+              <span className="mode-pill" aria-label={isLive ? 'Live data status' : 'Sample data status'}>{isLive ? 'Live data' : 'Sample data'}</span>
               <button
                 className="button button-preview"
                 type="button"
@@ -1416,10 +1425,28 @@ function App() {
                 <span className="mode-switch-label">{dashboardMode === 'editing' ? 'Editing mode' : 'Preview mode'}</span>
                 <span className="mode-switch-track" aria-hidden="true"><span className="mode-switch-thumb" /></span>
               </button>
-            )}
-            <button className="button button-save" type="button" disabled title="Dashboard saving is not connected in this preview">Save unavailable</button>
+              <button className="button button-save" type="button" disabled title="Dashboard saving is not connected in this preview">Save unavailable</button>
+            </>
+          )}
+
+          <div
+            className="home-toolbar-workspace home-toolbar-workspace-clickable"
+            aria-label="Current merchant workspace account"
+            role="button"
+            tabIndex={0}
+            onClick={() => setAuthModalOpen(true)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setAuthModalOpen(true); }}
+            title="Klik untuk Masuk Akun / Ganti Merchant Demo"
+          >
+            <span className="home-toolbar-business">
+              <span>{currentMerchant?.name ?? 'Pilih Akun / Demo'}</span>
+              <img src="/assets/home-chevron.svg" alt="" aria-hidden="true" />
+            </span>
+            <span className="home-toolbar-avatar" aria-hidden="true">
+              {currentMerchant?.name ? currentMerchant.name.slice(0, 2).toUpperCase() : 'EL'}
+            </span>
           </div>
-        )}
+        </div>
       </header>
 
       <div className={`dashboard-shell${activeNav === 'home' ? ' dashboard-shell-home' : ''}`}>
@@ -1611,6 +1638,15 @@ function App() {
           )}
         </div>
       </div>
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        onLoginSuccess={(business) => {
+          setCurrentMerchant(business);
+          setRefreshCount((c) => c + 1);
+        }}
+        currentBusiness={currentMerchant ?? undefined}
+      />
     </div>
   );
 }

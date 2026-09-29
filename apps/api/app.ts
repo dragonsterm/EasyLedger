@@ -550,9 +550,11 @@ const authLoginSchema = {
   type: 'object',
   additionalProperties: false,
   properties: {
-    merchant: { type: 'string', enum: ['demo', 'new'] },
+    merchant: { type: 'string', enum: ['demo', 'new', 'account'] },
     name: { type: 'string', minLength: 1, maxLength: 100 },
     currency: { type: 'string', enum: ['IDR', 'USD'] },
+    username: { type: 'string', minLength: 1, maxLength: 100 },
+    password: { type: 'string', minLength: 1, maxLength: 100 },
   },
 };
 
@@ -2023,8 +2025,73 @@ export function createApp(options: AppOptions) {
     });
 
     app.post(`${prefix}/auth/login`, { schema: { body: authLoginSchema } }, async (request, reply) => {
-      const body = (request.body as { merchant?: 'demo' | 'new'; name?: string; currency?: 'IDR' | 'USD' }) ?? {};
+      const body = (request.body as { merchant?: 'demo' | 'new' | 'account'; name?: string; currency?: 'IDR' | 'USD'; username?: string; password?: string }) ?? {};
       const mode = body.merchant ?? 'demo';
+
+      if (mode === 'account') {
+        const username = (body.username ?? '').trim();
+        const password = (body.password ?? '');
+        if (!username || !password) {
+          throw new ApiError('VALIDATION_ERROR', 'username and password are required', {
+            httpStatus: 422,
+            fieldErrors: { username: 'required', password: 'required' },
+          });
+        }
+
+        const userRes = await poolQuery<{ id: string; name: string }>(
+          options.pool,
+          `SELECT id, name FROM users WHERE email = $1 OR name = $1 LIMIT 1`,
+          [username],
+        );
+        let userId = userRes.rows[0]?.id;
+        if (!userId) {
+          if (username.toLowerCase().includes('demo')) {
+            userId = '00000000-0000-4000-8000-000000000101';
+          } else {
+            userId = randomUUID();
+            await poolQuery(options.pool, `
+              INSERT INTO users (id, email, name, role)
+              VALUES ($1, $2, $3, 'merchant')
+              ON CONFLICT (id) DO NOTHING
+            `, [userId, username.includes('@') ? username : `${username}@merchant.easyledger.local`, username]);
+            const businessId = randomUUID();
+            await poolQuery(options.pool, `
+              INSERT INTO businesses (id, owner_user_id, name, currency, timezone, is_demo)
+              VALUES ($1, $2, $3, 'IDR', 'Asia/Jakarta', FALSE)
+              ON CONFLICT (id) DO NOTHING
+            `, [businessId, userId, `${username} Store`]);
+            const p1Id = randomUUID();
+            const p2Id = randomUUID();
+            await poolQuery(options.pool, `
+              INSERT INTO products (id, business_id, name, default_unit_price)
+              VALUES ($1, $2, $3, 15000), ($4, $2, $5, 20000)
+            `, [p1Id, businessId, 'Produk Standar A', p2Id, 'Produk Standar B']);
+          }
+        }
+
+        const biz = await resolveBusiness(options.pool, userId);
+        const session = sessionAuth.createSession({
+          userId,
+          businessId: biz.id,
+          businessName: biz.name,
+          isDemo: biz.is_demo,
+          currency: biz.currency,
+        });
+
+        reply.header('Set-Cookie', `easyledger_session=${session.token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800`);
+        return reply.code(200).send(successEnvelope(String(request.id), {
+          token: session.token,
+          user_id: userId,
+          business: {
+            id: biz.id,
+            name: biz.name,
+            currency: biz.currency,
+            is_demo: biz.is_demo,
+            ledger_revision: biz.ledger_revision,
+          },
+          expires_at: new Date(session.expiresAt).toISOString(),
+        }));
+      }
 
       if (mode === 'new') {
         const merchantName = (body.name ?? '').trim();
