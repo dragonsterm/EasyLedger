@@ -338,6 +338,8 @@
   - Check submission requirements against [`docs/18-Hackathon-Rules.md`](file:///C:/Project/EasyLedger/docs/18-Hackathon-Rules.md).
 - **Human Verification Checkpoint:**
   - Review video presentation duration (must be ≤ 5 minutes) and verify audio clarity.
+- **Verification Evidence:**
+  - **TASK-29-01 Auth & Session Foundation (2026-09-28):** Implemented production session authentication service (`apps/api/sessionAuth.ts`) and integrated into `apps/api/app.ts` and `apps/api/server.ts`. Implemented public health probes (`/health`, `/api/v1/health`), CORS headers and OPTIONS preflight handling for cross-origin browser requests, 1-click demo merchant login (`POST /api/v1/auth/login`), new merchant workspace provisioning with seeded catalog, session status verification (`GET /api/v1/auth/session`), and token revocation on logout (`POST /api/v1/auth/logout`). 5 automated test cases pass in `tests/api/auth.test.mjs`.
 
 ---
 
