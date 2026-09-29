@@ -1611,7 +1611,7 @@ function App() {
             <div className="editor-body inspector-closed">
               <main className="canvas" id="ledger">
                 <div className="canvas-inner">
-                  <LedgerJournal isLive={isLive} voiceControl={voiceControl} />
+                  <LedgerJournal isLive={isLive} voiceControl={voiceControl} currency={currency} />
                 </div>
               </main>
             </div>

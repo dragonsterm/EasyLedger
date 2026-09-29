@@ -94,8 +94,16 @@ const initialSalesData: LedgerSaleItem[] = [
   },
 ];
 
-function formatRupiah(value: number): string {
-  return new Intl.NumberFormat('id-ID', {
+function formatLedgerAmount(value: number, currency: 'IDR' | 'USD' = 'USD'): string {
+  if (currency === 'USD') {
+    const major = value > 1000 ? value / 1000 : value > 100 ? value / 100 : value;
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+    }).format(major);
+  }
+  return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'IDR',
     maximumFractionDigits: 0,
@@ -112,9 +120,10 @@ function formatHumanDate(dateStr: string): string {
 interface LedgerProps {
   isLive?: boolean;
   voiceControl: VoiceAgentController;
+  currency?: 'IDR' | 'USD';
 }
 
-export function LedgerJournal({ isLive = false, voiceControl }: LedgerProps) {
+export function LedgerJournal({ isLive = false, voiceControl, currency = 'USD' }: LedgerProps) {
   const [sales, setSales] = useState<LedgerSaleItem[]>(initialSalesData);
   const [searchQuery, setSearchQuery] = useState('');
   const [productFilter, setProductFilter] = useState('all');
@@ -311,8 +320,8 @@ export function LedgerJournal({ isLive = false, voiceControl }: LedgerProps) {
         </div>
         <div className="stat-card">
           <span className="stat-label">Recorded Revenue</span>
-          <strong className="stat-value">{formatRupiah(recordedRevenue)}</strong>
-          <span className="stat-note">Known-price revenue · IDR</span>
+          <strong className="stat-value">{formatLedgerAmount(recordedRevenue, currency)}</strong>
+          <span className="stat-note">Known-price revenue · {currency}</span>
         </div>
         <div className="stat-card stat-card-days">
           <span className="stat-label">Price Flags / Needs Review</span>
@@ -374,14 +383,14 @@ export function LedgerJournal({ isLive = false, voiceControl }: LedgerProps) {
                       {isUnknown ? (
                         <span className="badge badge-warning">Unknown</span>
                       ) : (
-                        formatRupiah(item.unitPrice!)
+                        formatLedgerAmount(item.unitPrice!, currency)
                       )}
                     </td>
                     <td className="cell-total text-right">
                       {lineTotal !== null ? (
-                        <strong>{formatRupiah(lineTotal)}</strong>
+                        <strong>{formatLedgerAmount(lineTotal, currency)}</strong>
                       ) : (
-                        <span className="text-muted">Rp 0 (Unrecorded)</span>
+                        <span className="text-muted">$0.00 (Unrecorded)</span>
                       )}
                     </td>
                     <td className="cell-version text-center">
