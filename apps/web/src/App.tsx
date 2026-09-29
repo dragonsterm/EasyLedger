@@ -1436,10 +1436,10 @@ function App() {
             tabIndex={0}
             onClick={() => setAuthModalOpen(true)}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setAuthModalOpen(true); }}
-            title="Klik untuk Masuk Akun / Ganti Merchant Demo"
+            title="Select merchant workspace or sign in"
           >
             <span className="home-toolbar-business">
-              <span>{currentMerchant?.name ?? 'Pilih Akun / Demo'}</span>
+              <span>{currentMerchant?.name ?? 'Sign In / Demo'}</span>
               <img src="/assets/home-chevron.svg" alt="" aria-hidden="true" />
             </span>
             <span className="home-toolbar-avatar" aria-hidden="true">
