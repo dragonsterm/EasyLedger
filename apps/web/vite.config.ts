@@ -2,6 +2,8 @@ import { defineConfig } from 'vite';
 import type { ProxyOptions } from 'vite';
 import react from '@vitejs/plugin-react';
 
+declare const process: { env: Record<string, string | undefined> };
+
 const apiProxy: ProxyOptions = {
   target: process.env.EASYLEDGER_API_PROXY_TARGET ?? 'http://127.0.0.1:3000',
   changeOrigin: true,
