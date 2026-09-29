@@ -176,10 +176,51 @@ export function removeDashboardLayoutItem(
 export function moveDashboardLayoutItem(
   layout: ReadonlyArray<DashboardLayoutItem>,
   id: string,
-  direction: 'left' | 'right',
+  direction: 'left' | 'right' | 'up' | 'down',
 ): DashboardLayoutItem[] {
   const selected = layout.find((item) => item.i === id);
   if (!selected) return layout.map((item) => ({ ...item }));
+
+  if (direction === 'up' || direction === 'down') {
+    // In multi-row / mobile stacked flow, find the distinct vertical row groups or target adjacent item in order
+    const sorted = [...layout].sort((a, b) => a.y - b.y || a.x - b.x);
+    const currentIndex = sorted.findIndex((item) => item.i === id);
+    if (currentIndex === -1) return layout.map((item) => ({ ...item }));
+
+    // For down: find first item with y > current.y (or adjacent next item in list)
+    // For up: find last item with y < current.y (or adjacent prev item in list)
+    let targetIndex = -1;
+    if (direction === 'down') {
+      const nextRowItem = sorted.slice(currentIndex + 1).find((item) => item.y > selected.y);
+      if (nextRowItem) {
+        targetIndex = sorted.indexOf(nextRowItem);
+      } else if (currentIndex < sorted.length - 1) {
+        targetIndex = currentIndex + 1;
+      }
+    } else {
+      const prevRowItem = [...sorted.slice(0, currentIndex)].reverse().find((item) => item.y < selected.y);
+      if (prevRowItem) {
+        targetIndex = sorted.indexOf(prevRowItem);
+      } else if (currentIndex > 0) {
+        targetIndex = currentIndex - 1;
+      }
+    }
+
+    if (targetIndex < 0 || targetIndex >= sorted.length) return layout.map((item) => ({ ...item }));
+
+    const target = sorted[targetIndex];
+    // Swap vertical row positions
+    const targetY = target.y === selected.y
+      ? (direction === 'down' ? selected.y + selected.h : Math.max(0, selected.y - target.h))
+      : target.y;
+
+    return layout.map((item) => {
+      if (item.i === selected.i) return { ...item, y: targetY };
+      if (item.i === target.i) return { ...item, y: selected.y };
+      return { ...item };
+    });
+  }
+
   const candidates = layout.filter((item) => item.i !== id
     && item.y === selected.y
     && item.w === selected.w
@@ -202,12 +243,78 @@ export function moveDashboardLayoutItem(
 export function canMoveDashboardLayoutItem(
   layout: ReadonlyArray<DashboardLayoutItem>,
   id: string,
-  direction: 'left' | 'right',
+  direction: 'left' | 'right' | 'up' | 'down',
 ): boolean {
   const moved = moveDashboardLayoutItem(layout, id, direction);
   const selected = layout.find((item) => item.i === id);
   const updated = moved.find((item) => item.i === id);
-  return selected !== undefined && updated !== undefined && selected.x !== updated.x;
+  if (!selected || !updated) return false;
+  return direction === 'left' || direction === 'right'
+    ? selected.x !== updated.x
+    : selected.y !== updated.y;
+}
+
+export type LayoutSizePreset = 'compact' | 'standard' | 'expanded';
+
+export function applyLayoutSizePreset(
+  layout: ReadonlyArray<DashboardLayoutItem>,
+  id: string,
+  preset: LayoutSizePreset,
+  cols = 12,
+): DashboardLayoutItem[] {
+  const selected = layout.find((item) => item.i === id);
+  if (!selected) return layout.map((item) => ({ ...item }));
+
+  let targetW: number;
+  let targetH: number;
+
+  const isChart = (selected.minW ?? 0) >= 5 || selected.h >= 8;
+
+  if (isChart) {
+    switch (preset) {
+      case 'compact':
+        targetW = Math.max(5, Math.min(6, cols));
+        targetH = 8;
+        break;
+      case 'expanded':
+        targetW = cols;
+        targetH = 14;
+        break;
+      case 'standard':
+      default:
+        targetW = Math.min(cols, Math.max(6, Math.floor(cols * 0.75)));
+        targetH = 10;
+        break;
+    }
+  } else {
+    // KPI / Stat card
+    switch (preset) {
+      case 'compact':
+        targetW = Math.max(2, Math.floor(cols / 4));
+        targetH = 4;
+        break;
+      case 'expanded':
+        targetW = Math.min(cols, Math.floor(cols / 2));
+        targetH = 6;
+        break;
+      case 'standard':
+      default:
+        targetW = Math.max(3, Math.floor(cols / 3));
+        targetH = 5;
+        break;
+    }
+  }
+
+  return layout.map((item) => {
+    if (item.i === id) {
+      return {
+        ...item,
+        w: targetW,
+        h: targetH,
+      };
+    }
+    return { ...item };
+  });
 }
 
 export function updateDashboardLayoutForWidgetKind(
