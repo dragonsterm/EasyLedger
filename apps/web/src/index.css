@@ -217,11 +217,14 @@ dd {
 
 .builder-actions {
   display: flex;
-  width: 388px;
-  height: 36px;
-  flex: 0 0 388px;
+  width: auto;
+  min-width: 0;
+  height: 38px;
+  flex: 0 0 auto;
   align-items: center;
+  justify-content: flex-end;
   gap: 12px;
+  margin-left: auto;
 }
 
 .mode-pill,
@@ -2535,8 +2538,8 @@ dd {
   }
 
   .builder-actions {
-    width: 330px;
-    flex-basis: 330px;
+    width: auto;
+    flex: 0 0 auto;
     gap: 6px;
   }
 
@@ -3619,7 +3622,7 @@ body:has(.app-shell-home) {
   height: 38px;
   flex: 0 0 auto;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
   color: var(--ink);
   font-size: 11px;
   font-weight: 500;
@@ -3873,11 +3876,11 @@ body:has(.app-shell-home) {
 .home-heading h1 {
   max-width: 100%;
   margin-top: 4px;
-  overflow: hidden;
   color: var(--ink);
   font-size: 30px;
   font-weight: 500;
-  line-height: 38px;
+  line-height: 40px;
+  padding-bottom: 4px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
