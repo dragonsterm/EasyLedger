@@ -242,3 +242,47 @@ test('TASK-29-01 auth: create new simulated merchant creates isolated tenant and
   });
   assert.equal(salesRes.statusCode, 200);
 });
+
+test('TASK-29-01 auth: login with username and password authenticates merchant and issues session', async (t) => {
+  const pool = createMockAuthPool();
+  const sessionAuth = new SessionAuthService();
+  const app = createApp({ pool, sessionAuth });
+  t.after(() => app.close());
+
+  // Missing username or password returns 422
+  const failRes = await app.inject({
+    method: 'POST',
+    url: '/api/v1/auth/login',
+    payload: {
+      merchant: 'account',
+      username: '',
+      password: '',
+    },
+  });
+  assert.equal(failRes.statusCode, 422);
+
+  // Valid username and password
+  const res = await app.inject({
+    method: 'POST',
+    url: '/api/v1/auth/login',
+    payload: {
+      merchant: 'account',
+      username: 'budi_merchant',
+      password: 'secretPassword123',
+    },
+  });
+  assert.equal(res.statusCode, 200);
+  const body = res.json();
+  assert.equal(body.status, 'ok');
+  assert.ok(body.data.token.startsWith('eld_'));
+  assert.equal(body.data.business.name, 'budi_merchant Store');
+
+  // Authenticated sales access
+  const salesRes = await app.inject({
+    method: 'GET',
+    url: '/api/v1/sales',
+    headers: { authorization: `Bearer ${body.data.token}` },
+  });
+  assert.equal(salesRes.statusCode, 200);
+});
+
