@@ -1,4 +1,5 @@
-import { useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import { apiFetch } from './api';
 
 type WorkspaceSection = 'all-folders' | 'recent' | 'starred' | 'trash' | 'settings';
 type WorkspaceSort = 'modified' | 'name' | 'count';
@@ -45,73 +46,12 @@ const previewAssets = [
   '/assets/home-chart-overview-d.svg',
 ];
 
-function localDayOffset(daysAgo: number, hour = 12, minute = 0): number {
-  const date = new Date();
-  date.setHours(hour, minute, 0, 0);
-  date.setDate(date.getDate() - daysAgo);
-  return date.getTime();
-}
-
 function countLabel(count: number, singular: string): string {
   return `${count} ${singular}${count === 1 ? '' : 's'}`;
 }
 
-function createSampleWorkspace(): WorkspaceState {
-  const folders: WorkspaceFolder[] = [
-    { id: 'folder-sales-reports', name: 'Sales reports', modifiedAt: localDayOffset(0, 9, 42), modifiedLabel: 'Updated today', deletedAt: null },
-    { id: 'folder-product-performance', name: 'Product performance', modifiedAt: localDayOffset(1, 16, 20), modifiedLabel: 'Updated yesterday', deletedAt: null },
-    { id: 'folder-monthly-reviews', name: 'Monthly reviews', modifiedAt: localDayOffset(2), modifiedLabel: 'Updated 2 days ago', deletedAt: null },
-    { id: 'folder-store-operations', name: 'Store operations', modifiedAt: localDayOffset(3), modifiedLabel: 'Updated 3 days ago', deletedAt: null },
-    { id: 'folder-quarterly-planning', name: 'Quarterly planning', modifiedAt: localDayOffset(5), modifiedLabel: 'Updated 5 days ago', deletedAt: null },
-    { id: 'folder-2025-archive', name: '2025 archive', modifiedAt: localDayOffset(15), modifiedLabel: 'Updated 12 Sep', deletedAt: null },
-  ];
-
-  const dashboard = (
-    id: string,
-    name: string,
-    folderId: string,
-    daysAgo: number,
-    modifiedLabel: string,
-    preview: PreviewKind,
-    lastOpenedDaysAgo: number | null = null,
-    hour = 10,
-    minute = 0,
-  ): WorkspaceDashboard => ({
-    id,
-    name,
-    folderId,
-    modifiedAt: localDayOffset(daysAgo, hour, minute),
-    modifiedLabel,
-    lastOpenedAt: lastOpenedDaysAgo === null ? 0 : localDayOffset(lastOpenedDaysAgo, hour, minute),
-    preview,
-    starred: false,
-    deletedAt: null,
-  });
-
-  const dashboards: WorkspaceDashboard[] = [
-    dashboard('dashboard-weekly-sales', 'Weekly sales overview', 'folder-sales-reports', 0, 'Edited today at 09:42', 'line', 0, 9, 42),
-    dashboard('dashboard-daily-sales', 'Daily sales tracker', 'folder-sales-reports', 1, 'Edited yesterday at 16:20', 'bar', null, 16, 20),
-    dashboard('dashboard-revenue-product', 'Revenue by product', 'folder-sales-reports', 3, 'Edited 24 Sep at 11:05', 'line', null, 11, 5),
-    dashboard('dashboard-weekly-comparison', 'Week-to-week comparison', 'folder-sales-reports', 5, 'Edited 22 Sep at 14:30', 'comparison', null, 14, 30),
-    dashboard('dashboard-best-selling', 'Best-selling products', 'folder-product-performance', 1, 'Edited yesterday', 'bar', 1),
-    dashboard('dashboard-product-growth', 'Product growth', 'folder-product-performance', 2, 'Edited 2 days ago', 'line'),
-    dashboard('dashboard-price-review', 'Price review', 'folder-product-performance', 2, 'Edited 2 days ago', 'comparison'),
-    dashboard('dashboard-september-review', 'September review', 'folder-monthly-reviews', 1, 'Edited yesterday', 'line', 1),
-    dashboard('dashboard-august-comparison', 'August comparison', 'folder-monthly-reviews', 2, 'Edited 2 days ago', 'comparison'),
-    dashboard('dashboard-monthly-revenue', 'Monthly revenue', 'folder-monthly-reviews', 4, 'Edited 4 days ago', 'bar'),
-    dashboard('dashboard-daily-operations', 'Daily operations', 'folder-store-operations', 3, 'Edited 3 days ago', 'line'),
-    dashboard('dashboard-store-summary', 'Store summary', 'folder-store-operations', 4, 'Edited 4 days ago', 'bar'),
-    dashboard('dashboard-q4-targets', 'Q4 targets', 'folder-quarterly-planning', 5, 'Edited 5 days ago', 'comparison'),
-    dashboard('dashboard-quarterly-sales', 'Quarterly sales', 'folder-quarterly-planning', 5, 'Edited 5 days ago', 'line'),
-    dashboard('dashboard-annual-summary', 'Annual summary', 'folder-2025-archive', 15, 'Edited 12 Sep', 'line'),
-    dashboard('dashboard-archive-products', 'Top products', 'folder-2025-archive', 15, 'Edited 12 Sep', 'bar'),
-    dashboard('dashboard-sales-month', 'Sales by month', 'folder-2025-archive', 15, 'Edited 12 Sep', 'comparison'),
-    dashboard('dashboard-archive-revenue', 'Revenue comparison', 'folder-2025-archive', 15, 'Edited 12 Sep', 'line'),
-    dashboard('dashboard-archive-store', 'Store performance', 'folder-2025-archive', 15, 'Edited 12 Sep', 'bar'),
-    dashboard('dashboard-product-history', 'Product history', 'folder-2025-archive', 15, 'Edited 12 Sep', 'comparison'),
-  ];
-
-  return { version: 1, folders, dashboards };
+function createEmptyWorkspace(): WorkspaceState {
+  return { version: 1, folders: [], dashboards: [] };
 }
 
 function isWorkspaceState(value: unknown): value is WorkspaceState {
@@ -138,15 +78,15 @@ function isWorkspaceState(value: unknown): value is WorkspaceState {
       && (typeof dashboard.deletedAt === 'number' || dashboard.deletedAt === null));
 }
 
-function loadWorkspace(): WorkspaceState {
-  if (typeof window === 'undefined') return createSampleWorkspace();
+function loadWorkspace(storageKey: string): WorkspaceState {
+  if (typeof window === 'undefined') return createEmptyWorkspace();
   try {
-    const saved = window.localStorage.getItem(STORAGE_KEY);
-    if (!saved) return createSampleWorkspace();
+    const saved = window.localStorage.getItem(storageKey);
+    if (!saved) return createEmptyWorkspace();
     const parsed: unknown = JSON.parse(saved);
-    return isWorkspaceState(parsed) ? parsed : createSampleWorkspace();
+    return isWorkspaceState(parsed) ? parsed : createEmptyWorkspace();
   } catch {
-    return createSampleWorkspace();
+    return createEmptyWorkspace();
   }
 }
 
@@ -315,14 +255,22 @@ function DashboardCard({
 
 export default function HomeWorkspace({
   workspaceLabel,
+  workspaceId,
   currency,
   onOpenDashboard,
 }: {
   workspaceLabel: string;
+  workspaceId: string;
   currency: string;
   onOpenDashboard: (dashboard: Pick<WorkspaceDashboard, 'id' | 'name'>, created: boolean) => void;
 }) {
-  const [workspace, setWorkspace] = useState(loadWorkspace);
+  const storageKey = `${STORAGE_KEY}:${workspaceId}`;
+  const [workspace, setWorkspace] = useState(() => loadWorkspace(storageKey));
+  const [serverDashboardIds, setServerDashboardIds] = useState<Set<string> | null>(null);
+  const [dashboardLoadError, setDashboardLoadError] = useState<string | null>(null);
+  const [dashboardMutationError, setDashboardMutationError] = useState<string | null>(null);
+  const [dashboardListRevision, setDashboardListRevision] = useState(0);
+  const [creatingDashboard, setCreatingDashboard] = useState(false);
   const [section, setSection] = useState<WorkspaceSection>('all-folders');
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -334,13 +282,72 @@ export default function HomeWorkspace({
   const [dialogError, setDialogError] = useState('');
   const [storageError, setStorageError] = useState(false);
 
+  useEffect(() => {
+    let cancelled = false;
+    void apiFetch('/api/v1/dashboards').then(async (response) => {
+      const payload = await response.json().catch(() => null) as { data?: { dashboards?: Array<{ id: string; name: string; updated_at?: string; widgets?: Array<{ format?: string; type?: string }> }> }; message?: string } | null;
+      if (!response.ok || !Array.isArray(payload?.data?.dashboards)) {
+        throw new Error(payload?.message ?? `Saved dashboards could not be loaded (${response.status}).`);
+      }
+      if (cancelled) return;
+      const records = payload.data.dashboards;
+      const ids = new Set(records.map((item) => item.id));
+      setWorkspace((current) => {
+        let folders = current.folders;
+        const defaultFolder = folders.find((folder) => folder.deletedAt === null);
+        if (records.length > 0 && !defaultFolder) {
+          const now = Date.now();
+          folders = [{ id: createId('folder'), name: 'My dashboards', modifiedAt: now, modifiedLabel: 'Updated just now', deletedAt: null }, ...folders];
+        }
+        const folderId = folders.find((folder) => folder.deletedAt === null)?.id ?? '';
+        const dashboards = records.map((record) => {
+          const previous = current.dashboards.find((item) => item.id === record.id);
+          const folderExists = folders.some((folder) => folder.id === previous?.folderId && folder.deletedAt === null);
+          const updatedAt = record.updated_at ? Date.parse(record.updated_at) : Date.now();
+          const preview: PreviewKind = record.widgets?.some((item) => item.type === 'bar')
+            ? 'bar'
+            : record.widgets?.some((item) => item.format === 'comparison') ? 'comparison' : 'line';
+          return {
+            id: record.id,
+            name: record.name,
+            folderId: folderExists ? previous!.folderId : folderId,
+            modifiedAt: Number.isFinite(updatedAt) ? updatedAt : Date.now(),
+            modifiedLabel: previous?.modifiedLabel ?? 'Saved to this business',
+            lastOpenedAt: previous?.lastOpenedAt ?? 0,
+            preview: previous?.preview ?? preview,
+            starred: previous?.starred ?? false,
+            deletedAt: previous?.deletedAt ?? null,
+          };
+        });
+        const next = { ...current, folders, dashboards };
+        try {
+          window.localStorage.setItem(storageKey, JSON.stringify(next));
+          setStorageError(false);
+        } catch {
+          setStorageError(true);
+        }
+        return next;
+      });
+      setServerDashboardIds(ids);
+      setDashboardLoadError(null);
+    }).catch((error: unknown) => {
+      if (cancelled) return;
+      setServerDashboardIds(new Set());
+      setDashboardLoadError(error instanceof Error ? error.message : 'Saved dashboards could not be loaded.');
+    });
+    return () => { cancelled = true; };
+  }, [dashboardListRevision, storageKey]);
+
   const activeFolders = useMemo(() => workspace.folders.filter((folder) => folder.deletedAt === null), [workspace.folders]);
   const activeFolder = selectedFolderId
     ? activeFolders.find((folder) => folder.id === selectedFolderId) ?? null
     : null;
-  const allDashboards = useMemo(() => workspace.dashboards.filter((dashboard) => dashboard.deletedAt === null), [workspace.dashboards]);
-  const deletedDashboards = useMemo(() => workspace.dashboards.filter((dashboard) => dashboard.deletedAt !== null
-    && workspace.folders.some((folder) => folder.id === dashboard.folderId && folder.deletedAt === null)), [workspace.dashboards, workspace.folders]);
+  const serverWorkspace: WorkspaceState = { ...workspace, dashboards: serverDashboardIds === null
+    ? []
+    : workspace.dashboards.filter((dashboard) => serverDashboardIds.has(dashboard.id)) };
+  const allDashboards = useMemo(() => serverWorkspace.dashboards.filter((dashboard) => dashboard.deletedAt === null), [serverWorkspace.dashboards]);
+  const deletedDashboards = useMemo(() => serverWorkspace.dashboards.filter((dashboard) => dashboard.deletedAt !== null
+    && workspace.folders.some((folder) => folder.id === dashboard.folderId && folder.deletedAt === null)), [serverWorkspace.dashboards, workspace.folders]);
   const deletedFolders = useMemo(() => workspace.folders.filter((folder) => folder.deletedAt !== null), [workspace.folders]);
   const activeSection = activeFolder ? 'folder' : section;
   const query = search.trim().toLocaleLowerCase();
@@ -348,7 +355,7 @@ export default function HomeWorkspace({
   const commitWorkspace = (next: WorkspaceState) => {
     setWorkspace(next);
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      window.localStorage.setItem(storageKey, JSON.stringify(next));
       setStorageError(false);
     } catch {
       setStorageError(true);
@@ -402,7 +409,7 @@ export default function HomeWorkspace({
     onOpenDashboard({ id: dashboard.id, name: dashboard.name }, created);
   };
 
-  const submitDialog = (event: FormEvent<HTMLFormElement>) => {
+  const submitDialog = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const name = dialogName.trim().slice(0, 64);
     if (!dialog || !name) {
@@ -430,39 +437,68 @@ export default function HomeWorkspace({
     }
 
     if (dialog.type === 'create-dashboard') {
-      if (!activeFolders.some((folder) => folder.id === dialogFolderId)) {
+      const selectedFolder = activeFolders.find((folder) => folder.id === dialogFolderId);
+      const createDefaultFolder = !selectedFolder && activeFolders.length === 0 && dialogFolderId === '';
+      if (!selectedFolder && !createDefaultFolder) {
         setDialogError('Choose a folder for this dashboard.');
         return;
       }
+      const targetFolder = selectedFolder ?? {
+        id: createId('folder'),
+        name: 'My dashboards',
+        modifiedAt: Date.now(),
+        modifiedLabel: 'Updated just now',
+        deletedAt: null,
+      };
       const conflict = workspace.dashboards.some((dashboard) => dashboard.deletedAt === null
-        && dashboard.folderId === dialogFolderId
+        && dashboard.folderId === targetFolder.id
         && dashboard.name.toLocaleLowerCase() === name.toLocaleLowerCase());
       if (conflict) {
         setDialogError('A dashboard with this name already exists in that folder.');
         return;
       }
-      const now = Date.now();
-      const dashboard: WorkspaceDashboard = {
-        id: createId('dashboard'),
-        name,
-        folderId: dialogFolderId,
-        modifiedAt: now,
-        modifiedLabel: 'Edited just now',
-        lastOpenedAt: now,
-        preview: 'line',
-        starred: false,
-        deletedAt: null,
-      };
-      const next: WorkspaceState = {
-        ...workspace,
-        folders: workspace.folders.map((folder) => folder.id === dialogFolderId
-          ? { ...folder, modifiedAt: now, modifiedLabel: 'Updated just now' }
-          : folder),
-        dashboards: [dashboard, ...workspace.dashboards],
-      };
-      commitWorkspace(next);
-      closeDialog();
-      onOpenDashboard({ id: dashboard.id, name: dashboard.name }, true);
+      setCreatingDashboard(true);
+      try {
+        const response = await apiFetch('/api/v1/dashboards', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ name, widgets: [], layout: [], schema_version: 1 }),
+        });
+        const payload = await response.json().catch(() => null) as { data?: { id?: string; name?: string }; message?: string } | null;
+        if (!response.ok || !payload?.data?.id) {
+          throw new Error(payload?.message ?? `Dashboard could not be saved (${response.status}).`);
+        }
+        const now = Date.now();
+        const dashboard: WorkspaceDashboard = {
+          id: payload.data.id,
+          name: payload.data.name ?? name,
+          folderId: targetFolder.id,
+          modifiedAt: now,
+          modifiedLabel: 'Saved just now',
+          lastOpenedAt: now,
+          preview: 'line',
+          starred: false,
+          deletedAt: null,
+        };
+        const next: WorkspaceState = {
+          ...workspace,
+          folders: createDefaultFolder
+            ? [targetFolder, ...workspace.folders]
+            : workspace.folders.map((folder) => folder.id === targetFolder.id
+              ? { ...folder, modifiedAt: now, modifiedLabel: 'Updated just now' }
+              : folder),
+          dashboards: [dashboard, ...workspace.dashboards.filter((item) => item.id !== dashboard.id)],
+        };
+        setServerDashboardIds((current) => new Set([...(current ?? []), dashboard.id]));
+        setDashboardLoadError(null);
+        commitWorkspace(next);
+        closeDialog();
+        onOpenDashboard({ id: dashboard.id, name: dashboard.name }, true);
+      } catch (error) {
+        setDialogError(error instanceof Error ? error.message : 'Dashboard could not be saved.');
+      } finally {
+        setCreatingDashboard(false);
+      }
       return;
     }
 
@@ -476,6 +512,35 @@ export default function HomeWorkspace({
       return;
     }
     const now = Date.now();
+    if (dialog.type === 'rename-dashboard') {
+      if (!existing) {
+        setDialogError('This dashboard is no longer available.');
+        return;
+      }
+      try {
+        const currentResponse = await apiFetch(`/api/v1/dashboards/${existing.id}`);
+        const currentPayload = await currentResponse.json().catch(() => null) as { data?: { version?: string; widgets?: unknown[]; layout?: unknown[] }; message?: string } | null;
+        if (!currentResponse.ok || !currentPayload?.data?.version) {
+          throw new Error(currentPayload?.message ?? `Dashboard could not be loaded (${currentResponse.status}).`);
+        }
+        const updateResponse = await apiFetch(`/api/v1/dashboards/${existing.id}`, {
+          method: 'PUT',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            name,
+            expected_version: currentPayload.data.version,
+            widgets: currentPayload.data.widgets ?? [],
+            layout: currentPayload.data.layout ?? [],
+            schema_version: 1,
+          }),
+        });
+        const updatePayload = await updateResponse.json().catch(() => null) as { message?: string } | null;
+        if (!updateResponse.ok) throw new Error(updatePayload?.message ?? `Dashboard name could not be saved (${updateResponse.status}).`);
+      } catch (error) {
+        setDialogError(error instanceof Error ? error.message : 'Dashboard name could not be saved.');
+        return;
+      }
+    }
     commitWorkspace({
       ...workspace,
       dashboards: workspace.dashboards.map((dashboard) => dashboard.id === dialog.id
@@ -522,9 +587,19 @@ export default function HomeWorkspace({
 
   const restoreDashboard = (dashboardId: string) => updateDashboard(dashboardId, { deletedAt: null });
 
-  const permanentlyDeleteDashboard = (dashboardId: string) => {
+  const permanentlyDeleteDashboard = async (dashboardId: string) => {
     const dashboard = workspace.dashboards.find((item) => item.id === dashboardId);
     if (!dashboard || !window.confirm(`Permanently delete “${dashboard.name}”?`)) return;
+    try {
+      const response = await apiFetch(`/api/v1/dashboards/${dashboardId}`, { method: 'DELETE' });
+      const payload = await response.json().catch(() => null) as { message?: string } | null;
+      if (!response.ok) throw new Error(payload?.message ?? `Dashboard could not be deleted (${response.status}).`);
+      setServerDashboardIds((current) => new Set([...(current ?? [])].filter((id) => id !== dashboardId)));
+      setDashboardMutationError(null);
+    } catch (error) {
+      setDashboardMutationError(error instanceof Error ? error.message : 'Dashboard could not be deleted.');
+      return;
+    }
     commitWorkspace({ ...workspace, dashboards: workspace.dashboards.filter((item) => item.id !== dashboardId) });
   };
 
@@ -558,9 +633,26 @@ export default function HomeWorkspace({
     if (folder) setSelectedFolderId(null);
   };
 
-  const permanentlyDeleteFolder = (folderId: string) => {
+  const permanentlyDeleteFolder = async (folderId: string) => {
     const folder = workspace.folders.find((item) => item.id === folderId);
     if (!folder || !window.confirm(`Permanently delete “${folder.name}” and its dashboards?`)) return;
+    const dashboards = workspace.dashboards.filter((dashboard) => dashboard.folderId === folderId);
+    try {
+      const results = await Promise.all(dashboards.map(async (dashboard) => {
+        const response = await apiFetch(`/api/v1/dashboards/${dashboard.id}`, { method: 'DELETE' });
+        if (!response.ok) {
+          const payload = await response.json().catch(() => null) as { message?: string } | null;
+          throw new Error(payload?.message ?? `Dashboard could not be deleted (${response.status}).`);
+        }
+        return dashboard.id;
+      }));
+      setServerDashboardIds((current) => new Set([...(current ?? [])].filter((id) => !results.includes(id))));
+      setDashboardMutationError(null);
+    } catch (error) {
+      setDashboardMutationError(error instanceof Error ? error.message : 'Dashboards in this folder could not be deleted.');
+      setDashboardListRevision((revision) => revision + 1);
+      return;
+    }
     commitWorkspace({
       ...workspace,
       folders: workspace.folders.filter((item) => item.id !== folderId),
@@ -572,17 +664,17 @@ export default function HomeWorkspace({
     const queryText = search.trim().toLocaleLowerCase();
     const source = activeSection === 'trash' ? deletedFolders : activeFolders;
     const result = source.filter((folder) => {
-      const dashboards = folderDashboards(workspace, folder.id, activeSection === 'trash');
+      const dashboards = folderDashboards(serverWorkspace, folder.id, activeSection === 'trash');
       return !queryText || folder.name.toLocaleLowerCase().includes(queryText)
         || dashboards.some((dashboard) => dashboard.name.toLocaleLowerCase().includes(queryText));
     });
     return [...result].sort((left, right) => {
       if (sort === 'name') return left.name.localeCompare(right.name);
-      if (sort === 'count') return folderDashboards(workspace, right.id, activeSection === 'trash').length
-        - folderDashboards(workspace, left.id, activeSection === 'trash').length;
+      if (sort === 'count') return folderDashboards(serverWorkspace, right.id, activeSection === 'trash').length
+        - folderDashboards(serverWorkspace, left.id, activeSection === 'trash').length;
       return right.modifiedAt - left.modifiedAt;
     });
-  }, [activeFolders, activeSection, deletedFolders, search, sort, workspace]);
+  }, [activeFolders, activeSection, deletedFolders, search, sort, serverWorkspace]);
 
   const visibleDashboards = useMemo(() => {
     let result = activeSection === 'trash'
@@ -592,7 +684,7 @@ export default function HomeWorkspace({
         : activeSection === 'recent'
           ? [...allDashboards].sort((left, right) => right.lastOpenedAt - left.lastOpenedAt).slice(0, 20)
           : activeSection === 'folder' && activeFolder
-            ? folderDashboards(workspace, activeFolder.id)
+            ? folderDashboards(serverWorkspace, activeFolder.id)
             : [];
     if (query) result = result.filter((dashboard) => dashboard.name.toLocaleLowerCase().includes(query));
     return [...result].sort((left, right) => {
@@ -600,7 +692,7 @@ export default function HomeWorkspace({
       if (sort === 'name') return left.name.localeCompare(right.name);
       return right.modifiedAt - left.modifiedAt;
     });
-  }, [activeFolder, activeSection, allDashboards, deletedDashboards, query, sort, workspace]);
+  }, [activeFolder, activeSection, allDashboards, deletedDashboards, query, sort, serverWorkspace]);
 
   const sectionTitle = activeFolder?.name
     ?? (activeSection === 'recent' ? 'Recently opened'
@@ -623,10 +715,6 @@ export default function HomeWorkspace({
 
   const handleCreateFolder = () => showDialog({ type: 'create-folder' });
   const handleCreateDashboard = () => {
-    if (activeFolders.length === 0) {
-      handleCreateFolder();
-      return;
-    }
     createDashboard();
   };
 
@@ -734,6 +822,10 @@ export default function HomeWorkspace({
           )}
         </header>
 
+        {serverDashboardIds === null && <p className="home-storage-error" role="status">Loading saved dashboards from this business…</p>}
+        {dashboardLoadError && <p className="home-storage-error" role="alert">{dashboardLoadError} <button className="button button-outline" type="button" onClick={() => setDashboardListRevision((revision) => revision + 1)}>Retry</button></p>}
+        {dashboardMutationError && <p className="home-storage-error" role="alert">{dashboardMutationError}</p>}
+
         <section className="home-browse-section" aria-labelledby="home-browse-title">
           <div className="home-browse-toolbar">
             <div className="home-browse-title-wrap">
@@ -781,8 +873,8 @@ export default function HomeWorkspace({
           {activeSection === 'settings' ? (
             <section className="home-settings-card" aria-labelledby="workspace-storage-title">
               <h2 id="workspace-storage-title">Workspace storage</h2>
-              <p>Home folders and dashboard names are stored in this browser for this preview. Account sync and saved dashboard layouts are not connected here.</p>
-              <span className="home-local-status">Local workspace · {currency}</span>
+              <p>Dashboard layouts are saved to this business. Folder organization, starred status, and Home display preferences are stored in this browser.</p>
+              <span className="home-local-status">Browser folders · {currency}</span>
               {storageError && <p className="home-storage-error" role="alert">This browser could not save the latest workspace changes.</p>}
             </section>
           ) : isFolderListing || isTrash ? (
@@ -793,7 +885,7 @@ export default function HomeWorkspace({
                     <FolderCard
                       key={folder.id}
                       folder={folder}
-                      dashboards={folderDashboards(workspace, folder.id)}
+                      dashboards={folderDashboards(serverWorkspace, folder.id)}
                       view={view}
                       onOpen={() => openFolder(folder.id)}
                       onRename={() => editDialogForName(folder.id, 'folder')}
@@ -809,7 +901,7 @@ export default function HomeWorkspace({
                 <>
                   {deletedFolders.length > 0 && <div className="home-trash-folders">
                     {deletedFolders.map((folder) => (
-                      <FolderCard key={folder.id} folder={folder} dashboards={folderDashboards(workspace, folder.id, true)} view={view} onOpen={() => undefined} onRename={() => undefined} onDelete={() => undefined} onRestore={() => restoreFolder(folder.id)} onPermanentlyDelete={() => permanentlyDeleteFolder(folder.id)} inTrash />
+                      <FolderCard key={folder.id} folder={folder} dashboards={folderDashboards(serverWorkspace, folder.id, true)} view={view} onOpen={() => undefined} onRename={() => undefined} onDelete={() => undefined} onRestore={() => restoreFolder(folder.id)} onPermanentlyDelete={() => permanentlyDeleteFolder(folder.id)} inTrash />
                     ))}
                   </div>}
                   {renderDashboardCards(visibleDashboards)}
@@ -857,15 +949,16 @@ export default function HomeWorkspace({
               {dialog.type === 'create-dashboard' && (
                 <label className="home-dialog-field">
                   <span>Folder</span>
-                  <select value={dialogFolderId} onChange={(event) => setDialogFolderId(event.target.value)} required>
+                  <select value={dialogFolderId} onChange={(event) => setDialogFolderId(event.target.value)} required={activeFolders.length > 0} disabled={activeFolders.length === 0}>
+                    {activeFolders.length === 0 && <option value="">My dashboards (created on save)</option>}
                     {activeFolders.map((folder) => <option value={folder.id} key={folder.id}>{folder.name}</option>)}
                   </select>
                 </label>
               )}
               {dialogError && <p className="home-dialog-error" role="alert">{dialogError}</p>}
               <div className="home-dialog-actions">
-                <button className="home-button home-button-secondary" type="button" onClick={closeDialog}>Cancel</button>
-                <button className="home-button home-button-primary" type="submit">{submitLabel}</button>
+                <button className="home-button home-button-secondary" type="button" onClick={closeDialog} disabled={creatingDashboard}>Cancel</button>
+                <button className="home-button home-button-primary" type="submit" disabled={creatingDashboard}>{creatingDashboard ? 'Saving…' : submitLabel}</button>
               </div>
             </form>
           </section>

@@ -2,287 +2,121 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { createApp } from '../../apps/api/app.ts';
-import { SessionAuthService } from '../../apps/api/sessionAuth.ts';
 
-const demoUserId = '00000000-0000-4000-8000-000000000101';
-const demoBusinessId = '00000000-0000-4000-8000-000000000001';
-
-function createMockAuthPool() {
-  const businesses = [
-    {
-      id: demoBusinessId,
-      owner_user_id: demoUserId,
-      name: '[DEMO] EasyLedger Juice Stall',
-      currency: 'IDR',
-      timezone: 'Asia/Jakarta',
-      is_demo: true,
-      ledger_revision: '4',
-    },
-  ];
-
-  const products = [
-    {
-      id: '00000000-0000-4000-8000-000000000011',
-      business_id: demoBusinessId,
-      name: 'Orange Juice',
-      default_unit_price: 15000,
-      active: true,
-    },
-  ];
-
-  const sales = [
-    {
-      id: '00000000-0000-4000-8000-000000000021',
-      business_id: demoBusinessId,
-      product_id: '00000000-0000-4000-8000-000000000011',
-      quantity: 5,
-      unit_price: 15000,
-      sale_date: '2026-09-28',
-      version: 1,
-      voided: false,
-    },
-  ];
-
-  const executedQueries = [];
-
+function mockPool(query = async () => ({ rows: [], rowCount: 0 })) {
   return {
-    businesses,
-    products,
-    sales,
-    executedQueries,
-    async query(text, values = []) {
-      const sql = String(text);
-      executedQueries.push({ sql, values });
-
-      if (sql.includes('FROM businesses') && sql.includes('WHERE is_demo = TRUE')) {
-        const found = businesses.filter((b) => b.is_demo);
-        return { rows: found, rowCount: found.length };
-      }
-
-      if (sql.includes('FROM businesses') && sql.includes('WHERE owner_user_id = $1')) {
-        const found = businesses.filter((b) => b.owner_user_id === values[0]);
-        return { rows: found, rowCount: found.length };
-      }
-
-      if (sql.includes('FROM businesses') && sql.includes('WHERE id = $1')) {
-        const found = businesses.filter((b) => b.id === values[0]);
-        return { rows: found, rowCount: found.length };
-      }
-
-      if (sql.includes('INSERT INTO businesses')) {
-        const [id, owner_user_id, name, currency, timezone, is_demo] = values;
-        const newBiz = { id, owner_user_id, name, currency, timezone, is_demo, ledger_revision: '0' };
-        businesses.push(newBiz);
-        return { rows: [newBiz], rowCount: 1 };
-      }
-
-      if (sql.includes('INSERT INTO products')) {
-        return { rows: [], rowCount: 2 };
-      }
-
-      if (sql.includes('FROM products') && sql.includes('WHERE business_id = $1')) {
-        const found = products.filter((p) => p.business_id === values[0]);
-        return { rows: found, rowCount: found.length };
-      }
-
-      if (sql.includes('FROM sales') && sql.includes('WHERE business_id = $1')) {
-        const found = sales.filter((s) => s.business_id === values[0]);
-        return {
-          rows: found.map((s) => ({
-            ...s,
-            product_name: 'Orange Juice',
-            total_price: String(s.quantity * s.unit_price),
-            created_at: new Date().toISOString(),
-          })),
-          rowCount: found.length,
-        };
-      }
-
-      return { rows: [], rowCount: 0 };
-    },
+    query,
     async connect() {
-      throw new Error('connect not implemented in mock');
+      throw new Error('This test does not use a transaction client');
     },
   };
 }
 
-test('TASK-29-01 auth: GET /health and /api/v1/health are public and return 200 OK', async (t) => {
-  const pool = createMockAuthPool();
-  const app = createApp({ pool });
+test('CORS allows only an exact configured origin and answers an allowed preflight', async (t) => {
+  const app = createApp({ pool: mockPool(), corsAllowedOrigins: 'https://ledger.example' });
   t.after(() => app.close());
 
-  const h1 = await app.inject({ method: 'GET', url: '/health' });
-  assert.equal(h1.statusCode, 200);
-  assert.equal(h1.json().status, 'ok');
+  const allowed = await app.inject({ method: 'GET', url: '/health', headers: { origin: 'https://ledger.example' } });
+  assert.equal(allowed.statusCode, 200);
+  assert.equal(allowed.headers['access-control-allow-origin'], 'https://ledger.example');
+  assert.equal(allowed.headers['access-control-allow-credentials'], 'true');
 
-  const h2 = await app.inject({ method: 'GET', url: '/api/v1/health' });
-  assert.equal(h2.statusCode, 200);
-  assert.equal(h2.json().status, 'ok');
-});
-
-test('TASK-29-01 auth: OPTIONS preflight returns 204 with permissive CORS headers', async (t) => {
-  const pool = createMockAuthPool();
-  const app = createApp({ pool });
-  t.after(() => app.close());
-
-  const res = await app.inject({
+  const preflight = await app.inject({
     method: 'OPTIONS',
-    url: '/api/v1/sales',
-    headers: {
-      origin: 'https://easyledger.onrender.com',
-      'access-control-request-method': 'POST',
-    },
+    url: '/api/v1/auth/signup',
+    headers: { origin: 'https://ledger.example', 'access-control-request-method': 'POST' },
   });
-  assert.equal(res.statusCode, 204);
-  assert.equal(res.headers['access-control-allow-origin'], 'https://easyledger.onrender.com');
-  assert.match(res.headers['access-control-allow-methods'], /GET, POST/);
+  assert.equal(preflight.statusCode, 204);
+  assert.match(preflight.headers['access-control-allow-methods'], /POST/);
+
+  const denied = await app.inject({ method: 'GET', url: '/health', headers: { origin: 'https://evil.example' } });
+  assert.equal(denied.statusCode, 403);
+  assert.equal(denied.headers['access-control-allow-origin'], undefined);
 });
 
-test('TASK-29-01 auth: unauthenticated request to protected endpoint returns 401 UNAUTHORIZED', async (t) => {
-  const pool = createMockAuthPool();
-  const app = createApp({ pool, authAdapter: () => null });
+test('login and signup share a bounded per-IP rate limit', async (t) => {
+  const app = createApp({ pool: mockPool() });
   t.after(() => app.close());
 
-  const res = await app.inject({ method: 'GET', url: '/api/v1/sales' });
-  assert.equal(res.statusCode, 401);
-  assert.equal(res.json().code, 'UNAUTHORIZED');
-});
-
-test('TASK-29-01 auth: one-click demo login issues token, sets cookie, and unlocks protected APIs', async (t) => {
-  const pool = createMockAuthPool();
-  const sessionAuth = new SessionAuthService();
-  const app = createApp({ pool, sessionAuth });
-  t.after(() => app.close());
-
-  // Check initial unauthenticated session status
-  const initialSession = await app.inject({ method: 'GET', url: '/api/v1/auth/session' });
-  assert.equal(initialSession.statusCode, 200);
-  assert.equal(initialSession.json().data.authenticated, false);
-
-  // 1-Click Demo Login
-  const loginRes = await app.inject({
+  for (let attempt = 1; attempt <= 10; attempt += 1) {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/v1/auth/login',
+      payload: { merchant: 'account', username: 'missing-user', password: 'wrong-password' },
+    });
+    assert.equal(response.statusCode, 401, `attempt ${attempt}`);
+  }
+  const limited = await app.inject({
     method: 'POST',
-    url: '/api/v1/auth/login',
-    payload: { merchant: 'demo' },
+    url: '/api/v1/auth/signup',
+    payload: { username: 'new-merchant', email: 'new@example.test', password: 'long-password-1', business_name: 'New Shop', currency: 'IDR' },
   });
-  assert.equal(loginRes.statusCode, 200);
-  const loginBody = loginRes.json();
-  assert.equal(loginBody.status, 'ok');
-  assert.ok(loginBody.data.token.startsWith('eld_'));
-  assert.equal(loginBody.data.user_id, demoUserId);
-  assert.equal(loginBody.data.business.name, '[DEMO] EasyLedger Juice Stall');
-  assert.equal(loginBody.data.business.is_demo, true);
-  assert.match(loginRes.headers['set-cookie'], /easyledger_session=eld_/);
+  assert.equal(limited.statusCode, 429);
+  assert.ok(Number(limited.headers['retry-after']) > 0);
+});
 
-  const token = loginBody.data.token;
+test('a session lookup database error returns 5xx instead of a signed-out result', async (t) => {
+  const pool = mockPool(async () => { throw new Error('database is offline'); });
+  const app = createApp({ pool });
+  t.after(() => app.close());
 
-  // Access protected API using Bearer Token
-  const salesRes = await app.inject({
-    method: 'GET',
-    url: '/api/v1/sales',
-    headers: { authorization: `Bearer ${token}` },
-  });
-  assert.equal(salesRes.statusCode, 200);
-  assert.equal(salesRes.json().status, 'ok');
-
-  // Verify /auth/session now reports authenticated
-  const checkSession = await app.inject({
+  const response = await app.inject({
     method: 'GET',
     url: '/api/v1/auth/session',
-    headers: { authorization: `Bearer ${token}` },
+    headers: { cookie: 'easyledger_session=token-that-cannot-be-checked' },
   });
-  assert.equal(checkSession.statusCode, 200);
-  assert.equal(checkSession.json().data.authenticated, true);
-  assert.equal(checkSession.json().data.business.id, demoBusinessId);
-
-  // Logout
-  const logoutRes = await app.inject({
-    method: 'POST',
-    url: '/api/v1/auth/logout',
-    headers: { authorization: `Bearer ${token}` },
-  });
-  assert.equal(logoutRes.statusCode, 200);
-
-  // Token is now revoked
-  const afterLogout = await app.inject({
-    method: 'GET',
-    url: '/api/v1/sales',
-    headers: { authorization: `Bearer ${token}` },
-  });
-  assert.equal(afterLogout.statusCode, 401);
+  assert.equal(response.statusCode, 500);
+  assert.notEqual(response.json().data?.authenticated, false);
 });
 
-test('TASK-29-01 auth: create new simulated merchant creates isolated tenant and session', async (t) => {
-  const pool = createMockAuthPool();
-  const sessionAuth = new SessionAuthService();
-  const app = createApp({ pool, sessionAuth });
+test('analytics database errors are surfaced without returning fabricated rows', async (t) => {
+  const ownerId = '00000000-0000-4000-8000-000000000101';
+  const businessId = '00000000-0000-4000-8000-000000000001';
+  const pool = mockPool(async (sql) => {
+    if (String(sql).includes('FROM businesses') && String(sql).includes('owner_user_id')) {
+      return {
+        rows: [{ id: businessId, name: 'Private Shop', currency: 'IDR', timezone: 'Asia/Jakarta', is_demo: false, ledger_revision: '0' }],
+        rowCount: 1,
+      };
+    }
+    throw new Error('database analytics query failed');
+  });
+  const app = createApp({ pool, authAdapter: () => ownerId });
   t.after(() => app.close());
 
-  const res = await app.inject({
+  const response = await app.inject({
     method: 'POST',
-    url: '/api/v1/auth/login',
-    payload: {
-      merchant: 'new',
-      name: 'Downtown Roast Cafe',
-      currency: 'IDR',
-    },
+    url: '/api/v1/analytics/query',
+    payload: { metric: 'revenue', dimension: 'date', product_ids: [] },
   });
-  assert.equal(res.statusCode, 200);
-  const body = res.json();
-  assert.equal(body.status, 'ok');
-  assert.equal(body.data.business.name, 'Downtown Roast Cafe');
-  assert.equal(body.data.business.currency, 'IDR');
-  assert.equal(body.data.business.is_demo, false);
-
-  const token = body.data.token;
-  const salesRes = await app.inject({
-    method: 'GET',
-    url: '/api/v1/sales',
-    headers: { authorization: `Bearer ${token}` },
-  });
-  assert.equal(salesRes.statusCode, 200);
+  assert.equal(response.statusCode, 500);
+  assert.equal(response.json().data, undefined);
+  assert.equal(response.json().code, 'INTERNAL_ERROR');
 });
 
-test('TASK-29-01 auth: login with username and password authenticates merchant and issues session', async (t) => {
-  const pool = createMockAuthPool();
-  const sessionAuth = new SessionAuthService();
-  const app = createApp({ pool, sessionAuth });
+test('login never creates an account and unknown credentials do not set a session', async (t) => {
+  const statements = [];
+  const pool = mockPool(async (sql) => {
+    statements.push(String(sql));
+    return { rows: [], rowCount: 0 };
+  });
+  const app = createApp({ pool });
   t.after(() => app.close());
 
-  // Missing username or password returns 422
-  const failRes = await app.inject({
+  const unknown = await app.inject({
     method: 'POST',
     url: '/api/v1/auth/login',
-    payload: {
-      merchant: 'account',
-      username: '',
-      password: '',
-    },
+    payload: { merchant: 'account', username: 'missing-user', password: 'long-password-1' },
   });
-  assert.equal(failRes.statusCode, 422);
+  assert.equal(unknown.statusCode, 401);
+  assert.equal(unknown.headers['set-cookie'], undefined);
 
-  // Valid username and password
-  const res = await app.inject({
+  const attemptedProvision = await app.inject({
     method: 'POST',
     url: '/api/v1/auth/login',
-    payload: {
-      merchant: 'account',
-      username: 'alex_merchant',
-      password: 'secretPassword123',
-    },
+    payload: { merchant: 'new', username: 'new-user', email: 'new@example.test', password: 'long-password-1', business_name: 'New Shop', currency: 'IDR' },
   });
-  assert.equal(res.statusCode, 200);
-  const body = res.json();
-  assert.equal(body.status, 'ok');
-  assert.ok(body.data.token.startsWith('eld_'));
-  assert.equal(body.data.business.name, 'alex_merchant Store');
-
-  // Authenticated sales access
-  const salesRes = await app.inject({
-    method: 'GET',
-    url: '/api/v1/sales',
-    headers: { authorization: `Bearer ${body.data.token}` },
-  });
-  assert.equal(salesRes.statusCode, 200);
+  assert.equal(attemptedProvision.statusCode, 422);
+  assert.equal(attemptedProvision.headers['set-cookie'], undefined);
+  assert.equal(statements.some((sql) => /INSERT INTO (users|businesses|auth_sessions)/i.test(sql)), false);
 });
-

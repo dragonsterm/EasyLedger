@@ -1,5 +1,7 @@
 export type AnalyticsMetric = 'revenue' | 'units';
 export type AnalyticsDimension = 'date' | 'product' | 'none';
+import { apiFetch } from './api.ts';
+
 export type LedgerCurrency = 'IDR' | 'USD';
 
 export interface AnalyticsQueryRequest {
@@ -17,7 +19,7 @@ export interface AnalyticsQueryRow {
   /** Exact minor units (whole rupiah for IDR, cents for USD), or null for a gap or wholly unknown revenue. */
   revenue: string | null;
   /** Present for date rows; distinguishes an open-day gap from confirmed zero and recorded sales. */
-  data_state?: 'sales' | 'unknown-price' | 'gap' | 'confirmed-zero';
+  data_state?: 'sales' | 'unknown-price' | 'gap' | 'confirmed-zero' | 'no-sales';
   /** Day completeness is independent of whether recorded sales have unknown prices. */
   coverage_state?: 'open' | 'complete';
 }
@@ -206,7 +208,7 @@ export function parseAnalyticsQueryEnvelope(input: unknown): AnalyticsQueryEnvel
     }
     const dataState = value.data_state;
     const coverageState = value.coverage_state;
-    if (dataState !== undefined && dataState !== 'sales' && dataState !== 'unknown-price' && dataState !== 'gap' && dataState !== 'confirmed-zero') {
+    if (dataState !== undefined && dataState !== 'sales' && dataState !== 'unknown-price' && dataState !== 'gap' && dataState !== 'confirmed-zero' && dataState !== 'no-sales') {
       throw new Error(`Analytics row ${index + 1} has an invalid data state`);
     }
     if (coverageState !== undefined && coverageState !== 'open' && coverageState !== 'complete') {
@@ -220,6 +222,9 @@ export function parseAnalyticsQueryEnvelope(input: unknown): AnalyticsQueryEnvel
     }
     if (dataState === 'confirmed-zero' && (quantity !== '0' || revenue !== '0' || coverageState !== 'complete')) {
       throw new Error(`Analytics confirmed-zero row ${index + 1} must be complete with exact zeros`);
+    }
+    if (dataState === 'no-sales' && (data.dimension !== 'none' || quantity !== '0' || revenue !== '0')) {
+      throw new Error(`Analytics no-sales row ${index + 1} must be a zero-valued aggregate`);
     }
     if (dataState === 'sales' && revenue === null) {
       throw new Error(`Analytics sales row ${index + 1} cannot have unknown revenue`);
@@ -412,9 +417,8 @@ export function parseSourceTransactionsEnvelope(
 }
 
 async function postJson(path: string, payload: unknown): Promise<unknown> {
-  const response = await fetch(path, {
+  const response = await apiFetch(path, {
     method: 'POST',
-    credentials: 'same-origin',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(payload),
   });

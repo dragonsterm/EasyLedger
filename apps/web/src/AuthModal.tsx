@@ -1,4 +1,5 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
+import { apiFetch } from './api';
 
 export interface MerchantIdentity {
   id: string;
@@ -14,349 +15,256 @@ export interface AuthSessionState {
   business?: MerchantIdentity;
 }
 
+export type AuthTab = 'demo' | 'login' | 'register';
+
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   onLoginSuccess: (business: MerchantIdentity) => void;
+  onLogout: () => void;
   currentBusiness?: MerchantIdentity;
+  initialTab?: AuthTab;
+  isPage?: boolean;
+  onModeChange?: (tab: AuthTab) => void;
+  initialError?: string | null;
 }
 
-export function AuthModal({ isOpen, onClose, onLoginSuccess, currentBusiness }: AuthModalProps) {
-  const [activeTab, setActiveTab] = useState<'demo' | 'login' | 'register'>('demo');
+interface AuthResponse {
+  data?: { business?: MerchantIdentity };
+  message?: string;
+}
+
+async function submitAuth(path: string, payload: Record<string, unknown>): Promise<MerchantIdentity> {
+  const response = await apiFetch(path, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  const result = await response.json().catch(() => null) as AuthResponse | null;
+  if (!response.ok) throw new Error(result?.message ?? `EasyLedger could not complete the request (${response.status}).`);
+  if (!result?.data?.business) throw new Error('EasyLedger returned an incomplete account response.');
+  return result.data.business;
+}
+
+export function AuthModal({
+  isOpen,
+  onClose,
+  onLoginSuccess,
+  onLogout,
+  currentBusiness,
+  initialTab = 'demo',
+  isPage = false,
+  onModeChange,
+  initialError = null,
+}: AuthModalProps) {
+  const [activeTab, setActiveTab] = useState<AuthTab>(initialTab);
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [businessName, setBusinessName] = useState('');
-  const [currency, setCurrency] = useState<'IDR' | 'USD'>('USD');
+  const [currency, setCurrency] = useState<'IDR' | 'USD'>('IDR');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  useEffect(() => {
+    setActiveTab(initialTab);
+    setErrorMessage(initialError);
+  }, [initialError, initialTab, isOpen]);
+
   if (!isOpen) return null;
+
+  const selectTab = (tab: AuthTab) => {
+    setActiveTab(tab);
+    setErrorMessage(null);
+    onModeChange?.(tab);
+  };
 
   const handleDemoLogin = async () => {
     setLoading(true);
     setErrorMessage(null);
     try {
-      const res = await fetch('/api/v1/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ merchant: 'demo' }),
-      });
-      const body = await res.json().catch(() => null);
-      if (res.ok && body?.data?.business) {
-        onLoginSuccess(body.data.business);
-        onClose();
-        return;
-      }
-      // Resilient fallback for standalone preview or development
-      const fallbackDemo: MerchantIdentity = {
-        id: '00000000-0000-4000-8000-000000000001',
-        name: '[DEMO] EasyLedger Juice Stall',
-        currency: 'USD',
-        is_demo: true,
-        ledger_revision: '0',
-      };
-      onLoginSuccess(fallbackDemo);
+      const business = await submitAuth('/api/v1/auth/login', { merchant: 'demo' });
+      onLoginSuccess(business);
       onClose();
-    } catch {
-      const fallbackDemo: MerchantIdentity = {
-        id: '00000000-0000-4000-8000-000000000001',
-        name: '[DEMO] EasyLedger Juice Stall',
-        currency: 'USD',
-        is_demo: true,
-        ledger_revision: '0',
-      };
-      onLoginSuccess(fallbackDemo);
-      onClose();
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Demo sign in failed.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAccountSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const handleAccountSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setLoading(true);
     setErrorMessage(null);
-
     try {
-      if (activeTab === 'login') {
-        if (!username.trim() || !password) {
-          throw new Error('Please provide both username/email and password.');
-        }
-        const res = await fetch('/api/v1/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
+      const business = activeTab === 'login'
+        ? await submitAuth('/api/v1/auth/login', {
             merchant: 'account',
             username: username.trim(),
             password,
-          }),
-        });
-        const body = await res.json().catch(() => null);
-        if (res.ok && body?.data?.business) {
-          onLoginSuccess(body.data.business);
-          onClose();
-          return;
-        }
-        const fallbackBiz: MerchantIdentity = {
-          id: '00000000-0000-4000-8000-000000000001',
-          name: `${username.trim()} Store`,
-          currency: 'USD',
-          is_demo: false,
-          ledger_revision: '0',
-        };
-        onLoginSuccess(fallbackBiz);
-        onClose();
-      } else if (activeTab === 'register') {
-        if (!businessName.trim()) {
-          throw new Error('Please enter your business or store name.');
-        }
-        const res = await fetch('/api/v1/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            merchant: 'new',
-            name: businessName.trim(),
+          })
+        : await submitAuth('/api/v1/auth/signup', {
+            username: username.trim(),
+            email: email.trim(),
+            password,
+            business_name: businessName.trim(),
             currency,
-            username: username.trim() || undefined,
-          }),
-        });
-        const body = await res.json().catch(() => null);
-        if (res.ok && body?.data?.business) {
-          onLoginSuccess(body.data.business);
-          onClose();
-          return;
-        }
-        const fallbackBiz: MerchantIdentity = {
-          id: '00000000-0000-4000-8000-000000000001',
-          name: businessName.trim(),
-          currency,
-          is_demo: false,
-          ledger_revision: '0',
-        };
-        onLoginSuccess(fallbackBiz);
-        onClose();
-      }
-    } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : 'Authentication encountered an error');
+          });
+      onLoginSuccess(business);
+      onClose();
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Authentication failed.');
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="home-dialog-backdrop auth-modal-backdrop" onClick={onClose} role="presentation">
-      <div
-        className="home-dialog auth-modal-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="auth-modal-title"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="auth-modal-header">
-          <div className="rail-brand">
-            <strong>EasyLedger</strong>
-            <span>Sales, made clear.</span>
-          </div>
-          <button
-            type="button"
-            className="inspector-close"
-            onClick={onClose}
-            aria-label="Close authentication dialog"
-          >
+  const handleLogout = async () => {
+    setLoading(true);
+    setErrorMessage(null);
+    try {
+      const response = await apiFetch('/api/v1/auth/logout', { method: 'POST' });
+      const result = await response.json().catch(() => null) as AuthResponse | null;
+      if (!response.ok) throw new Error(result?.message ?? `Sign out failed (${response.status}).`);
+      onLogout();
+      selectTab('demo');
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Sign out failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const closeAllowed = Boolean(currentBusiness) && !isPage;
+  const content = (
+    <section className="home-dialog auth-modal-dialog" aria-labelledby="auth-modal-title">
+      <div className="auth-modal-header">
+        <div className="rail-brand">
+          <strong>EasyLedger</strong>
+          <span>Sales, made clear.</span>
+        </div>
+        {closeAllowed && (
+          <button type="button" className="inspector-close" onClick={onClose} aria-label="Close account switcher">
             <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true" focusable="false">
               <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
             </svg>
           </button>
-        </div>
-
-        <h2 id="auth-modal-title">
-          {currentBusiness ? 'Switch Workspace' : 'Merchant Workspace'}
-        </h2>
-        <p className="auth-modal-subtitle">
-          Access your sales journals, real-time analytics, and voice-assisted bookkeeping.
-        </p>
-
-        {errorMessage && (
-          <div className="home-dialog-error auth-error-alert" role="alert">
-            {errorMessage}
-          </div>
-        )}
-
-        {/* Clean Segmented Tab Switcher */}
-        <div className="auth-tabs" role="tablist" aria-label="Authentication modes">
-          <button
-            type="button"
-            className={`auth-tab-btn ${activeTab === 'demo' ? 'auth-tab-active' : ''}`}
-            onClick={() => setActiveTab('demo')}
-            role="tab"
-            aria-selected={activeTab === 'demo'}
-          >
-            Evaluation Demo
-          </button>
-          <button
-            type="button"
-            className={`auth-tab-btn ${activeTab === 'login' ? 'auth-tab-active' : ''}`}
-            onClick={() => setActiveTab('login')}
-            role="tab"
-            aria-selected={activeTab === 'login'}
-          >
-            Sign In
-          </button>
-          <button
-            type="button"
-            className={`auth-tab-btn ${activeTab === 'register' ? 'auth-tab-active' : ''}`}
-            onClick={() => setActiveTab('register')}
-            role="tab"
-            aria-selected={activeTab === 'register'}
-          >
-            New Merchant
-          </button>
-        </div>
-
-        {/* Tab 1: Hackathon Evaluation Demo (1-Click) */}
-        {activeTab === 'demo' && (
-          <div className="auth-demo-card">
-            <div className="auth-demo-badge">
-              <span className="mode-pill mode-pill-demo">EVALUATION FIXTURE</span>
-              <span className="auth-demo-tag">AssemblyAI Voice Ready</span>
-            </div>
-            
-            <div className="auth-demo-details">
-              <strong>EasyLedger Juice Stall</strong>
-              <p>Pre-configured merchant workspace with verified append-only ledger entries, catalog items, and live ECharts reconciliation.</p>
-              
-              <div className="auth-demo-meta-grid">
-                <div>
-                  <small>Currency</small>
-                  <span>USD ($)</span>
-                </div>
-                <div>
-                  <small>Catalog</small>
-                  <span>Orange Juice &amp; Mango Juice</span>
-                </div>
-              </div>
-
-              <div className="auth-demo-hint">
-                <span className="auth-demo-hint-label">Sample Voice Instruction:</span>
-                <code>"Record sale of 3 orange juices at 4 dollars 50 cents"</code>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              className="button button-action auth-demo-btn"
-              onClick={handleDemoLogin}
-              disabled={loading}
-            >
-              {loading ? 'Entering...' : 'Launch Evaluation Demo →'}
-            </button>
-          </div>
-        )}
-
-        {/* Tab 2: Standard Sign In (Username & Password) */}
-        {activeTab === 'login' && (
-          <form onSubmit={handleAccountSubmit} className="auth-form">
-            <label className="home-dialog-field">
-              <span>Username or Email</span>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="merchant@easyledger.local or username"
-                autoComplete="username"
-                required
-                autoFocus
-              />
-            </label>
-
-            <label className="home-dialog-field">
-              <span>Password</span>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                autoComplete="current-password"
-                required
-              />
-            </label>
-
-            <div className="home-dialog-actions auth-actions">
-              <button
-                type="button"
-                className="button button-outline"
-                onClick={onClose}
-                disabled={loading}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="button button-primary auth-submit-btn"
-                disabled={loading}
-              >
-                {loading ? 'Authenticating...' : 'Sign In to Workspace'}
-              </button>
-            </div>
-          </form>
-        )}
-
-        {/* Tab 3: Register New Merchant Workspace */}
-        {activeTab === 'register' && (
-          <form onSubmit={handleAccountSubmit} className="auth-form">
-            <label className="home-dialog-field">
-              <span>Store / Business Name</span>
-              <input
-                type="text"
-                value={businessName}
-                onChange={(e) => setBusinessName(e.target.value)}
-                placeholder="e.g. Orchard Fresh Juices"
-                required
-                autoFocus
-              />
-            </label>
-
-            <label className="home-dialog-field">
-              <span>Owner Username (Optional)</span>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="e.g. alex_merchant"
-              />
-            </label>
-
-            <label className="home-dialog-field">
-              <span>Accounting Currency</span>
-              <select
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value as 'IDR' | 'USD')}
-              >
-                <option value="USD">USD — US Dollar (Default)</option>
-                <option value="IDR">IDR — Multi-Currency</option>
-              </select>
-            </label>
-
-            <div className="home-dialog-actions auth-actions">
-              <button
-                type="button"
-                className="button button-outline"
-                onClick={onClose}
-                disabled={loading}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="button button-primary auth-submit-btn"
-                disabled={loading}
-              >
-                {loading ? 'Creating...' : 'Create Merchant Workspace'}
-              </button>
-            </div>
-          </form>
         )}
       </div>
+
+      {currentBusiness && (
+        <div className="auth-current-account" aria-label="Current account">
+          <span className="auth-current-account-name">{currentBusiness.name}</span>
+          <span>{currentBusiness.is_demo ? 'DEMO DATA' : 'Private workspace'} · {currentBusiness.currency}</span>
+          <button type="button" className="button button-outline auth-signout-btn" onClick={() => void handleLogout()} disabled={loading}>
+            Sign out
+          </button>
+        </div>
+      )}
+
+      <h2 id="auth-modal-title">{currentBusiness ? 'Switch Workspace' : 'Choose your workspace'}</h2>
+      <p className="auth-modal-subtitle">
+        Sign in to your business, create a private ledger, or explore the labeled demo workspace.
+      </p>
+
+      {errorMessage && <div className="home-dialog-error auth-error-alert" role="alert">{errorMessage}</div>}
+
+      <div className="auth-tabs" role="tablist" aria-label="Workspace options">
+        <button type="button" className={`auth-tab-btn ${activeTab === 'demo' ? 'auth-tab-active' : ''}`} onClick={() => selectTab('demo')} role="tab" aria-selected={activeTab === 'demo'}>
+          Demo data
+        </button>
+        <button type="button" className={`auth-tab-btn ${activeTab === 'login' ? 'auth-tab-active' : ''}`} onClick={() => selectTab('login')} role="tab" aria-selected={activeTab === 'login'}>
+          Sign in
+        </button>
+        <button type="button" className={`auth-tab-btn ${activeTab === 'register' ? 'auth-tab-active' : ''}`} onClick={() => selectTab('register')} role="tab" aria-selected={activeTab === 'register'}>
+          Create account
+        </button>
+      </div>
+
+      {activeTab === 'demo' && (
+        <div className="auth-demo-card">
+          <div className="auth-demo-badge">
+            <span className="mode-pill mode-pill-demo">DEMO DATA</span>
+            <span className="auth-demo-tag">Seeded PostgreSQL workspace</span>
+          </div>
+          <div className="auth-demo-details">
+            <strong>[DEMO] EasyLedger Juice Stall</strong>
+            <p>Uses the shared demo business and its two seeded catalog items. Sales start empty; anything you record stays in this demo workspace.</p>
+            <div className="auth-demo-meta-grid">
+              <div><small>Currency</small><span>IDR (Rp)</span></div>
+              <div><small>Catalog</small><span>Orange Juice · Mango Juice</span></div>
+            </div>
+            <div className="auth-demo-hint">
+              <span className="auth-demo-hint-label">Try a voice entry</span>
+              <code>“Record 3 orange juices at Rp 15,000 each today”</code>
+            </div>
+          </div>
+          <button type="button" className="button button-action auth-demo-btn" onClick={() => void handleDemoLogin()} disabled={loading}>
+            {loading ? 'Connecting…' : 'Open demo workspace'}
+            <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true" focusable="false">
+              <path d="M4 10h11M10 5l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
+      )}
+
+      {activeTab === 'login' && (
+        <form onSubmit={handleAccountSubmit} className="auth-form">
+          <label className="home-dialog-field">
+            <span>Username or email</span>
+            <input type="text" value={username} onChange={(event) => setUsername(event.target.value)} placeholder="merchant@example.com" autoComplete="username" required autoFocus />
+          </label>
+          <label className="home-dialog-field">
+            <span>Password</span>
+            <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" required />
+          </label>
+          <div className="home-dialog-actions auth-actions">
+            {closeAllowed && <button type="button" className="button button-outline" onClick={onClose} disabled={loading}>Cancel</button>}
+            <button type="submit" className="button button-primary auth-submit-btn" disabled={loading}>{loading ? 'Signing in…' : 'Sign in'}</button>
+          </div>
+        </form>
+      )}
+
+      {activeTab === 'register' && (
+        <form onSubmit={handleAccountSubmit} className="auth-form">
+          <label className="home-dialog-field">
+            <span>Username</span>
+            <input type="text" value={username} onChange={(event) => setUsername(event.target.value)} placeholder="alex_merchant" autoComplete="username" minLength={3} maxLength={32} pattern="[A-Za-z0-9][A-Za-z0-9_.-]{2,31}" required autoFocus />
+          </label>
+          <label className="home-dialog-field">
+            <span>Email address</span>
+            <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="alex@example.com" autoComplete="email" maxLength={254} required />
+          </label>
+          <label className="home-dialog-field">
+            <span>Password</span>
+            <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="new-password" minLength={10} maxLength={100} required />
+            <small>Use at least 10 characters.</small>
+          </label>
+          <label className="home-dialog-field">
+            <span>Business or store name</span>
+            <input type="text" value={businessName} onChange={(event) => setBusinessName(event.target.value)} placeholder="Orchard Fresh Juices" maxLength={100} required />
+          </label>
+          <label className="home-dialog-field">
+            <span>Business currency</span>
+            <select value={currency} onChange={(event) => setCurrency(event.target.value as 'IDR' | 'USD')} required>
+              <option value="IDR">IDR — Indonesian rupiah</option>
+              <option value="USD">USD — US dollar</option>
+            </select>
+          </label>
+          <div className="home-dialog-actions auth-actions">
+            {closeAllowed && <button type="button" className="button button-outline" onClick={onClose} disabled={loading}>Cancel</button>}
+            <button type="submit" className="button button-primary auth-submit-btn" disabled={loading}>{loading ? 'Creating account…' : 'Create account'}</button>
+          </div>
+        </form>
+      )}
+    </section>
+  );
+
+  if (isPage) return <main className="auth-modal-backdrop auth-modal-page">{content}</main>;
+  return (
+    <div className="home-dialog-backdrop auth-modal-backdrop" onClick={closeAllowed ? onClose : undefined} role="presentation">
+      <div role="dialog" aria-modal="true" aria-labelledby="auth-modal-title" onClick={(event) => event.stopPropagation()}>{content}</div>
     </div>
   );
 }

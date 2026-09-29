@@ -45,6 +45,34 @@ test('analytics chart mapping preserves open gaps, confirmed zeroes, and unknown
   ]);
 });
 
+test('analytics aggregate distinguishes an empty ledger from a recorded zero-value total', () => {
+  const envelope = {
+    request_id: 'req-empty-ledger',
+    status: 'ok',
+    data: {
+      metric: 'revenue',
+      dimension: 'none',
+      total: '0.00',
+      currency: 'USD',
+      ledger_revision: '0',
+      completeness: 'complete',
+      has_unknown_prices: false,
+      rows: [{ key: 'total', label: 'Total', quantity: '0', revenue: '0', data_state: 'no-sales' }],
+      filters: { date_from: null, date_to: null, product_ids: [] },
+    },
+  };
+  const response = parseAnalyticsQueryEnvelope(envelope);
+  assert.equal(response.data.rows[0].data_state, 'no-sales');
+  assert.deepEqual(mapAnalyticsRowsToChart(response.data), {
+    status: 'ready',
+    points: [{ key: 'total', label: 'Total', quantity: '0', revenue: '0', data_state: 'no-sales', value: 0, exactValue: '0', state: 'known', coverageState: undefined }],
+  });
+
+  const malformed = structuredClone(envelope);
+  malformed.data.rows[0].quantity = '1';
+  assert.throws(() => parseAnalyticsQueryEnvelope(malformed), /no-sales row.*zero-valued aggregate/);
+});
+
 test('analytics envelope rejects malformed gap and confirmed-zero rows', () => {
   const malformedGap = dateResponse();
   malformedGap.data.rows[1].quantity = '0';

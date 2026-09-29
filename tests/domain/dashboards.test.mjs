@@ -281,3 +281,75 @@ test('TASK-26-03 domain: tenant isolation prevents cross-business draft leakage'
   assert.equal(draftA.widgets.some((w) => w.id === 'tenant-a-widget'), true);
   assert.equal(draftB, null);
 });
+
+test('dashboard persistence returns storage errors instead of cached or fabricated success', async () => {
+  const unavailablePool = {
+    async query() { throw new Error('database unavailable'); },
+    async connect() { throw new Error('connect not implemented in mock'); },
+  };
+  const service = new DashboardService(unavailablePool);
+
+  const assertUnavailable = async (action) => {
+    await assert.rejects(action, (err) => {
+      assert.ok(err instanceof OperationError);
+      assert.equal(err.code, 'INTERNAL_ERROR');
+      assert.equal(err.httpStatus, 503);
+      return true;
+    });
+  };
+
+  await assertUnavailable(() => service.getDashboard(businessA, 'dashboard-id'));
+  await assertUnavailable(() => service.listDashboards(businessA));
+  await assertUnavailable(() => service.saveDashboard({ business_id: businessA, name: 'Offline' }));
+  await assertUnavailable(() => service.deleteDashboard(businessA, 'dashboard-id'));
+});
+
+test('dashboard compare-and-swap update catches a concurrent version change', async () => {
+  const dashboardId = '00000000-0000-4000-8000-000000000033';
+  const current = {
+    id: dashboardId,
+    business_id: businessA,
+    name: 'Sales',
+    schema_version: 1,
+    version: '1',
+    widgets: [],
+    layout: [],
+    created_at: new Date('2026-01-01T00:00:00.000Z'),
+    updated_at: new Date('2026-01-01T00:00:00.000Z'),
+  };
+  const calls = [];
+  const pool = {
+    async query(sql, values) {
+      calls.push({ sql, values });
+      if (sql.startsWith('SELECT')) {
+        return { rows: [{ ...current, version: calls.filter((call) => call.sql.startsWith('SELECT')).length === 1 ? '1' : '2' }], rowCount: 1 };
+      }
+      if (sql.startsWith('UPDATE')) return { rows: [], rowCount: 0 };
+      throw new Error(`Unexpected query: ${sql}`);
+    },
+    async connect() { throw new Error('connect not implemented in mock'); },
+  };
+  const service = new DashboardService(pool);
+
+  await assert.rejects(
+    () => service.saveDashboard({
+      business_id: businessA,
+      id: dashboardId,
+      name: 'Sales updated',
+      expected_version: '1',
+      widgets: [],
+      layout: [],
+    }),
+    (err) => {
+      assert.ok(err instanceof OperationError);
+      assert.equal(err.code, 'CONFLICT');
+      assert.equal(err.httpStatus, 409);
+      assert.equal(err.currentVersion, '2');
+      return true;
+    },
+  );
+
+  const update = calls.find((call) => call.sql.startsWith('UPDATE'));
+  assert.match(update.sql, /version = \$7::bigint/);
+  assert.equal(update.values[6], '1');
+});

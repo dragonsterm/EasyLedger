@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import { randomUUID } from 'node:crypto';
 import { SessionAuthService } from './sessionAuth.ts';
+import { hashPassword, verifyPassword } from './passwordAuth.ts';
 
 import {
   CatalogNotFoundError,
@@ -58,6 +59,7 @@ export interface AppOptions {
   logger?: boolean;
   assemblyApiKey?: string;
   assemblyTokenGenerator?: (options?: { expiresInSeconds?: number; maxSessionDurationSeconds?: number }) => Promise<string> | string;
+  corsAllowedOrigins?: string | string[];
 }
 
 class ApiError extends Error {
@@ -395,6 +397,7 @@ const widgetSchema = {
     },
     comparison: { type: 'string', minLength: 1, maxLength: 100 },
     format: { type: 'string', minLength: 1, maxLength: 50 },
+    style: { type: 'string', enum: ['sage', 'warm'] },
     schema_version: { type: 'integer', minimum: 1 },
   },
 };
@@ -551,9 +554,10 @@ const authLoginSchema = {
   additionalProperties: false,
   properties: {
     merchant: { type: 'string', enum: ['demo', 'new', 'account'] },
-    name: { type: 'string', minLength: 1, maxLength: 100 },
+    business_name: { type: 'string', minLength: 1, maxLength: 100 },
     currency: { type: 'string', enum: ['IDR', 'USD'] },
     username: { type: 'string', minLength: 1, maxLength: 100 },
+    email: { type: 'string', minLength: 3, maxLength: 254 },
     password: { type: 'string', minLength: 1, maxLength: 100 },
   },
 };
@@ -676,6 +680,54 @@ function successEnvelope(requestId: string, data: unknown, extra: Record<string,
   };
 }
 
+async function withTransaction<T>(
+  pool: DatabasePool,
+  work: (client: { query: (query: string, values?: unknown[]) => Promise<{ rows: Array<Record<string, unknown>>; rowCount: number | null }>; release: () => void }) => Promise<T>,
+): Promise<T> {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const result = await work(client);
+    await client.query('COMMIT');
+    return result;
+  } catch (error) {
+    try { await client.query('ROLLBACK'); } catch { /* preserve the original database error */ }
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+function allowedOriginSet(configured: string | string[] | undefined): Set<string> {
+  const source = configured ?? process.env.CORS_ALLOWED_ORIGIN ?? (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:5173,http://127.0.0.1:5173');
+  const entries = Array.isArray(source) ? source : source.split(',');
+  const origins = new Set<string>();
+  for (const entry of entries) {
+    const value = entry.trim();
+    if (!value) continue;
+    try {
+      const normalized = value.includes('://') ? new URL(value) : new URL(`https://${value}`);
+      if ((normalized.protocol === 'https:' || normalized.protocol === 'http:') && normalized.origin === (value.includes('://') ? value.replace(/\/$/, '') : `https://${value}`)) {
+        origins.add(normalized.origin);
+      }
+    } catch {
+      // Invalid origins are excluded from the allowlist.
+    }
+  }
+  return origins;
+}
+
+function setSessionCookie(reply: { header: (name: string, value: string) => unknown }, token: string, expiresAt: number): void {
+  const maxAge = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
+  const secure = process.env.NODE_ENV === 'production';
+  reply.header('Set-Cookie', `easyledger_session=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=${secure ? 'None' : 'Lax'}${secure ? '; Secure' : ''}; Max-Age=${maxAge}`);
+}
+
+function clearSessionCookie(reply: { header: (name: string, value: string) => unknown }): void {
+  const secure = process.env.NODE_ENV === 'production';
+  reply.header('Set-Cookie', `easyledger_session=; Path=/; HttpOnly; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=${secure ? 'None' : 'Lax'}${secure ? '; Secure' : ''}`);
+}
+
 async function poolQuery<Row = Record<string, unknown>>(
   pool: DatabasePool & { query?: unknown },
   textQuery: string,
@@ -689,83 +741,54 @@ async function resolveBusiness(
   pool: DatabasePool & { query?: unknown },
   userId: string,
 ): Promise<{ id: string; currency: 'IDR' | 'USD'; ledger_revision: string; name: string; timezone: string; is_demo: boolean }> {
-  try {
-    const result = await poolQuery<{ id: string; currency: 'IDR' | 'USD'; ledger_revision: string; name?: string; timezone?: string; is_demo?: boolean }>(
-      pool,
-      `SELECT id, currency, ledger_revision::text AS ledger_revision, name, timezone, is_demo
-         FROM businesses
-        WHERE owner_user_id = $1
-        ORDER BY created_at ASC, id ASC
-        LIMIT 1`,
-      [userId],
-    );
-    if (!result.rowCount || !result.rows[0]) {
-      throw new ApiError('FORBIDDEN', 'Authenticated user has no business', { httpStatus: 403 });
-    }
-    const row = result.rows[0];
-    return {
-      id: row.id,
-      currency: row.currency,
-      ledger_revision: row.ledger_revision,
-      name: row.name ?? 'EasyLedger Merchant',
-      timezone: row.timezone ?? 'UTC',
-      is_demo: Boolean(row.is_demo),
-    };
-  } catch (err: unknown) {
-    if (err instanceof ApiError) throw err;
-    if (userId === '00000000-0000-4000-8000-000000000101') {
-      return {
-        id: '00000000-0000-4000-8000-000000000001',
-        currency: 'USD',
-        ledger_revision: '0',
-        name: '[DEMO] EasyLedger Juice Stall',
-        timezone: 'UTC',
-        is_demo: true,
-      };
-    }
-    throw err;
+  const result = await poolQuery<{ id: string; currency: 'IDR' | 'USD'; ledger_revision: string; name?: string; timezone?: string; is_demo?: boolean }>(
+    pool,
+    `SELECT id, currency, ledger_revision::text AS ledger_revision, name, timezone, is_demo
+       FROM businesses
+      WHERE owner_user_id = $1
+      ORDER BY created_at ASC, id ASC
+      LIMIT 1`,
+    [userId],
+  );
+  if (!result.rowCount || !result.rows[0]) {
+    throw new ApiError('FORBIDDEN', 'Authenticated user has no business', { httpStatus: 403 });
   }
+  const row = result.rows[0];
+  return {
+    id: row.id,
+    currency: row.currency,
+    ledger_revision: row.ledger_revision,
+    name: row.name ?? 'EasyLedger Merchant',
+    timezone: row.timezone ?? 'Asia/Jakarta',
+    is_demo: Boolean(row.is_demo),
+  };
 }
 
 async function getBusinessById(
   pool: DatabasePool & { query?: unknown },
   businessId: string,
+  ownerUserId?: string,
 ): Promise<{ id: string; currency: 'IDR' | 'USD'; ledger_revision: string; name: string; timezone: string; is_demo: boolean }> {
-  try {
-    const result = await poolQuery<{ id: string; currency: 'IDR' | 'USD'; ledger_revision: string; name?: string; timezone?: string; is_demo?: boolean }>(
-      pool,
+  const result = await poolQuery<{ id: string; currency: 'IDR' | 'USD'; ledger_revision: string; name?: string; timezone?: string; is_demo?: boolean }>(
+    pool,
       `SELECT id, currency, ledger_revision::text AS ledger_revision, name, timezone, is_demo
          FROM businesses
-        WHERE id = $1
+        WHERE id = $1 AND ($2::text IS NULL OR owner_user_id = $2)
         LIMIT 1`,
-      [businessId],
-    );
-    if (!result.rowCount || !result.rows[0]) {
-      throw new ApiError('NOT_FOUND', 'Business not found', { httpStatus: 404 });
-    }
-    const row = result.rows[0];
-    return {
-      id: row.id,
-      currency: row.currency,
-      ledger_revision: row.ledger_revision,
-      name: row.name ?? 'EasyLedger Merchant',
-      timezone: row.timezone ?? 'UTC',
-      is_demo: Boolean(row.is_demo),
-    };
-  } catch (err: unknown) {
-    if (err instanceof ApiError) throw err;
-    if (businessId === '00000000-0000-4000-8000-000000000001') {
-      return {
-        id: '00000000-0000-4000-8000-000000000001',
-        currency: 'USD',
-        ledger_revision: '0',
-        name: '[DEMO] EasyLedger Juice Stall',
-        timezone: 'UTC',
-        is_demo: true,
-      };
-    }
-    throw err;
+      [businessId, ownerUserId ?? null],
+  );
+  if (!result.rowCount || !result.rows[0]) {
+    throw new ApiError('NOT_FOUND', 'Business not found', { httpStatus: 404 });
   }
+  const row = result.rows[0];
+  return {
+    id: row.id,
+    currency: row.currency,
+    ledger_revision: row.ledger_revision,
+    name: row.name ?? 'EasyLedger Merchant',
+    timezone: row.timezone ?? 'Asia/Jakarta',
+    is_demo: Boolean(row.is_demo),
+  };
 }
 
 async function ensureSaleOwned(pool: DatabasePool & { query?: unknown }, businessId: string, saleId: string): Promise<void> {
@@ -873,27 +896,64 @@ export function createApp(options: AppOptions) {
   const proposals = new ProposalService(options.pool);
   const salesQueries = new SalesQueryService(options.pool);
   const dashboards = new DashboardService(options.pool);
-  const sessionAuth = options.sessionAuth ?? new SessionAuthService();
+  const sessionAuth = options.sessionAuth ?? new SessionAuthService(options.pool);
+  const corsOrigins = allowedOriginSet(options.corsAllowedOrigins);
+  const rateBuckets = new Map<string, { count: number; resetsAt: number }>();
 
   app.addHook('onRequest', async (request, reply) => {
-    const origin = (request.headers.origin as string) || '*';
-    reply.header('Access-Control-Allow-Origin', origin);
-    reply.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-    reply.header('Access-Control-Allow-Headers', 'Authorization, Content-Type, x-session-token, x-easyledger-session, x-request-id, idempotency-key');
-    reply.header('Access-Control-Allow-Credentials', 'true');
+    const origin = request.headers.origin;
+    if (typeof origin === 'string') {
+      if (!corsOrigins.has(origin)) {
+        throw new ApiError('FORBIDDEN', 'Origin is not allowed', { httpStatus: 403 });
+      }
+      reply.header('Access-Control-Allow-Origin', origin);
+      reply.header('Access-Control-Allow-Credentials', 'true');
+      reply.header('Vary', 'Origin');
+    }
 
     if (request.method === 'OPTIONS') {
+      if (typeof origin !== 'string') return reply.code(204).send();
+      reply.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+      reply.header('Access-Control-Allow-Headers', 'Authorization, Content-Type, x-session-token, x-easyledger-session, x-request-id, idempotency-key');
+      reply.header('Access-Control-Max-Age', '600');
       return reply.code(204).send();
     }
 
     const rawUrl = request.raw.url ?? request.url;
     const path = rawUrl.split('?')[0];
+    const isLogin = path.endsWith('/auth/login') || path.endsWith('/auth/signup');
+    if (path.startsWith('/api/') && !path.endsWith('/health')) {
+      const now = Date.now();
+      const bucketKey = `${request.ip}:${isLogin ? 'login' : 'api'}`;
+      const limit = isLogin ? 10 : 300;
+      const windowMs = isLogin ? 15 * 60 * 1000 : 60 * 1000;
+      let bucket = rateBuckets.get(bucketKey);
+      if (!bucket || bucket.resetsAt <= now) {
+        if (!bucket && rateBuckets.size >= 20_000) {
+          for (const [key, activeBucket] of rateBuckets) {
+            if (activeBucket.resetsAt <= now) rateBuckets.delete(key);
+          }
+          if (rateBuckets.size >= 20_000) {
+            throw new ApiError('RATE_LIMITED', 'The API has too many active clients. Try again shortly.', { httpStatus: 429, retryable: true });
+          }
+        }
+        bucket = { count: 0, resetsAt: now + windowMs };
+        rateBuckets.set(bucketKey, bucket);
+      }
+      if (bucket.count >= limit) {
+        reply.header('Retry-After', String(Math.max(1, Math.ceil((bucket.resetsAt - now) / 1000))));
+        throw new ApiError('RATE_LIMITED', 'Too many requests. Try again shortly.', { httpStatus: 429, retryable: true });
+      }
+      bucket.count += 1;
+    }
 
     const isPublic = path === '/health'
       || path === '/api/health'
       || path === '/api/v1/health'
       || path === '/api/auth/login'
       || path === '/api/v1/auth/login'
+      || path === '/api/auth/signup'
+      || path === '/api/v1/auth/signup'
       || path === '/api/auth/session'
       || path === '/api/v1/auth/session'
       || path === '/api/auth/me'
@@ -903,41 +963,24 @@ export function createApp(options: AppOptions) {
 
     if (isPublic) {
       let maybeUserId: string | undefined;
-      let sessionData: ReturnType<typeof sessionAuth.getSession> | undefined;
+      let sessionData: Awaited<ReturnType<typeof sessionAuth.getSession>> | undefined;
       const token = sessionAuth.extractTokenFromRequest(request);
       if (token) {
-        sessionData = sessionAuth.getSession(token);
+        sessionData = await sessionAuth.getSession(token);
         if (sessionData) maybeUserId = sessionData.userId;
       }
       if (!maybeUserId && adapter) {
-        try {
-          const identity = typeof adapter === 'function' ? await adapter(request) : await adapter.authenticate(request);
-          maybeUserId = typeof identity === 'string' ? identity : identity?.userId ?? identity?.user_id;
-        } catch {
-          // ignore error for public route context discovery
-        }
+        const identity = typeof adapter === 'function' ? await adapter(request) : await adapter.authenticate(request);
+        maybeUserId = typeof identity === 'string' ? identity : identity?.userId ?? identity?.user_id;
       }
       if (maybeUserId) {
-        try {
-          const business = await resolveBusiness(options.pool, maybeUserId.trim());
-          (request as unknown as { easyLedger?: { userId: string; business: typeof business } }).easyLedger = {
-            userId: maybeUserId.trim(),
-            business,
-          };
-        } catch {
-          if (sessionData?.businessId) {
-            (request as unknown as { easyLedger?: { userId: string; business: { id: string; name: string; currency: 'IDR' | 'USD'; is_demo: boolean; ledger_revision: string } } }).easyLedger = {
-              userId: maybeUserId.trim(),
-              business: {
-                id: sessionData.businessId,
-                name: sessionData.businessName ?? '[DEMO] EasyLedger Juice Stall',
-                currency: sessionData.currency ?? 'USD',
-                is_demo: sessionData.isDemo ?? true,
-                ledger_revision: '0',
-              },
-            };
-          }
-        }
+        const business = sessionData
+          ? await getBusinessById(options.pool, sessionData.businessId, maybeUserId.trim())
+          : await resolveBusiness(options.pool, maybeUserId.trim());
+        (request as unknown as { easyLedger?: { userId: string; business: typeof business } }).easyLedger = {
+          userId: maybeUserId.trim(),
+          business,
+        };
       }
       return;
     }
@@ -968,19 +1011,7 @@ export function createApp(options: AppOptions) {
         throw new ApiError('UNAUTHORIZED', 'Voice session token is invalid or expired', { httpStatus: 401 });
       }
 
-      let business: { id: string; currency: 'IDR' | 'USD'; ledger_revision: string; name: string; timezone: string; is_demo: boolean };
-      try {
-        business = await getBusinessById(options.pool, session.business_id);
-      } catch {
-        business = {
-          id: session.business_id,
-          name: '[DEMO] EasyLedger Juice Stall',
-          currency: 'USD',
-          timezone: 'UTC',
-          is_demo: true,
-          ledger_revision: '0',
-        };
-      }
+      const business = await getBusinessById(options.pool, session.business_id, session.actor_user_id);
       (request as unknown as { easyLedger?: unknown }).easyLedger = {
         userId: session.actor_user_id,
         business,
@@ -990,10 +1021,10 @@ export function createApp(options: AppOptions) {
     }
 
     let userId: string | undefined;
-    let matchedSession: ReturnType<typeof sessionAuth.getSession> | undefined;
+    let matchedSession: Awaited<ReturnType<typeof sessionAuth.getSession>> | undefined;
     const sessionToken = sessionAuth.extractTokenFromRequest(request);
     if (sessionToken) {
-      matchedSession = sessionAuth.getSession(sessionToken);
+      matchedSession = await sessionAuth.getSession(sessionToken);
       if (matchedSession) {
         userId = matchedSession.userId;
       }
@@ -1011,23 +1042,9 @@ export function createApp(options: AppOptions) {
       throw new ApiError('UNAUTHORIZED', 'Authentication is required', { httpStatus: 401 });
     }
 
-    let business: { id: string; currency: 'IDR' | 'USD'; ledger_revision: string; name: string; timezone: string; is_demo: boolean };
-    try {
-      business = await resolveBusiness(options.pool, userId.trim());
-    } catch {
-      if (matchedSession?.businessId) {
-        business = {
-          id: matchedSession.businessId,
-          name: matchedSession.businessName ?? '[DEMO] EasyLedger Juice Stall',
-          currency: matchedSession.currency ?? 'USD',
-          timezone: 'UTC',
-          is_demo: matchedSession.isDemo ?? true,
-          ledger_revision: '0',
-        };
-      } else {
-        throw new ApiError('FORBIDDEN', 'Authenticated user has no business', { httpStatus: 403 });
-      }
-    }
+    const business = matchedSession
+      ? await getBusinessById(options.pool, matchedSession.businessId, userId.trim())
+      : await resolveBusiness(options.pool, userId.trim());
     (request as unknown as { easyLedger?: { userId: string; business: typeof business } }).easyLedger = {
       userId: userId.trim(),
       business,
@@ -1343,54 +1360,16 @@ export function createApp(options: AppOptions) {
       const rawTo = body.date_to ?? body.end_date;
       const dates = dateRange(rawFrom, rawTo);
 
-      let result;
-      try {
-        result = await salesQueries.querySales({
-          business_id: context.business.id,
-          currency: context.business.currency,
-          ledger_revision: context.business.ledger_revision,
-          metric: body.metric,
-          dimension: body.dimension,
-          date_from: dates.start,
-          date_to: dates.end,
-          product_ids: body.product_ids,
-        });
-      } catch {
-        if (body.metric === 'revenue' && body.dimension === 'date') {
-          result = {
-            metric: 'revenue' as const,
-            dimension: 'date' as const,
-            currency: context.business.currency,
-            ledger_revision: context.business.ledger_revision,
-            points: [
-              { label: '2026-09-20', value: 4500, state: 'recorded' as const },
-              { label: '2026-09-21', value: 0, state: 'confirmed_zero' as const },
-              { label: '2026-09-22', value: 8500, state: 'recorded' as const },
-            ],
-          };
-        } else if (body.metric === 'units' && body.dimension === 'product') {
-          result = {
-            metric: 'units' as const,
-            dimension: 'product' as const,
-            currency: context.business.currency,
-            ledger_revision: context.business.ledger_revision,
-            points: [
-              { label: 'Orange Juice', value: 18, state: 'recorded' as const },
-              { label: 'Mango Juice', value: 12, state: 'recorded' as const },
-            ],
-          };
-        } else {
-          result = {
-            metric: body.metric,
-            dimension: 'none' as const,
-            currency: context.business.currency,
-            ledger_revision: context.business.ledger_revision,
-            points: [
-              { label: 'Total', value: body.metric === 'revenue' ? 13000 : 30, state: 'recorded' as const },
-            ],
-          };
-        }
-      }
+      const result = await salesQueries.querySales({
+        business_id: context.business.id,
+        currency: context.business.currency,
+        ledger_revision: context.business.ledger_revision,
+        metric: body.metric,
+        dimension: body.dimension,
+        date_from: dates.start,
+        date_to: dates.end,
+        product_ids: body.product_ids,
+      });
 
       return reply.code(200).send(successEnvelope(String(request.id), result, {
         currency: result.currency,
@@ -2098,256 +2077,160 @@ export function createApp(options: AppOptions) {
   registerHealthRoute('/api/v1/health');
 
   const registerAuthRoutes = (prefix: string) => {
-    app.get(`${prefix}/auth/session`, async (request, reply) => {
-      const context = (request as unknown as { easyLedger?: { userId: string; business: { id: string; name: string; currency: 'IDR' | 'USD'; is_demo: boolean; ledger_revision: string } } }).easyLedger;
-      if (context?.business) {
-        return reply.code(200).send(successEnvelope(String(request.id), {
-          authenticated: true,
-          user_id: context.userId,
-          business: {
-            id: context.business.id,
-            name: context.business.name,
-            currency: context.business.currency,
-            is_demo: context.business.is_demo,
-            ledger_revision: context.business.ledger_revision,
-          },
-        }));
-      }
-      return reply.code(200).send(successEnvelope(String(request.id), {
-        authenticated: false,
-      }));
-    });
+    const authStatus = async (request: { id: string; easyLedger?: { userId: string; business: { id: string; name: string; currency: 'IDR' | 'USD'; is_demo: boolean; ledger_revision: string } } }, reply: { code: (status: number) => { send: (value: unknown) => unknown } }) => {
+      const context = request.easyLedger;
+      return reply.code(200).send(successEnvelope(String(request.id), context?.business
+        ? {
+            authenticated: true,
+            user_id: context.userId,
+            business: {
+              id: context.business.id,
+              name: context.business.name,
+              currency: context.business.currency,
+              is_demo: context.business.is_demo,
+              ledger_revision: context.business.ledger_revision,
+            },
+          }
+        : { authenticated: false }));
+    };
+    app.get(`${prefix}/auth/session`, authStatus);
+    app.get(`${prefix}/auth/me`, authStatus);
 
-    app.get(`${prefix}/auth/me`, async (request, reply) => {
-      const context = (request as unknown as { easyLedger?: { userId: string; business: { id: string; name: string; currency: 'IDR' | 'USD'; is_demo: boolean; ledger_revision: string } } }).easyLedger;
-      if (context?.business) {
-        return reply.code(200).send(successEnvelope(String(request.id), {
-          authenticated: true,
-          user_id: context.userId,
-          business: {
-            id: context.business.id,
-            name: context.business.name,
-            currency: context.business.currency,
-            is_demo: context.business.is_demo,
-            ledger_revision: context.business.ledger_revision,
-          },
-        }));
+    const handleLogin = async (request: { id: string; body: unknown }, reply: any, forcedMode?: 'new') => {
+      const body = (request.body as {
+        merchant?: 'demo' | 'new' | 'account';
+        business_name?: string;
+        currency?: 'IDR' | 'USD';
+        username?: string;
+        email?: string;
+        password?: string;
+      }) ?? {};
+      const mode = forcedMode ?? body.merchant;
+      if (!mode) throw new ApiError('VALIDATION_ERROR', 'Choose demo, sign in, or create an account.', { httpStatus: 422 });
+      if (!forcedMode && mode === 'new') {
+        throw new ApiError('VALIDATION_ERROR', 'Create accounts through the signup route.', { httpStatus: 422 });
       }
-      return reply.code(200).send(successEnvelope(String(request.id), {
-        authenticated: false,
-      }));
-    });
 
-    app.post(`${prefix}/auth/login`, { schema: { body: authLoginSchema } }, async (request, reply) => {
-      const body = (request.body as { merchant?: 'demo' | 'new' | 'account'; name?: string; currency?: 'IDR' | 'USD'; username?: string; password?: string }) ?? {};
-      const mode = body.merchant ?? 'demo';
+      if (mode === 'new') {
+        const username = (body.username ?? '').trim().toLowerCase();
+        const email = (body.email ?? '').trim().toLowerCase();
+        const password = body.password ?? '';
+        const businessName = (body.business_name ?? '').trim();
+        const currency = body.currency;
+        const fieldErrors: Record<string, string> = {};
+        if (!/^[a-z0-9][a-z0-9_.-]{2,31}$/.test(username)) fieldErrors.username = 'Use 3–32 letters, numbers, dots, underscores, or hyphens.';
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) fieldErrors.email = 'Enter a valid email address.';
+        if (password.length < 10 || password.length > 100) fieldErrors.password = 'Use a password between 10 and 100 characters.';
+        if (!businessName || businessName.length > 100) fieldErrors.business_name = 'Enter a business name up to 100 characters.';
+        if (currency !== 'IDR' && currency !== 'USD') fieldErrors.currency = 'Choose IDR or USD.';
+        if (Object.keys(fieldErrors).length) {
+          throw new ApiError('VALIDATION_ERROR', 'Check the highlighted account details.', { httpStatus: 422, fieldErrors });
+        }
+
+        const passwordHash = await hashPassword(password);
+        const userId = randomUUID();
+        const businessId = randomUUID();
+        try {
+          const session = await withTransaction(options.pool, async (client) => {
+            await client.query(
+              `INSERT INTO users (id, email, name, username, password_hash, role)
+               VALUES ($1, $2, $3, $4, $5, 'merchant')`,
+              [userId, email, username, username, passwordHash],
+            );
+            await client.query(
+              `INSERT INTO businesses (id, owner_user_id, name, currency, timezone, is_demo)
+               VALUES ($1, $2, $3, $4, 'Asia/Jakarta', FALSE)`,
+              [businessId, userId, businessName, currency],
+            );
+            return sessionAuth.createSession({ userId, businessId }, client);
+          });
+          setSessionCookie(reply, session.token, session.expiresAt);
+          return reply.code(201).send(successEnvelope(String(request.id), {
+            user_id: userId,
+            business: { id: businessId, name: businessName, currency, is_demo: false, ledger_revision: '0' },
+            expires_at: new Date(session.expiresAt).toISOString(),
+          }));
+        } catch (error) {
+          if ((error as { code?: string }).code === '23505') {
+            throw new ApiError('CONFLICT', 'That username or email is already registered.', { httpStatus: 409 });
+          }
+          throw error;
+        }
+      }
 
       if (mode === 'account') {
-        const username = (body.username ?? '').trim();
-        const password = (body.password ?? '');
-        if (!username || !password) {
-          throw new ApiError('VALIDATION_ERROR', 'username and password are required', {
+        const identifier = (body.username ?? '').trim().toLowerCase();
+        const password = body.password ?? '';
+        if (!identifier || !password) {
+          throw new ApiError('VALIDATION_ERROR', 'Username/email and password are required.', {
             httpStatus: 422,
             fieldErrors: { username: 'required', password: 'required' },
           });
         }
-
-        let userId = '00000000-0000-4000-8000-000000000101';
-        let biz = {
-          id: '00000000-0000-4000-8000-000000000001',
-          name: `${username} Store`,
-          currency: 'USD' as 'IDR' | 'USD',
-          ledger_revision: '0',
-          is_demo: false,
-        };
-
-        try {
-          const userRes = await poolQuery<{ id: string; name: string }>(
-            options.pool,
-            `SELECT id, name FROM users WHERE email = $1 OR name = $1 LIMIT 1`,
-            [username],
-          );
-          let dbUserId = userRes.rows[0]?.id;
-          if (!dbUserId) {
-            if (username.toLowerCase().includes('demo')) {
-              dbUserId = '00000000-0000-4000-8000-000000000101';
-            } else {
-              dbUserId = randomUUID();
-              await poolQuery(options.pool, `
-                INSERT INTO users (id, email, name, role)
-                VALUES ($1, $2, $3, 'merchant')
-                ON CONFLICT (id) DO NOTHING
-              `, [dbUserId, username.includes('@') ? username : `${username}@merchant.easyledger.local`, username]);
-              const businessId = randomUUID();
-              await poolQuery(options.pool, `
-                INSERT INTO businesses (id, owner_user_id, name, currency, timezone, is_demo)
-                VALUES ($1, $2, $3, 'USD', 'UTC', FALSE)
-                ON CONFLICT (id) DO NOTHING
-              `, [businessId, dbUserId, `${username} Store`]);
-              const p1Id = randomUUID();
-              const p2Id = randomUUID();
-              await poolQuery(options.pool, `
-                INSERT INTO products (id, business_id, name, default_unit_price)
-                VALUES ($1, $2, $3, 450), ($4, $2, $5, 500)
-              `, [p1Id, businessId, 'Orange Juice', p2Id, 'Mango Juice']);
-            }
-          }
-          userId = dbUserId;
-          const resolved = await resolveBusiness(options.pool, userId);
-          biz = {
-            id: resolved.id,
-            name: resolved.name,
-            currency: resolved.currency,
-            ledger_revision: resolved.ledger_revision,
-            is_demo: resolved.is_demo,
-          };
-        } catch {
-          // Graceful fallback for offline local evaluation environments
-        }
-
-        const session = sessionAuth.createSession({
-          userId,
-          businessId: biz.id,
-          businessName: biz.name,
-          isDemo: biz.is_demo,
-          currency: biz.currency,
-        });
-
-        reply.header('Set-Cookie', `easyledger_session=${session.token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800`);
-        return reply.code(200).send(successEnvelope(String(request.id), {
-          token: session.token,
-          user_id: userId,
-          business: {
-            id: biz.id,
-            name: biz.name,
-            currency: biz.currency,
-            is_demo: biz.is_demo,
-            ledger_revision: biz.ledger_revision,
-          },
-          expires_at: new Date(session.expiresAt).toISOString(),
-        }));
-      }
-
-      if (mode === 'new') {
-        const merchantName = (body.name ?? '').trim();
-        if (!merchantName) {
-          throw new ApiError('VALIDATION_ERROR', 'name is required when creating a new merchant', {
-            httpStatus: 422,
-            fieldErrors: { name: 'required' },
-          });
-        }
-        const businessId = randomUUID();
-        const ownerUserId = randomUUID();
-        const currency = body.currency === 'IDR' ? 'IDR' : 'USD';
-
-        try {
-          await poolQuery(options.pool, `
-            INSERT INTO users (id, email, name, role)
-            VALUES ($1, $2, $3, 'merchant')
-            ON CONFLICT (id) DO NOTHING
-          `, [ownerUserId, `${ownerUserId}@merchant.easyledger.local`, merchantName]);
-
-          await poolQuery(options.pool, `
-            INSERT INTO businesses (id, owner_user_id, name, currency, timezone, is_demo)
-            VALUES ($1, $2, $3, $4, 'UTC', FALSE)
-          `, [businessId, ownerUserId, merchantName, currency]);
-
-          const p1Id = randomUUID();
-          const p2Id = randomUUID();
-          const p1Price = currency === 'IDR' ? 15000 : 450;
-          const p2Price = currency === 'IDR' ? 18000 : 500;
-          await poolQuery(options.pool, `
-            INSERT INTO products (id, business_id, name, default_unit_price)
-            VALUES ($1, $2, $3, $4), ($5, $2, $6, $7)
-          `, [p1Id, businessId, 'Orange Juice', p1Price, p2Id, businessId, 'Mango Juice', p2Price]);
-        } catch {
-          // Graceful fallback for offline local evaluation environments
-        }
-
-        const session = sessionAuth.createSession({
-          userId: ownerUserId,
-          businessId,
-          businessName: merchantName,
-          isDemo: false,
-          currency,
-        });
-
-        reply.header('Set-Cookie', `easyledger_session=${session.token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800`);
-        return reply.code(200).send(successEnvelope(String(request.id), {
-          token: session.token,
-          user_id: ownerUserId,
-          business: {
-            id: businessId,
-            name: merchantName,
-            currency,
-            is_demo: false,
-            ledger_revision: '0',
-          },
-          expires_at: new Date(session.expiresAt).toISOString(),
-        }));
-      }
-
-      // Demo login
-      let demoBusiness: { id: string; owner_user_id: string; name: string; currency: 'IDR' | 'USD'; ledger_revision: string; is_demo: boolean } | null = null;
-      try {
-        const res = await poolQuery<{ id: string; owner_user_id: string; name: string; currency: 'IDR' | 'USD'; ledger_revision: string; is_demo: boolean }>(
+        const result = await poolQuery<{ id: string; password_hash: string | null }>(
           options.pool,
-          `SELECT id, owner_user_id, name, currency, ledger_revision::text AS ledger_revision, is_demo
-             FROM businesses
-            WHERE is_demo = TRUE
-            ORDER BY created_at ASC
+          `SELECT id::text AS id, password_hash
+             FROM users
+            WHERE lower(username) = $1 OR lower(email) = $1
             LIMIT 1`,
+          [identifier],
         );
-        if (res.rowCount && res.rows[0]) {
-          demoBusiness = res.rows[0];
+        const user = result.rows[0];
+        if (!user || !(await verifyPassword(password, user.password_hash))) {
+          throw new ApiError('INVALID_CREDENTIALS', 'Username/email or password is incorrect.', { httpStatus: 401 });
         }
-      } catch {
-        // Fallback for standalone evaluation or offline pool
+        const business = await resolveBusiness(options.pool, user.id);
+        const session = await sessionAuth.createSession({ userId: user.id, businessId: business.id });
+        setSessionCookie(reply, session.token, session.expiresAt);
+        return reply.code(200).send(successEnvelope(String(request.id), {
+          user_id: user.id,
+          business: {
+            id: business.id,
+            name: business.name,
+            currency: business.currency,
+            is_demo: business.is_demo,
+            ledger_revision: business.ledger_revision,
+          },
+          expires_at: new Date(session.expiresAt).toISOString(),
+        }));
       }
 
-      if (!demoBusiness) {
-        demoBusiness = {
-          id: '00000000-0000-4000-8000-000000000001',
-          owner_user_id: '00000000-0000-4000-8000-000000000101',
-          name: '[DEMO] EasyLedger Juice Stall',
-          currency: 'USD',
-          ledger_revision: '0',
-          is_demo: true,
-        };
-      }
-
-      const session = sessionAuth.createSession({
-        userId: demoBusiness.owner_user_id,
-        businessId: demoBusiness.id,
-        businessName: demoBusiness.name,
-        isDemo: true,
-        currency: demoBusiness.currency,
-      });
-
-      reply.header('Set-Cookie', `easyledger_session=${session.token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800`);
+      const demo = await poolQuery<{
+        id: string; owner_user_id: string; name: string; currency: 'IDR' | 'USD'; ledger_revision: string; is_demo: boolean;
+      }>(
+        options.pool,
+        `SELECT id, owner_user_id, name, currency, ledger_revision::text AS ledger_revision, is_demo
+           FROM businesses
+          WHERE is_demo = TRUE
+          ORDER BY created_at ASC
+          LIMIT 1`,
+        [],
+      );
+      const demoBusiness = demo.rows[0];
+      if (!demoBusiness) throw new ApiError('SERVICE_UNAVAILABLE', 'The demo workspace is not available.', { httpStatus: 503, retryable: true });
+      const session = await sessionAuth.createSession({ userId: demoBusiness.owner_user_id, businessId: demoBusiness.id });
+      setSessionCookie(reply, session.token, session.expiresAt);
       return reply.code(200).send(successEnvelope(String(request.id), {
-        token: session.token,
-        user_id: session.userId,
+        user_id: demoBusiness.owner_user_id,
         business: {
           id: demoBusiness.id,
           name: demoBusiness.name,
           currency: demoBusiness.currency,
-          is_demo: Boolean(demoBusiness.is_demo),
+          is_demo: demoBusiness.is_demo,
           ledger_revision: demoBusiness.ledger_revision,
         },
         expires_at: new Date(session.expiresAt).toISOString(),
       }));
-    });
+    };
+
+    app.post(`${prefix}/auth/login`, { schema: { body: authLoginSchema } }, (request, reply) => handleLogin(request, reply));
+    app.post(`${prefix}/auth/signup`, { schema: { body: authLoginSchema } }, (request, reply) => handleLogin(request, reply, 'new'));
 
     app.post(`${prefix}/auth/logout`, async (request, reply) => {
       const token = sessionAuth.extractTokenFromRequest(request);
-      if (token) {
-        sessionAuth.revokeSession(token);
-      }
-      reply.header('Set-Cookie', 'easyledger_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT');
-      return reply.code(200).send(successEnvelope(String(request.id), {
-        message: 'Logged out successfully',
-      }));
+      if (token) await sessionAuth.revokeSession(token);
+      clearSessionCookie(reply);
+      return reply.code(200).send(successEnvelope(String(request.id), { message: 'Logged out successfully' }));
     });
   };
 

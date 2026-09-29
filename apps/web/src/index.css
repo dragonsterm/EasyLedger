@@ -48,6 +48,12 @@ body {
   color: var(--ink);
 }
 
+body:has(.auth-modal-page) {
+  min-width: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
 button,
 input,
 select {
@@ -4770,6 +4776,74 @@ body:has(.app-shell-home) {
   background: var(--surface, #fbfbf7);
   border: 1px solid var(--outline, #e5e8df);
   box-shadow: 0 12px 36px rgba(37, 39, 36, 0.08);
+}
+
+.auth-modal-page {
+  position: relative;
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 16px;
+  background: var(--canvas, #f0f1eb);
+}
+
+.auth-modal-page .auth-modal-dialog {
+  flex: 0 1 auto;
+  margin: auto 0;
+}
+
+.auth-current-account {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 3px;
+  margin: 8px 0 18px;
+  padding: 11px 13px;
+  border: 1px solid #d8e2d6;
+  border-radius: 10px;
+  background: #f0f3ea;
+}
+
+.auth-current-account-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.auth-current-account > span:nth-child(2) {
+  grid-column: 1;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.auth-current-account .auth-signout-btn {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  white-space: nowrap;
+}
+
+.api-state-card {
+  display: flex;
+  min-height: 180px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 10px;
+}
+
+.api-state-card h1 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 20px;
+}
+
+.api-state-card p {
+  margin: 0;
+  color: var(--secondary);
 }
 
 .auth-modal-header {

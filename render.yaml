@@ -7,7 +7,8 @@ databases:
     databaseName: easyledger
     user: easyledger_owner
     region: singapore
-    plan: free
+    plan: 0.1c-256mb
+    postgresMajorVersion: '17'
     ipAllowList: [] # Private internal VPC network access only
 
 services:
@@ -35,18 +36,26 @@ services:
       - key: ASSEMBLYAI_API_KEY
         sync: false # Set securely in Render dashboard secrets
       - key: CORS_ALLOWED_ORIGIN
-        value: https://easyledger.onrender.com
+        fromService:
+          type: web
+          name: easyledger-web
+          envVarKey: RENDER_EXTERNAL_HOSTNAME
 
   # Tier 2: React + Vite Static Site SPA
   - type: web
     name: easyledger-web
     runtime: static
-    region: singapore
     plan: free
     rootDir: apps/web
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
     autoDeploy: true
+    envVars:
+      - key: VITE_API_HOSTNAME
+        fromService:
+          type: web
+          name: easyledger-api
+          envVarKey: RENDER_EXTERNAL_HOSTNAME
     headers:
       - path: /*
         name: X-Frame-Options

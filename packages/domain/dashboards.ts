@@ -15,6 +15,7 @@ export interface WidgetSpec {
   };
   comparison?: string | null;
   format?: string | null;
+  style?: 'sage' | 'warm';
   schema_version?: number;
 }
 
@@ -219,7 +220,6 @@ function resolveTargetWidgetId(
 
 export class DashboardService {
   private readonly pool: DatabasePool;
-  private readonly memoryDashboards = new Map<string, DashboardView>();
   private readonly drafts = new Map<string, DashboardDraftView>();
 
   constructor(pool: DatabasePool) {
@@ -227,35 +227,27 @@ export class DashboardService {
   }
 
   async getDashboard(businessId: string, dashboardId: string): Promise<DashboardView> {
-    const memoryKey = `${businessId}:${dashboardId}`;
-    const inMemory = this.memoryDashboards.get(memoryKey);
-
+    const poolQuery = (this.pool as DatabasePool & { query: DatabaseClient['query'] });
+    let result;
     try {
-      const poolQuery = (this.pool as DatabasePool & { query: DatabaseClient['query'] });
-      const result = await poolQuery.query<DashboardRow>(
+      result = await poolQuery.query<DashboardRow>(
         `SELECT id, business_id, name, schema_version, version::text AS version,
                 widgets, layout, created_at, updated_at
            FROM dashboards
           WHERE business_id = $1 AND id = $2`,
         [businessId, dashboardId],
       );
-
-      if (result.rowCount && result.rows[0]) {
-        const view = dashboardView(result.rows[0]);
-        this.memoryDashboards.set(memoryKey, view);
-        return view;
-      }
     } catch {
-      if (inMemory) return inMemory;
+      throw dashboardStorageUnavailable();
     }
 
-    if (inMemory) return inMemory;
+    if (result.rowCount && result.rows[0]) return dashboardView(result.rows[0]);
     throw new OperationError('NOT_FOUND', 'Dashboard is unavailable', { httpStatus: 404 });
   }
 
   async listDashboards(businessId: string): Promise<DashboardView[]> {
+    const poolQuery = (this.pool as DatabasePool & { query: DatabaseClient['query'] });
     try {
-      const poolQuery = (this.pool as DatabasePool & { query: DatabaseClient['query'] });
       const result = await poolQuery.query<DashboardRow>(
         `SELECT id, business_id, name, schema_version, version::text AS version,
                 widgets, layout, created_at, updated_at
@@ -265,16 +257,10 @@ export class DashboardService {
         [businessId],
       );
 
-      if (result.rowCount) {
-        return result.rows.map(dashboardView);
-      }
-    } catch {}
-
-    const list: DashboardView[] = [];
-    for (const [key, dash] of this.memoryDashboards.entries()) {
-      if (key.startsWith(`${businessId}:`)) list.push(dash);
+      return result.rows.map(dashboardView);
+    } catch {
+      throw dashboardStorageUnavailable();
     }
-    return list.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
   }
 
   async saveDashboard(input: SaveDashboardInput): Promise<DashboardView> {
@@ -326,22 +312,22 @@ export class DashboardService {
         }
       }
 
-      const nextVersion = (BigInt(existing.version) + 1n).toString();
-      const nowIso = new Date().toISOString();
-
       try {
         const res = await poolQuery.query<DashboardRow>(
           `UPDATE dashboards
               SET name = $3, widgets = $4::jsonb, layout = $5::jsonb,
                   schema_version = $6, version = version + 1, updated_at = now()
             WHERE business_id = $1 AND id = $2
+              AND ($7::bigint IS NULL OR version = $7::bigint)
         RETURNING id, business_id, name, schema_version, version::text AS version,
                   widgets, layout, created_at, updated_at`,
-          [input.business_id, existing.id, name, JSON.stringify(widgets), JSON.stringify(layout), schemaVersion],
+          [input.business_id, existing.id, name, JSON.stringify(widgets), JSON.stringify(layout), schemaVersion,
+            input.expected_version === undefined || input.expected_version === null
+              ? null
+              : String(input.expected_version)],
         );
         if (res.rowCount && res.rows[0]) {
           const updatedView = dashboardView(res.rows[0]);
-          this.memoryDashboards.set(`${input.business_id}:${existing.id}`, updatedView);
           this.drafts.delete(draftKey);
           return updatedView;
         }
@@ -350,26 +336,27 @@ export class DashboardService {
         if (pg.code === '23505' && pg.constraint === 'dashboards_business_id_name_key') {
           throw new OperationError('CONFLICT', 'A dashboard with this name already exists', { httpStatus: 409 });
         }
+        throw dashboardStorageUnavailable();
       }
 
-      const updatedView: DashboardView = {
-        ...existing,
-        name,
-        schema_version: schemaVersion,
-        version: nextVersion,
-        widgets,
-        layout,
-        updated_at: nowIso,
-      };
-      this.memoryDashboards.set(`${input.business_id}:${existing.id}`, updatedView);
-      this.drafts.delete(draftKey);
-      return updatedView;
+      let current: DashboardView;
+      try {
+        current = await this.getDashboard(input.business_id, existing.id);
+      } catch (err) {
+        if (err instanceof OperationError && err.code === 'NOT_FOUND') throw err;
+        throw err;
+      }
+      if (input.expected_version === undefined || input.expected_version === null) {
+        throw dashboardStorageUnavailable();
+      }
+      throw new OperationError('CONFLICT', 'Expected version does not match current dashboard version', {
+        httpStatus: 409,
+        currentVersion: current.version,
+      });
     }
 
     // Creating new dashboard
     const newId = input.id ?? randomUUID();
-    const nowIso = new Date().toISOString();
-
     try {
       const res = await poolQuery.query<DashboardRow>(
         `INSERT INTO dashboards (
@@ -381,7 +368,6 @@ export class DashboardService {
       );
       if (res.rowCount && res.rows[0]) {
         const createdView = dashboardView(res.rows[0]);
-        this.memoryDashboards.set(`${input.business_id}:${newId}`, createdView);
         this.drafts.delete(draftKey);
         return createdView;
       }
@@ -390,22 +376,10 @@ export class DashboardService {
       if (pg.code === '23505' && pg.constraint === 'dashboards_business_id_name_key') {
         throw new OperationError('CONFLICT', 'A dashboard with this name already exists', { httpStatus: 409 });
       }
+      throw dashboardStorageUnavailable();
     }
 
-    const createdView: DashboardView = {
-      id: newId,
-      business_id: input.business_id,
-      name,
-      schema_version: schemaVersion,
-      version: '1',
-      widgets,
-      layout,
-      created_at: nowIso,
-      updated_at: nowIso,
-    };
-    this.memoryDashboards.set(`${input.business_id}:${newId}`, createdView);
-    this.drafts.delete(draftKey);
-    return createdView;
+    throw dashboardStorageUnavailable();
   }
 
   async getDashboardDraft(businessId: string, dashboardId?: string): Promise<DashboardDraftView | null> {
@@ -655,24 +629,25 @@ export class DashboardService {
   }
 
   async deleteDashboard(businessId: string, dashboardId: string): Promise<{ id: string; deleted: true }> {
-    const memoryKey = `${businessId}:${dashboardId}`;
+    const poolQuery = (this.pool as DatabasePool & { query: DatabaseClient['query'] });
+    let res;
     try {
-      const poolQuery = (this.pool as DatabasePool & { query: DatabaseClient['query'] });
-      const res = await poolQuery.query(
+      res = await poolQuery.query(
         'DELETE FROM dashboards WHERE business_id = $1 AND id = $2',
         [businessId, dashboardId],
       );
-      if (!res.rowCount && !this.memoryDashboards.has(memoryKey)) {
-        throw new OperationError('NOT_FOUND', 'Dashboard is unavailable', { httpStatus: 404 });
-      }
-    } catch (err) {
-      if (err instanceof OperationError) throw err;
-      if (!this.memoryDashboards.has(memoryKey)) {
-        throw new OperationError('NOT_FOUND', 'Dashboard is unavailable', { httpStatus: 404 });
-      }
+    } catch {
+      throw dashboardStorageUnavailable();
     }
 
-    this.memoryDashboards.delete(memoryKey);
+    if (!res.rowCount) throw new OperationError('NOT_FOUND', 'Dashboard is unavailable', { httpStatus: 404 });
     return { id: dashboardId, deleted: true };
   }
+}
+
+function dashboardStorageUnavailable(): OperationError {
+  return new OperationError('INTERNAL_ERROR', 'Dashboard storage is unavailable', {
+    httpStatus: 503,
+    retryable: true,
+  });
 }

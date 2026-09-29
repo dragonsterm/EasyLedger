@@ -19,19 +19,19 @@
     "docs/13-Sources.md": "434502708c6e16fb2d6d59e2aa744c66299b25de9da48431660544f1023f3e82",
     "docs/14-Glossary.md": "521bc112a25833bca787c936373910811b17bcd010c1eb4b30ff2d7b9a5601f9",
     "docs/15-Use-Cases.md": "ce97a3e8604e3700dc53faf1242f2da7c81b81068072241a4cbf4fd44877b406",
-    "docs/16-Implementation-Handoff.md": "ed6a36801c45bb5a0c3cc27b18ae66cb906ee93dd6dcd5ecbf39bbf474522934",
+    "docs/16-Implementation-Handoff.md": "4c5d300a9c5dc9cfad70c437147e13c054e762f50011fba7647779fea5549939",
     "docs/17-Verification-Record.md": "acf8bcdc326785af1667a236af0c43742adbf063bfbc36c405c820cfa0a01884",
     "docs/18-Hackathon-Rules.md": "6aa0224b94b76edcd850b04323cb0a0d903832b4af83c5ec86ae5e01538d5dbb",
     "scripts/serve-graph.cjs": "bbd7530b27f465a75e96bec76744b88bf67ae50e8849a9e9b2d723ab6a1ac1c3",
     "scripts/sync-docs.cjs": "7775883ca29fc91d4a27d006a1bef194149049cfa8c488a1060df5a2c200c20d",
     "scripts/watch-docs.cjs": "f0ef7073b01c3cf7cdd6770e58315576a417249e4ac978d419ed392dfc904c46",
-    "package.json": "daff480647a7ab8cfeb65afca8a662444c3d9f53eff2b62f7eeed6e48053a991",
+    "package.json": "3dc8bd823cb8a70dc5b3e2b759a514434d44230d5cad8c6390ddc05f21f44d93",
     "package-lock.json": "2e2336259cdccd863cbde42f1d4b25ac473940e72790fe28041f18674fb26056"
   },
   "outputs": {
-    ".graphify/graph.json": "a3ef46c9aba7075467bc67de60ea4bac19c35723048cfedf98ba8f8a39a940e8",
-    ".graphify/GRAPH_REPORT.md": "71379954d6ea3301c94c6504d3f2d18beae38ed9ccc8c1d0a4ea7ba7fc522723",
-    ".graphify/.graphify_labels.json": "5c37d2bc8702a296c9805433c9c895bcefbedd835c1bd7548695b07515481e38",
+    ".graphify/graph.json": "eb6b3a3ad37cf9fda65d547f24eb752fb2976ebe72fc141ee94e6529f8802ea4",
+    ".graphify/GRAPH_REPORT.md": "b45ed6b59c7290b01d25ee2c36e7adad9388bb8bfd741c56e202e7ee0048bbf8",
+    ".graphify/.graphify_labels.json": "fc7c7b3a719515d99e396a359c8d02985f68628e51a63f943a820bceb4678bcf",
     ".graphify/.graphify_runtime.json": "3f4a14b56ae5fdafce2e3f1ec75f0ae2768c6d5b841c25072cd235f888e8fe9c",
     "docs/EasyLedger-Overview.canvas": "15717ad4b0e1e1fc607b0a1e5fd3d6f8eb6edd22ad976c6328229400975a7abe",
     "docs/EasyLedger-Knowledge.canvas": "9b04fa391c2ab839ed1d1bad0a7b4f91e94d64c4913d452c1c7939a5beb53e10",
@@ -42,12 +42,12 @@
     ".graphify/studio/assets/pdf-gh-BrLFn.js": "be85c6975bbdafaa7a8132df55c2123d9f8f24fac092ec0b35ffbb492dff6ac3",
     ".graphify/studio/assets/pdf.worker.min-DgRcL-GR.js": "1636904ba68f5eb66103816b367b24254b507531d9f8c9602efb2a20a7247c26",
     ".graphify/studio/assets/pdf.worker.min-yatZIOMy.mjs": "1baa1844c89c80a5b2797c916e75ab29254be46d8e9cb53cb6364d7aad84be36",
-    ".graphify/studio/entities.json": "78f20c835590e9ab4fdf585be46da20d42bddee54763a7df61ced653872105f4",
-    ".graphify/studio/graph.json": "a3ef46c9aba7075467bc67de60ea4bac19c35723048cfedf98ba8f8a39a940e8",
+    ".graphify/studio/entities.json": "43d3aa8dd1c6e5f628c8db504672686478ccc98d580cebf4ab93ba39bc0c1480",
+    ".graphify/studio/graph.json": "eb6b3a3ad37cf9fda65d547f24eb752fb2976ebe72fc141ee94e6529f8802ea4",
     ".graphify/studio/index.html": "68a1550666dfa4c12d350e2695e614979b44a811ae9432c04ed4886709920df8",
     ".graphify/studio/reconciliation-candidates.json": "4bf7c8639bc34bbbae5aef4aba3c724f9a425cbdc0416ab6384f7745ae1acb96",
-    ".graphify/studio/scene.json": "8853f05c42ddf144ecf9b3fe81e091f908e377fc45b5ab5523779e7f8bca0c1b",
-    ".graphify/studio/search-index.json": "3e99e137c5f763709dcbd4b621a8dfcfa323502b57ced04fa40d825310dda4a2",
+    ".graphify/studio/scene.json": "3ac1d91e33657e6f45f5538338ef05ba60262e73628b3b4e74eb28096a742c42",
+    ".graphify/studio/search-index.json": "cc02af4535e11f51f3e2dc7dd6b702491a679227846b8817241fa229b65e13f8",
     ".graphify/studio/sources/AGENTS.md": "338c62889b4da282d5dd1283f24c8422c04f5d1fc0e306f84e1df6f5a4faae02",
     ".graphify/studio/sources/docs/00-Home.md": "ee19a6380b042868d6556c8218bb4cf1ed83ba49cefd92f0bb93a15ab41bf420",
     ".graphify/studio/sources/docs/01-Product-Brief.md": "2125372ed8365a49686d1f8957afed6b59aa5e4cb903e954812321f5546ca342",
@@ -65,17 +65,17 @@
     ".graphify/studio/sources/docs/13-Sources.md": "434502708c6e16fb2d6d59e2aa744c66299b25de9da48431660544f1023f3e82",
     ".graphify/studio/sources/docs/14-Glossary.md": "521bc112a25833bca787c936373910811b17bcd010c1eb4b30ff2d7b9a5601f9",
     ".graphify/studio/sources/docs/15-Use-Cases.md": "ce97a3e8604e3700dc53faf1242f2da7c81b81068072241a4cbf4fd44877b406",
-    ".graphify/studio/sources/docs/16-Implementation-Handoff.md": "ed6a36801c45bb5a0c3cc27b18ae66cb906ee93dd6dcd5ecbf39bbf474522934",
+    ".graphify/studio/sources/docs/16-Implementation-Handoff.md": "4c5d300a9c5dc9cfad70c437147e13c054e762f50011fba7647779fea5549939",
     ".graphify/studio/sources/docs/17-Verification-Record.md": "acf8bcdc326785af1667a236af0c43742adbf063bfbc36c405c820cfa0a01884",
     ".graphify/studio/sources/docs/18-Hackathon-Rules.md": "6aa0224b94b76edcd850b04323cb0a0d903832b4af83c5ec86ae5e01538d5dbb",
     ".graphify/studio/studio-template.html": "271a9108d87db74b5ad9ff7729132ba96380a49b5bce9bc22cccb9c9cefa886c",
-    ".graphify/studio/workspace-manifest.json": "144bda0667fdd1804daea74a604ed7baee912325b70cdbdab4aac961fd864843"
+    ".graphify/studio/workspace-manifest.json": "4aec698b2b76f896168741f48b0b81fc4277e8ac1add059f5b437cfb3e87ceb4"
   },
   "counts": {
     "notes": 20,
-    "nodes": 136,
-    "edges": 275,
-    "communities": 17
+    "nodes": 140,
+    "edges": 279,
+    "communities": 9
   },
-  "total_words": 13331
+  "total_words": 15177
 }

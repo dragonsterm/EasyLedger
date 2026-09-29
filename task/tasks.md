@@ -327,7 +327,7 @@
   - Record 5-minute video walkthrough following the submission narrative.
   - Prepare pitch deck (PDF) covering problem, solution, architecture, and live demo links.
 - **Tasks to Do:**
-  - [x] **TASK-29-01**: Deploy Fastify API (`apps/api`) and PostgreSQL database to Render with HTTPS, rate limiting, and CORS configuration.
+  - [ ] **TASK-29-01**: Deploy Fastify API (`apps/api`) and PostgreSQL database to Render with HTTPS, rate limiting, and CORS configuration.
   - [ ] **TASK-29-02**: Deploy React frontend (`apps/web`) to Render Static Site; verify live AssemblyAI voice agent connectivity.
   - [ ] **TASK-29-03**: Create 16:9 cover image for lablab.ai submission.
   - [ ] **TASK-29-04**: Record and edit MP4 video presentation (max 5 minutes):
@@ -340,7 +340,7 @@
 - **Human Verification Checkpoint:**
   - Review video presentation duration (must be ≤ 5 minutes) and verify audio clarity.
 - **Verification Evidence:**
-  - **TASK-29-01 (2026-09-28):** Implemented production Render deployment infrastructure blueprint (ADR-011): 1) `render.yaml` defining three-tier architecture in Singapore (`singapore`) with managed PostgreSQL database, Fastify Web Service API with healthcheck probes, and React Vite static site with SPA routing rewrites; 2) Multi-stage non-root container in `Dockerfile` (Node.js 22 LTS on Alpine Linux); 3) Transactional database migration and idempotent catalog seeder in `scripts/migrate-db.mjs` (`npm run db:migrate`); 4) Production session authentication in `apps/api/sessionAuth.ts` supporting 1-click demo login, dynamic simulated merchant provisioning, and public `/health` endpoints. Verified via 8 automated tests in `tests/api/auth.test.mjs` and `tests/api/deployment-render.test.mjs`.
+  - **TASK-29-01 (2026-09-29):** Render deployment configuration is implemented and locally checked: `render.yaml` configures the API and static site with HTTPS-facing service URLs, strict CORS origin wiring, and a persistent paid PostgreSQL 17 plan. The application and database have not been deployed to Render, and no live deployment has been verified. Keep this task incomplete until the deployed API and database pass live checks.
 
 ---
 

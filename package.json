@@ -7,6 +7,7 @@
   "scripts": {
     "start": "node --env-file-if-exists=.env apps/api/server.ts",
     "start:dev": "node --env-file-if-exists=.env --import ./scripts/local-development-env.mjs apps/api/server.ts",
+    "dev": "node scripts/dev.mjs",
     "test": "npm run test:domain && npm run test:api",
     "docs:sync": "node scripts/sync-docs.cjs",
     "docs:check": "node scripts/sync-docs.cjs --check",

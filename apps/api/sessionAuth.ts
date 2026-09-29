@@ -1,67 +1,87 @@
-import { randomBytes } from 'node:crypto';
-import type { AuthenticationAdapter } from './app.ts';
+import { createHash, randomBytes } from 'node:crypto';
+import type { DatabasePool } from '../../packages/domain/mutations.ts';
 
 export interface MerchantSession {
   token: string;
   userId: string;
-  businessId?: string;
-  businessName?: string;
-  isDemo?: boolean;
-  currency?: 'IDR' | 'USD';
+  businessId: string;
   createdAt: number;
   expiresAt: number;
 }
 
+interface StoredSessionRow {
+  user_id: string;
+  business_id: string;
+  created_at: Date | string;
+  expires_at: Date | string;
+}
+
+function digestToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
+}
+
+function timestamp(value: Date | string): number {
+  return value instanceof Date ? value.getTime() : new Date(value).getTime();
+}
+
 export class SessionAuthService {
-  private readonly sessions = new Map<string, MerchantSession>();
+  private readonly pool: DatabasePool & { query?: unknown };
   private readonly sessionTtlMs: number;
 
-  constructor(sessionTtlMs = 7 * 24 * 60 * 60 * 1000) {
+  constructor(
+    pool: DatabasePool & { query?: unknown },
+    sessionTtlMs = 7 * 24 * 60 * 60 * 1000,
+  ) {
+    this.pool = pool;
     this.sessionTtlMs = sessionTtlMs;
   }
 
-  createSession(options: {
+  async createSession(options: {
     userId: string;
-    businessId?: string;
-    businessName?: string;
-    isDemo?: boolean;
-    currency?: 'IDR' | 'USD';
+    businessId: string;
     ttlMs?: number;
-  }): MerchantSession {
-    const token = `eld_${randomBytes(24).toString('hex')}`;
+  }, executor: { query?: unknown } = this.pool): Promise<MerchantSession> {
+    const token = `eld_${randomBytes(32).toString('base64url')}`;
     const now = Date.now();
-    const session: MerchantSession = {
-      token,
-      userId: options.userId,
-      businessId: options.businessId,
-      businessName: options.businessName,
-      isDemo: options.isDemo,
-      currency: options.currency,
-      createdAt: now,
-      expiresAt: now + (options.ttlMs ?? this.sessionTtlMs),
-    };
-    this.sessions.set(token, session);
-    return session;
+    const expiresAt = now + (options.ttlMs ?? this.sessionTtlMs);
+    if (typeof executor?.query !== 'function') throw new Error('Session storage requires a PostgreSQL query executor');
+    await (executor.query as (query: string, values: unknown[]) => Promise<unknown>)(
+      `INSERT INTO auth_sessions (token_hash, user_id, business_id, created_at, expires_at)
+       VALUES ($1, $2, $3, to_timestamp($4 / 1000.0), to_timestamp($5 / 1000.0))`,
+      [digestToken(token), options.userId, options.businessId, now, expiresAt],
+    );
+    return { token, userId: options.userId, businessId: options.businessId, createdAt: now, expiresAt };
   }
 
-  getSession(token: string): MerchantSession | null {
+  async getSession(token: string): Promise<MerchantSession | null> {
     if (!token || typeof token !== 'string') return null;
-    const session = this.sessions.get(token.trim());
-    if (!session) return null;
-    if (Date.now() > session.expiresAt) {
-      this.sessions.delete(token.trim());
-      return null;
-    }
-    return session;
+    if (typeof this.pool?.query !== 'function') throw new Error('Session storage requires a PostgreSQL query executor');
+    const result = await (this.pool.query as (query: string, values: unknown[]) => Promise<{ rows: StoredSessionRow[] }>)(
+      `SELECT user_id::text, business_id::text, created_at, expires_at
+         FROM auth_sessions
+        WHERE token_hash = $1 AND expires_at > now()
+        LIMIT 1`,
+      [digestToken(token.trim())],
+    );
+    const row = result.rows[0];
+    if (!row) return null;
+    return {
+      token: token.trim(),
+      userId: row.user_id,
+      businessId: row.business_id,
+      createdAt: timestamp(row.created_at),
+      expiresAt: timestamp(row.expires_at),
+    };
   }
 
-  revokeSession(token: string): boolean {
+  async revokeSession(token: string): Promise<boolean> {
     if (!token || typeof token !== 'string') return false;
-    return this.sessions.delete(token.trim());
-  }
-
-  clear(): void {
-    this.sessions.clear();
+    if (typeof this.pool?.query !== 'function') throw new Error('Session storage requires a PostgreSQL query executor');
+    const result = await (this.pool.query as (query: string, values: unknown[]) => Promise<{ rowCount: number | null }>)(
+      'DELETE FROM auth_sessions WHERE token_hash = $1',
+      [digestToken(token.trim())],
+    );
+    return (result.rowCount ?? 0) > 0;
   }
 
   extractTokenFromRequest(request: unknown): string | null {
@@ -72,7 +92,6 @@ export class SessionAuthService {
     };
     const headers = req.headers ?? {};
 
-    // 1. Authorization: Bearer <token>
     const auth = headers.authorization;
     const authVal = Array.isArray(auth) ? auth[0] : auth;
     if (authVal && typeof authVal === 'string' && authVal.startsWith('Bearer ')) {
@@ -80,43 +99,14 @@ export class SessionAuthService {
       if (extracted) return extracted;
     }
 
-    // 2. Custom headers
-    const custom = headers['x-session-token'] ?? headers['x-easyledger-session'];
-    const customVal = Array.isArray(custom) ? custom[0] : custom;
-    if (typeof customVal === 'string' && customVal.trim()) {
-      return customVal.trim();
-    }
-
-    // 3. Cookie: easyledger_session=<token>
     const cookieHeader = headers.cookie;
     const cookieVal = Array.isArray(cookieHeader) ? cookieHeader[0] : cookieHeader;
     if (typeof cookieVal === 'string') {
       const match = cookieVal.match(/(?:^|;\s*)easyledger_session=([^;]+)/);
       if (match) {
-        return decodeURIComponent(match[1].trim());
+        try { return decodeURIComponent(match[1].trim()); } catch { return null; }
       }
     }
-
     return null;
-  }
-
-  createAuthenticationAdapter(fallbackAdapter?: AuthenticationAdapter): AuthenticationAdapter {
-    return async (request: unknown) => {
-      const token = this.extractTokenFromRequest(request);
-      if (token) {
-        const session = this.getSession(token);
-        if (session) {
-          return { userId: session.userId };
-        }
-      }
-
-      if (fallbackAdapter) {
-        return typeof fallbackAdapter === 'function'
-          ? fallbackAdapter(request)
-          : fallbackAdapter.authenticate(request);
-      }
-
-      return null;
-    };
   }
 }

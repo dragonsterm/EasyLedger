@@ -8,7 +8,8 @@ import Icon from './Icon';
 import LedgerJournal from './Ledger';
 import Catalog, { type CatalogSection } from './Catalog';
 import HomeWorkspace from './HomeWorkspace';
-import { AuthModal, type MerchantIdentity } from './AuthModal';
+import { AuthModal, type AuthTab, type MerchantIdentity } from './AuthModal';
+import { apiFetch } from './api';
 import { VoiceControl, useVoiceAgent } from './VoiceControl';
 import type { VoiceDashboardDraft } from './VoiceControl';
 import {
@@ -60,6 +61,54 @@ interface DashboardAnalytics {
   totalUnits: AnalyticsQueryResponse;
 }
 
+interface SavedDashboardRecord {
+  id: string;
+  name: string;
+  version: string;
+  widgets: Array<{
+    id: string;
+    type: 'line' | 'bar' | 'kpi' | 'table';
+    title: string;
+    metric: 'units' | 'revenue';
+    dimension?: 'date' | 'product' | 'none';
+    format?: string | null;
+    style?: 'sage' | 'warm';
+  }>;
+  layout: Array<{ i: string; x: number; y: number; w: number; h: number }>;
+}
+
+function dashboardWidgetFromSaved(widget: SavedDashboardRecord['widgets'][number]): DashboardWidgetDefinition | null {
+  let kind: DashboardWidgetKind | null = null;
+  if (widget.format === 'coverage') kind = 'complete-days';
+  else if (widget.type === 'line' && widget.metric === 'revenue' && (widget.dimension ?? 'date') === 'date') kind = 'daily-revenue';
+  else if (widget.type === 'bar' && widget.metric === 'units' && (widget.dimension ?? 'product') === 'product') kind = 'product-sales';
+  else if (widget.type === 'kpi' && (widget.dimension ?? 'none') === 'none') kind = widget.metric === 'revenue' ? 'revenue-kpi' : 'units-kpi';
+  if (!kind) return null;
+  return {
+    ...createDashboardWidget(kind, widget.id),
+    title: widget.title,
+    style: widget.style ?? 'sage',
+  };
+}
+
+function dashboardWidgetToSaved(widget: DashboardWidgetDefinition): SavedDashboardRecord['widgets'][number] {
+  const dimension = widget.kind === 'daily-revenue' ? 'date'
+    : widget.kind === 'product-sales' ? 'product'
+      : widget.kind === 'complete-days' ? 'date' : 'none';
+  const type = widget.kind === 'daily-revenue' ? 'line'
+    : widget.kind === 'product-sales' ? 'bar' : 'kpi';
+  const metric = widget.kind === 'daily-revenue' || widget.kind === 'revenue-kpi' ? 'revenue' : 'units';
+  return {
+    id: widget.id,
+    type,
+    title: widget.title,
+    metric,
+    dimension,
+    ...(widget.kind === 'complete-days' ? { format: 'coverage' } : {}),
+    style: widget.style,
+  };
+}
+
 interface SelectedDatum {
   dimension: 'date' | 'product';
   key: string;
@@ -92,8 +141,8 @@ function sampleDataForWidget(kind: DashboardWidgetKind): AnalyticsQueryResponse 
 
 const initialWidgetSelections: WidgetSelection[] = createInitialDashboardWidgets().map((widget) => ({
   ...widget,
-  data: sampleDataForWidget(widget.kind),
-  dataSource: 'sample',
+  data: null,
+  dataSource: 'live',
 }));
 
 function isReady(mapping: ChartMapping): mapping is Extract<ChartMapping, { status: 'ready' }> {
@@ -528,19 +577,25 @@ function DashboardFilters({
   editable,
   onWidgetKindChange,
   onAddWidget,
+  canSave,
+  saving,
+  onSave,
 }: {
   widgetKind: DashboardWidgetKind;
   editable: boolean;
   onWidgetKindChange: (kind: DashboardWidgetKind) => void;
   onAddWidget: () => void;
+  canSave: boolean;
+  saving: boolean;
+  onSave: () => void;
 }) {
   return (
     <section className={`canvas-toolbar dashboard-toolbar${editable ? ' dashboard-toolbar-editing' : ' dashboard-toolbar-preview'}`} aria-label="Dashboard filters and actions">
       <div className="filter-controls">
         <label className="filter-control">
           <span className="sr-only">Date range</span>
-          <select defaultValue="week" aria-label="Date range" disabled>
-            <option value="week">16–22 Sep 2026</option>
+          <select defaultValue="all" aria-label="Date range" disabled>
+            <option value="all">All dates</option>
           </select>
         </label>
         <label className="filter-control">
@@ -551,8 +606,8 @@ function DashboardFilters({
         </label>
         <label className="filter-control">
           <span className="sr-only">Comparison period</span>
-          <select defaultValue="previous" aria-label="Comparison period" disabled>
-            <option value="previous">Previous week</option>
+          <select defaultValue="none" aria-label="Comparison period" disabled>
+            <option value="none">No comparison</option>
           </select>
         </label>
       </div>
@@ -566,6 +621,7 @@ function DashboardFilters({
             </select>
           </label>
           <button className="button button-add" id="add-widget" type="button" onClick={onAddWidget}>+ Add widget</button>
+          <button className="button button-save" type="button" onClick={onSave} disabled={!canSave || saving} title={!canSave ? 'Open a saved dashboard from Home before saving changes' : undefined}>{saving ? 'Saving…' : 'Save dashboard'}</button>
         </div>
       )}
     </section>
@@ -770,11 +826,13 @@ function Inspector({
         </button>
       </header>
 
-      <section className="inspector-sample" aria-label={widget.dataSource === 'live' ? 'Live data status' : 'Sample data status'}>
-        <strong>{widget.dataSource === 'live' ? 'Live ledger data' : 'Sample data'}</strong>
-        <p>{widget.dataSource === 'live'
+      <section className="inspector-sample" aria-label={widget.kind === 'complete-days' ? 'Day coverage status' : widget.dataSource === 'live' ? 'Live data status' : 'Sample data status'}>
+        <strong>{widget.kind === 'complete-days' ? 'Coverage unavailable' : widget.dataSource === 'live' ? 'Live ledger data' : 'Sample data'}</strong>
+        <p>{widget.kind === 'complete-days'
+          ? 'Day coverage is not connected to this dashboard.'
+          : widget.dataSource === 'live'
           ? 'Values were returned by the authenticated analytics API. Source rows require the same ledger revision.'
-          : widget.data ? 'This widget is not connected to a live ledger.' : 'Coverage values are examples and are not connected to day coverage.'}</p>
+          : 'This widget is not connected to a live ledger.'}</p>
       </section>
 
       {isEditing ? (
@@ -870,12 +928,14 @@ function Inspector({
             </div>
           </section>
 
-          <section className="inspector-source" aria-label={widget.dataSource === 'live' ? 'Connected ledger source' : 'Sample widget source'}>
-            <h3>{widget.dataSource === 'live' ? 'Connected to your ledger' : 'Sample widget source'}</h3>
-            <p>{widget.data
+          <section className="inspector-source" aria-label={widget.kind === 'complete-days' ? 'Coverage source status' : widget.dataSource === 'live' ? 'Connected ledger source' : 'Sample widget source'}>
+            <h3>{widget.kind === 'complete-days' ? 'Coverage source unavailable' : widget.dataSource === 'live' ? 'Connected to your ledger' : 'Sample widget source'}</h3>
+            <p>{widget.kind === 'complete-days'
+              ? 'No day coverage figures are shown because the API does not provide them.'
+              : widget.data
               ? `${widget.dataSource === 'live' ? 'Ledger' : 'Sample fixture'} revision ${widget.data.ledger_revision} · same query filters.`
-              : 'Sample fixture · no live day coverage revision.'}</p>
-            <p>Widget changes stay in this local draft.</p>
+              : 'No connected data is available for this widget.'}</p>
+            <p>Save dashboard to keep widget changes with this business.</p>
           </section>
 
           <button className="remove-widget" type="button" onClick={() => onRemove(widget.id)}>Remove widget</button>
@@ -892,14 +952,16 @@ function Inspector({
             <div><dt>Revision</dt><dd>{widget.data ? `${widget.dataSource === 'live' ? 'Ledger' : 'Sample fixture'} · ${widget.data.ledger_revision}` : 'No API revision'}</dd></div>
           </dl>
 
-          <section className="inspector-rules" aria-label={widget.dataSource === 'live' ? 'How live values are shown' : 'How this sample is shown'}>
+          <section className="inspector-rules" aria-label={widget.kind === 'complete-days' ? 'Coverage availability' : widget.dataSource === 'live' ? 'How live values are shown' : 'How this sample is shown'}>
             <h3>How values are shown</h3>
-            <p>{widget.data
+            <p>{widget.kind === 'complete-days'
+              ? 'This dashboard does not yet contain day coverage measurements.'
+              : widget.data
               ? 'Open no-sale days are gaps; complete no-sale days show 0. Unknown-price sales are flagged separately and excluded from known-price revenue.'
-              : '5 of 7 days are shown as an illustrative sample. The analytics response does not provide day coverage.'}</p>
+              : 'No analytics values are available.'}</p>
           </section>
 
-          <p className="inspector-preview-note">Layout changes stay in this local draft. They do not change sales or save to an account.</p>
+          <p className="inspector-preview-note">Save dashboard to persist widget and layout changes.</p>
         </>
       )}
     </aside>
@@ -907,6 +969,9 @@ function Inspector({
 }
 
 function Dashboard({
+  businessId,
+  dashboardId,
+  dashboardName,
   widget,
   mode,
   onSelect,
@@ -917,6 +982,9 @@ function Dashboard({
   voiceControl,
   voiceDashboardDraft,
 }: {
+  businessId: string;
+  dashboardId: string | null;
+  dashboardName: string;
   widget: WidgetSelection | null;
   mode: DashboardMode;
   onSelect: (widget: WidgetSelection) => void;
@@ -927,8 +995,15 @@ function Dashboard({
   voiceControl: ReturnType<typeof useVoiceAgent>;
   voiceDashboardDraft: VoiceDashboardDraft | null;
 }) {
-  const [widgets, setWidgets] = useState(initialWidgetSelections);
+  const [widgets, setWidgets] = useState<WidgetSelection[]>(initialWidgetSelections);
   const [layout, setLayout] = useState<DashboardLayoutItem[]>(createInitialDashboardLayout);
+  const [savedDashboardVersion, setSavedDashboardVersion] = useState<string | null>(null);
+  const [savedDashboardStatus, setSavedDashboardStatus] = useState<'ready' | 'loading' | 'error'>(dashboardId ? 'loading' : 'ready');
+  const [dashboardLoadError, setDashboardLoadError] = useState<string | null>(null);
+  const [dashboardLoadRevision, setDashboardLoadRevision] = useState(0);
+  const [savingDashboard, setSavingDashboard] = useState(false);
+  const [dashboardSaveError, setDashboardSaveError] = useState<string | null>(null);
+  const [dashboardSaveNotice, setDashboardSaveNotice] = useState<string | null>(null);
   const [newWidgetKind, setNewWidgetKind] = useState<DashboardWidgetKind>('revenue-kpi');
   const [unsupportedVoiceWidgets, setUnsupportedVoiceWidgets] = useState<Array<{ id: string; title: string }>>([]);
   const nextWidgetSequence = useRef(1);
@@ -954,6 +1029,79 @@ function Dashboard({
     return leftPosition.y - rightPosition.y || leftPosition.x - rightPosition.x;
   }), [widgets, layoutPositions]);
   const isDesktopGrid = gridMounted && gridWidth >= 720;
+
+  useEffect(() => {
+    if (!dashboardId) {
+      setSavedDashboardVersion(null);
+      setSavedDashboardStatus('ready');
+      setDashboardLoadError(null);
+      return;
+    }
+    let cancelled = false;
+    setSavedDashboardStatus('loading');
+    setDashboardLoadError(null);
+    void apiFetch(`/api/v1/dashboards/${dashboardId}`).then(async (response) => {
+      const payload = await response.json().catch(() => null) as { data?: SavedDashboardRecord; message?: string } | null;
+      if (!response.ok || !payload?.data || !Array.isArray(payload.data.widgets) || !Array.isArray(payload.data.layout)) {
+        throw new Error(payload?.message ?? `This dashboard could not be loaded (${response.status}).`);
+      }
+      if (cancelled) return;
+      const record = payload.data;
+      const mapped = record.widgets.map(dashboardWidgetFromSaved);
+      const unsupported = record.widgets.filter((saved) => !dashboardWidgetFromSaved(saved)).map(({ id, title }) => ({ id, title }));
+      const definitions = mapped.filter((item): item is DashboardWidgetDefinition => item !== null);
+      const ids = definitions.map((item) => item.id);
+      const savedById = new Map(record.layout.map((item) => [item.i, item]));
+      const resolvedLayout = definitions.map((definition) => {
+        const base = createAppendedDashboardLayoutItem([], definition);
+        const stored = savedById.get(definition.id);
+        return stored ? { ...base, ...stored, i: definition.id } : base;
+      });
+      setWidgets(definitions.map((item) => ({ ...item, data: null, dataSource: 'live' })));
+      setLayout(normalizeDashboardLayout(resolvedLayout, ids));
+      setUnsupportedVoiceWidgets(unsupported);
+      setSavedDashboardVersion(String(record.version));
+      setSavedDashboardStatus('ready');
+    }).catch((error: unknown) => {
+      if (cancelled) return;
+      setDashboardLoadError(error instanceof Error ? error.message : 'This dashboard could not be loaded.');
+      setSavedDashboardStatus('error');
+    });
+    return () => { cancelled = true; };
+  }, [businessId, dashboardId, dashboardLoadRevision]);
+
+  const saveCurrentDashboard = async () => {
+    if (!dashboardId || !savedDashboardVersion || savingDashboard) return;
+    setSavingDashboard(true);
+    setDashboardSaveError(null);
+    setDashboardSaveNotice(null);
+    try {
+      const response = await apiFetch(`/api/v1/dashboards/${dashboardId}`, {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          name: dashboardName,
+          expected_version: savedDashboardVersion,
+          widgets: widgets.map(dashboardWidgetToSaved),
+          layout: layout.map(({ i, x, y, w, h }) => ({ i, x, y, w, h })),
+          schema_version: 1,
+        }),
+      });
+      const payload = await response.json().catch(() => null) as { data?: { version?: string }; message?: string; current_version?: string } | null;
+      if (!response.ok || !payload?.data?.version) {
+        const message = payload?.message ?? `Dashboard could not be saved (${response.status}).`;
+        throw new Error(response.status === 409
+          ? `${message} Reload the dashboard to get the latest saved version before trying again.`
+          : message);
+      }
+      setSavedDashboardVersion(String(payload.data.version));
+      setDashboardSaveNotice('Dashboard saved to this business.');
+    } catch (error) {
+      setDashboardSaveError(error instanceof Error ? error.message : 'Dashboard could not be saved.');
+    } finally {
+      setSavingDashboard(false);
+    }
+  };
 
   useEffect(() => {
     if (!voiceDashboardDraft) return;
@@ -984,7 +1132,7 @@ function Dashboard({
   const currentSelection = (item: WidgetSelection): WidgetSelection => ({
     ...item,
     data: dataForWidget(item),
-    dataSource: item.kind === 'complete-days' ? 'sample' : isLive ? 'live' : 'sample',
+    dataSource: isLive ? 'live' : 'sample',
   });
   const selectedDefinition = widget ? widgets.find((item) => item.id === widget.id) ?? null : null;
   const currentWidget = selectedDefinition ? currentSelection(selectedDefinition) : null;
@@ -1069,7 +1217,7 @@ function Dashboard({
         content = <MetricCard widget={selection} value={formatAnalyticsTotal(unitsData)} note={unitsNote} tone="units" selected={selected} onSelect={selectWidget} />;
         break;
       case 'complete-days':
-        content = <MetricCard widget={selection} value="5 of 7" note="Example coverage values" tone="days" selected={selected} onSelect={selectWidget} />;
+        content = <MetricCard widget={selection} value="Not available" note="Day coverage is not connected" tone="days" selected={selected} onSelect={selectWidget} />;
         break;
       case 'daily-revenue':
         content = <RevenueChart widget={selection} data={lineData} isLive={isLive} selected={selected} onSelect={selectWidget} onDatumSelect={openDatum} />;
@@ -1135,6 +1283,40 @@ function Dashboard({
     });
   };
 
+  if (dashboardId && savedDashboardStatus === 'loading') {
+    return <main className="canvas api-state-card" role="status"><h1>Loading {dashboardName}</h1><p>Reading the saved dashboard from this business.</p></main>;
+  }
+  if (dashboardId && savedDashboardStatus === 'error') {
+    return <main className="canvas api-state-card" role="alert"><h1>Dashboard unavailable</h1><p>{dashboardLoadError}</p><button className="button button-primary" type="button" onClick={() => setDashboardLoadRevision((revision) => revision + 1)}>Retry</button></main>;
+  }
+
+  if (!analytics) {
+    const title = liveStatus === 'checking'
+      ? 'Loading your ledger'
+      : liveStatus === 'unauthorized'
+        ? 'Your session needs attention'
+        : 'Analytics are unavailable';
+    const detail = liveStatus === 'checking'
+      ? 'EasyLedger is checking your saved business data.'
+      : liveStatus === 'unauthorized'
+        ? 'Sign in again to continue to your business data.'
+        : 'The API did not return ledger data. No sample values are being shown.';
+    return (
+      <div className={`editor-body dashboard-mode-${mode}`}>
+        <main className="canvas" id="dashboard">
+          <div className="canvas-inner">
+            <VoiceControl controller={voiceControl} headingId="voice-title" description="Try “show revenue this week”" />
+            <section className="dashboard-grid-empty api-state-card" role={liveStatus === 'checking' ? 'status' : 'alert'}>
+              <h1>{title}</h1>
+              <p>{detail}</p>
+              {liveStatus === 'unavailable' && <button className="button button-primary" type="button" onClick={onRefresh}>Retry connection</button>}
+            </section>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className={`editor-body${currentWidget ? ' inspector-open' : ' inspector-closed'} dashboard-mode-${mode}`}>
       <main className="canvas" id="dashboard">
@@ -1145,10 +1327,20 @@ function Dashboard({
             description="Try “show revenue this week”"
           />
 
-          <DashboardFilters editable={isEditing} widgetKind={newWidgetKind} onWidgetKindChange={setNewWidgetKind} onAddWidget={addWidget} />
+          <DashboardFilters
+            editable={isEditing}
+            widgetKind={newWidgetKind}
+            onWidgetKindChange={setNewWidgetKind}
+            onAddWidget={addWidget}
+            canSave={Boolean(dashboardId && savedDashboardVersion && savedDashboardStatus === 'ready')}
+            saving={savingDashboard}
+            onSave={() => void saveCurrentDashboard()}
+          />
+          {dashboardSaveError && <p className="home-dialog-error" role="alert">{dashboardSaveError}</p>}
+          {dashboardSaveNotice && <p className="home-local-status" role="status">{dashboardSaveNotice}</p>}
           <p className="layout-draft-note">{isEditing
-            ? 'Widget and layout changes stay in this local draft. They do not change sales or save to an account.'
-            : 'Preview mode is read-only. Switch to Editing mode to change this local dashboard draft.'}</p>
+            ? dashboardId ? 'Widget and layout changes are drafts until you save them to this business.' : 'Create a dashboard from Home before saving widget and layout changes.'
+            : 'Preview mode is read-only. Switch to Editing mode to change this dashboard.'}</p>
 
           {voiceDashboardDraft && (
             <p className="layout-draft-note voice-grid-source-note" role="status">
@@ -1161,7 +1353,7 @@ function Dashboard({
             </p>
           )}
 
-          <div className={`dashboard-grid-container dashboard-grid-${mode}`} ref={gridContainerRefForReact18} aria-label={voiceDashboardDraft ? `Server dashboard draft version ${voiceDashboardDraft.version}` : isLive ? 'Live dashboard widgets' : 'Sample dashboard widgets'}>
+          <div className={`dashboard-grid-container dashboard-grid-${mode}`} ref={gridContainerRefForReact18} aria-label={voiceDashboardDraft ? `Server dashboard draft version ${voiceDashboardDraft.version}` : 'Dashboard widgets'}>
             {widgets.length === 0
               ? <div className="dashboard-grid-empty" role="status">{isEditing ? 'No widgets in this draft. Choose a widget type above and add it to the dashboard.' : 'No widgets in this dashboard draft. Switch to Editing mode to add a widget.'}</div>
               : isDesktopGrid
@@ -1253,7 +1445,8 @@ function Dashboard({
 function App() {
   const [activeNav, setActiveNav] = useState<'home' | 'dashboard' | 'ledger' | 'catalog'>('home');
   const [dashboardMode, setDashboardMode] = useState<DashboardMode>('preview');
-  const [activeDashboardName, setActiveDashboardName] = useState('Weekly sales overview');
+  const [activeDashboardName, setActiveDashboardName] = useState('Sales dashboard');
+  const [activeDashboardId, setActiveDashboardId] = useState<string | null>(null);
   const [catalogSection, setCatalogSection] = useState<CatalogSection>(null);
   const [selectedWidget, setSelectedWidget] = useState<WidgetSelection | null>(null);
   const [dashboardAnalytics, setDashboardAnalytics] = useState<DashboardAnalytics | null>(null);
@@ -1261,22 +1454,37 @@ function App() {
   const [refreshCount, setRefreshCount] = useState(0);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [currentMerchant, setCurrentMerchant] = useState<MerchantIdentity | null>(null);
+  const [authCheck, setAuthCheck] = useState<'checking' | 'ready'>('checking');
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [authTab, setAuthTab] = useState<AuthTab>(() => window.location.hash.toLowerCase() === '#sign-up' ? 'register' : window.location.hash.toLowerCase() === '#sign-in' ? 'login' : 'demo');
 
   useEffect(() => {
-    fetch('/api/v1/auth/session')
-      .then((res) => res.json())
-      .then((payload) => {
-        if (payload.data?.authenticated && payload.data.business) {
-          setCurrentMerchant(payload.data.business);
-        }
-      })
-      .catch(() => {});
+    let cancelled = false;
+    void apiFetch('/api/v1/auth/session').then(async (response) => {
+      const payload = await response.json().catch(() => null) as { data?: { authenticated?: boolean; business?: MerchantIdentity }; message?: string } | null;
+      if (!response.ok) throw new Error(payload?.message ?? `EasyLedger could not check your session (${response.status}).`);
+      if (cancelled) return;
+      if (payload?.data?.authenticated && payload.data.business) {
+        setCurrentMerchant(payload.data.business);
+        setAuthError(null);
+      } else {
+        setCurrentMerchant(null);
+      }
+      setAuthCheck('ready');
+    }).catch((error: unknown) => {
+      if (cancelled) return;
+      setCurrentMerchant(null);
+      setAuthError(error instanceof Error ? error.message : 'Could not reach the EasyLedger API. Start the local app or check your connection.');
+      setAuthCheck('ready');
+    });
+    return () => { cancelled = true; };
   }, []);
   const isLive = dashboardAnalytics !== null;
-  const currency = dashboardAnalytics?.revenue.currency ?? sampleDailyRevenue.currency;
+  const currency = currentMerchant?.currency ?? 'IDR';
   const voiceControl = useVoiceAgent({
     onLedgerCommitted: () => setRefreshCount((count) => count + 1),
     onDashboardDraft: (draft) => {
+      setActiveDashboardId(null);
       setActiveDashboardName(draft.name);
       setDashboardMode('editing');
       setActiveNav('dashboard');
@@ -1290,6 +1498,8 @@ function App() {
   useEffect(() => {
     const handleHash = () => {
       const hash = window.location.hash.replace('#', '').toLowerCase();
+      if (hash === 'sign-in') { setAuthTab('login'); return; }
+      if (hash === 'sign-up') { setAuthTab('register'); return; }
       if (hash.includes('ledger')) setActiveNav('ledger');
       else if (hash.includes('catalog')) setActiveNav('catalog');
       else if (hash.includes('dashboard') || hash === 'voice-title' || hash === 'add-widget') setActiveNav('dashboard');
@@ -1303,13 +1513,12 @@ function App() {
   useEffect(() => {
     let cancelled = false;
     setDashboardAnalytics(null);
+    if (!currentMerchant) {
+      setLiveStatus('unauthorized');
+      return () => { cancelled = true; };
+    }
     setLiveStatus('checking');
-    const { date_from: dateFrom, date_to: dateTo } = sampleDailyRevenue.filters;
-    const filter = {
-      ...(dateFrom ? { date_from: dateFrom } : {}),
-      ...(dateTo ? { date_to: dateTo } : {}),
-      product_ids: [],
-    };
+    const filter = { product_ids: [] };
     void Promise.all([
       fetchAnalyticsQuery({ metric: 'revenue', dimension: 'date', ...filter }),
       fetchAnalyticsQuery({ metric: 'units', dimension: 'product', ...filter }),
@@ -1324,10 +1533,15 @@ function App() {
     }).catch((error: unknown) => {
       if (cancelled) return;
       setDashboardAnalytics(null);
-      setLiveStatus(error instanceof AnalyticsHttpError && error.status === 401 ? 'unauthorized' : 'unavailable');
+      const status = error instanceof AnalyticsHttpError && error.status === 401 ? 'unauthorized' : 'unavailable';
+      setLiveStatus(status);
+      if (status === 'unauthorized') {
+        setAuthTab('login');
+        setAuthModalOpen(true);
+      }
     });
     return () => { cancelled = true; };
-  }, [refreshCount]);
+  }, [currentMerchant?.id, refreshCount]);
 
   const closeInspector = () => setSelectedWidget(null);
   const refreshCharts = () => setRefreshCount((count) => count + 1);
@@ -1337,6 +1551,7 @@ function App() {
     ? 'Needs a price'
     : 'Product catalog';
   const openDashboardFromHome = (dashboard: { id: string; name: string }, created: boolean) => {
+    setActiveDashboardId(dashboard.id);
     setActiveDashboardName(dashboard.name);
     setDashboardMode(created ? 'editing' : 'preview');
     setSelectedWidget(null);
@@ -1363,6 +1578,43 @@ function App() {
     : voiceNeedsReview
     ? 'Review the pending EasyLedger action before starting voice'
     : `Start microphone and voice session (${voiceControl.status})`;
+
+  if (authCheck === 'checking') {
+    return <main className="auth-modal-backdrop auth-modal-page"><p role="status">Connecting to EasyLedger…</p></main>;
+  }
+  if (!currentMerchant) {
+    return (
+      <AuthModal
+        isOpen
+        isPage
+        initialTab={authTab}
+        initialError={authError}
+        onModeChange={(tab) => {
+          setAuthTab(tab);
+          if (tab === 'register') window.location.hash = 'sign-up';
+          else if (tab === 'login') window.location.hash = 'sign-in';
+        }}
+        onClose={() => {}}
+        onLoginSuccess={(business) => {
+          setCurrentMerchant(business);
+          setAuthCheck('ready');
+          setLiveStatus('checking');
+          setAuthError(null);
+          setDashboardAnalytics(null);
+          setSelectedWidget(null);
+          setActiveDashboardId(null);
+          setActiveDashboardName('Sales dashboard');
+          setDashboardMode('preview');
+          setCatalogSection(null);
+          setActiveNav('home');
+          setAuthModalOpen(false);
+          window.location.hash = 'home';
+          setRefreshCount((count) => count + 1);
+        }}
+        onLogout={() => {}}
+      />
+    );
+  }
 
   return (
     <div className={`app-shell${activeNav === 'catalog' ? ' app-shell-catalog' : ''}${activeNav === 'home' ? ' app-shell-home' : ''}`}>
@@ -1412,7 +1664,7 @@ function App() {
         <div className="builder-actions">
           {activeNav === 'dashboard' && (
             <>
-              <span className="mode-pill" aria-label={isLive ? 'Live data status' : 'Sample data status'}>{isLive ? 'Live data' : 'Sample data'}</span>
+              <span className={`mode-pill${currentMerchant.is_demo ? ' mode-pill-demo' : ''}`} aria-label={currentMerchant.is_demo ? 'Demo data status' : isLive ? 'Live data status' : 'Data status'}>{currentMerchant.is_demo ? 'DEMO DATA' : isLive ? 'Live data' : liveStatus === 'checking' ? 'Loading data' : 'Data unavailable'}</span>
               <button
                 className="button button-preview"
                 type="button"
@@ -1425,7 +1677,6 @@ function App() {
                 <span className="mode-switch-label">{dashboardMode === 'editing' ? 'Editing mode' : 'Preview mode'}</span>
                 <span className="mode-switch-track" aria-hidden="true"><span className="mode-switch-thumb" /></span>
               </button>
-              <button className="button button-save" type="button" disabled title="Dashboard saving is not connected in this preview">Save unavailable</button>
             </>
           )}
 
@@ -1508,7 +1759,7 @@ function App() {
             ) : (
               <>
                 <strong>Make it yours</strong>
-                <p>{isLive ? 'Chart and KPI values use live ledger data.' : 'Chart and KPI values are sample data.'}</p>
+                <p>{isLive ? 'Chart and KPI values use this business’s ledger.' : liveStatus === 'checking' ? 'Loading this business’s ledger.' : 'Ledger values are unavailable until the API responds.'}</p>
                 <p>{dashboardMode === 'editing'
                   ? 'Add, move, resize, and remove widgets in this local draft.'
                   : 'Dashboard widgets are read-only in Preview mode.'}</p>
@@ -1516,13 +1767,13 @@ function App() {
             )}
           </aside>
 
-          <section className="rail-footer" aria-label={isLive ? 'Authenticated workspace' : 'Sample workspace'}>
+          <section className="rail-footer" aria-label={currentMerchant.is_demo ? 'Demo data workspace' : 'Authenticated workspace'}>
             <div className="rail-avatar" aria-hidden="true">EL</div>
             <div className="rail-workspace">
-              <strong>{isLive ? 'Authenticated business' : 'Example business'}</strong>
-              <span>{currency}{isLive ? ' · live' : ' · sample'}</span>
+              <strong>{currentMerchant.name}</strong>
+              <span>{currency}{currentMerchant.is_demo ? ' · demo data' : ' · private business'}</span>
               {activeNav !== 'catalog' && (
-                <span>{isLive ? 'Owner session connected' : liveStatus === 'unauthorized' ? 'Sign in to connect a ledger' : 'No live ledger connection'}</span>
+                <span>{liveStatus === 'live' ? 'Owner session connected' : liveStatus === 'checking' ? 'Loading saved data' : 'API data unavailable'}</span>
               )}
             </div>
           </section>
@@ -1530,14 +1781,14 @@ function App() {
 
         <div className="workspace">
           {activeNav === 'home' ? (
-            <HomeWorkspace workspaceLabel="Example business" currency={currency} onOpenDashboard={openDashboardFromHome} />
+            <HomeWorkspace key={currentMerchant.id} workspaceId={currentMerchant.id} workspaceLabel={currentMerchant.name} currency={currency} onOpenDashboard={openDashboardFromHome} />
           ) : (
             <>
           <header className="dashboard-header">
             <div className="dashboard-header-inner">
               <div className="dashboard-heading">
                 <p className="breadcrumb">
-                  {isLive ? 'Authenticated workspace' : 'Sample workspace'}{' '}
+                  {currentMerchant.is_demo ? 'DEMO DATA' : currentMerchant.name}{' '}
                   <span aria-hidden="true">/</span>{' '}
                   {activeNav === 'ledger' ? 'Ledger journal' : activeNav === 'catalog' ? 'Catalog' : `Dashboard ${dashboardMode} mode`}
                   {activeNav === 'catalog' && catalogSection !== null && (
@@ -1551,26 +1802,26 @@ function App() {
                 <p>
                   {activeNav === 'catalog'
                     ? catalogSection === 'all-products'
-                      ? '2 products · Product names and default prices'
+                      ? 'Products saved to this business'
                       : catalogSection === 'needs-price'
-                      ? '0 products · Default price review'
-                      : `${isLive ? 'Authenticated business' : 'Example business'} · ${currency} · Sample products`
+                      ? 'Products that need a default price'
+                      : `${currentMerchant.is_demo ? 'Demo workspace' : 'Private business'} · ${currency}`
                     : <>
-                        {isLive ? 'Authenticated business' : 'Example business'}{' '}
+                        {currentMerchant.name}{' '}
                         <span aria-hidden="true">·</span> {currency}{' '}
                         <span aria-hidden="true">·</span>{' '}
                         {activeNav === 'ledger'
-                          ? 'Daily sales transaction logs · Fixture revision 142'
+                          ? 'Sales saved to this business.'
                           : isLive
-                          ? 'Live analytics data.'
-                          : 'Sample data only.'}
+                          ? 'Analytics from this business’s ledger.'
+                          : 'Waiting for saved ledger data.'}
                       </>}
                 </p>
               </div>
               {activeNav === 'catalog' ? (
-                <div className="catalog-status" aria-label="Catalog sample data status">
-                  <strong>Sample preview</strong>
-                  <span>Local sample values</span>
+                <div className="catalog-status" aria-label="Catalog data status">
+                  <strong>{currentMerchant.is_demo ? 'DEMO DATA' : 'Private catalog'}</strong>
+                  <span>Saved in {currentMerchant.name}</span>
                 </div>
               ) : (
                 <div className="dashboard-status" aria-label="Dashboard data status">
@@ -1582,7 +1833,7 @@ function App() {
                         ? 'Checking connection'
                         : liveStatus === 'unauthorized'
                         ? 'Sign in required'
-                        : 'Sample preview'}
+                        : 'Data unavailable'}
                     </strong>
                     <span>
                       {isLive
@@ -1590,16 +1841,16 @@ function App() {
                         : liveStatus === 'unauthorized'
                         ? 'No authorized session'
                         : liveStatus === 'checking'
-                        ? 'Sample values remain labeled during check'
-                        : 'Not connected to a live ledger'}
+                        ? 'Loading saved ledger data'
+                        : 'API did not return ledger data'}
                     </span>
                   </div>
                   <div className="refreshed-status">
-                    <strong>{isLive ? 'Live query snapshot' : 'Local sample values'}</strong>
+                    <strong>{isLive ? 'Live query snapshot' : 'Ledger status'}</strong>
                     <span>
                       {isLive
                         ? `Ledger revision ${dashboardAnalytics.revenue.ledger_revision}`
-                        : 'Fixture revision 142 · example data'}
+                        : 'No current query snapshot'}
                     </span>
                   </div>
                 </div>
@@ -1611,18 +1862,22 @@ function App() {
             <div className="editor-body inspector-closed">
               <main className="canvas" id="ledger">
                 <div className="canvas-inner">
-                  <LedgerJournal isLive={isLive} voiceControl={voiceControl} currency={currency} />
+                  <LedgerJournal key={currentMerchant.id} businessId={currentMerchant.id} voiceControl={voiceControl} currency={currency} onChanged={refreshCharts} />
                 </div>
               </main>
             </div>
           ) : activeNav === 'catalog' ? (
             <div className="editor-body catalog-editor-body">
               <main className="canvas catalog-canvas" id="catalog">
-                <Catalog currency={currency} section={catalogSection} onSectionChange={setCatalogSection} voiceControl={voiceControl} />
+                <Catalog key={currentMerchant.id} businessId={currentMerchant.id} currency={currency} section={catalogSection} onSectionChange={setCatalogSection} voiceControl={voiceControl} onChanged={refreshCharts} />
               </main>
             </div>
           ) : (
             <Dashboard
+              key={`${currentMerchant.id}:${activeDashboardId ?? 'unsaved'}`}
+              businessId={currentMerchant.id}
+              dashboardId={activeDashboardId}
+              dashboardName={activeDashboardName}
               widget={selectedWidget}
               mode={dashboardMode}
               onSelect={setSelectedWidget}
@@ -1640,9 +1895,41 @@ function App() {
       </div>
       <AuthModal
         isOpen={authModalOpen}
+        initialTab={authTab}
+        onModeChange={(tab) => {
+          setAuthTab(tab);
+          if (tab === 'register') window.location.hash = 'sign-up';
+          else if (tab === 'login') window.location.hash = 'sign-in';
+        }}
         onClose={() => setAuthModalOpen(false)}
+        onLogout={() => {
+          voiceControl.stop();
+          setCurrentMerchant(null);
+          setAuthTab('login');
+          setAuthModalOpen(false);
+          setDashboardAnalytics(null);
+          setActiveDashboardId(null);
+          setActiveDashboardName('Sales dashboard');
+          setDashboardMode('preview');
+          setCatalogSection(null);
+          setSelectedWidget(null);
+          setAuthError(null);
+          window.location.hash = 'sign-in';
+        }}
         onLoginSuccess={(business) => {
           setCurrentMerchant(business);
+          setLiveStatus('checking');
+          setAuthTab('demo');
+          setAuthModalOpen(false);
+          setDashboardAnalytics(null);
+          setSelectedWidget(null);
+          setActiveDashboardId(null);
+          setActiveDashboardName('Sales dashboard');
+          setDashboardMode('preview');
+          setCatalogSection(null);
+          setActiveNav('home');
+          setAuthError(null);
+          window.location.hash = 'home';
           setRefreshCount((c) => c + 1);
         }}
         currentBusiness={currentMerchant ?? undefined}

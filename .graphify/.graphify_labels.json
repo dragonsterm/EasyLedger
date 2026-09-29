@@ -1,19 +1,11 @@
 {
-  "0": "Authorization and tool safety",
-  "1": "Manual access and accessibility",
+  "0": "Data model and calculation rules",
+  "1": "Implementation handoff and runbook",
   "2": "Architecture decisions and stack",
-  "3": "Corrections and undo",
-  "4": "Implementation handoff and runbook",
-  "5": "Delivery plan and risk register",
-  "6": "System architecture",
-  "7": "Data model and calculation rules",
-  "8": "Documentation verification record",
-  "9": "Product brief",
-  "10": "Analytics and missing data",
-  "11": "Verification and release readiness",
-  "12": "Agent workflow and API contracts",
-  "13": "Knowledge system maintenance",
-  "14": "AssemblyAI Voice Agent Hackathon rules,",
-  "15": "Security and operations plan",
-  "16": "Atomic sales and retries"
+  "3": "Authorization and tool safety",
+  "4": "Manual access and accessibility",
+  "5": "Corrections and undo",
+  "6": "Analytics and missing data",
+  "7": "Verification and release readiness",
+  "8": "Atomic sales and retries"
 }

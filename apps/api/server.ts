@@ -1,24 +1,17 @@
 import pg from 'pg';
 import { createApp } from './app.ts';
-import { createLocalDemoAuthAdapter } from './localDemoAuth.ts';
 import { SessionAuthService } from './sessionAuth.ts';
 
 const port = Number(process.env.PORT || 3000);
 const host = process.env.HOST || '0.0.0.0';
-const databaseUrl = process.env.DATABASE_URL || 'postgresql://postgres:***@localhost:5432/easyledger';
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) throw new Error('DATABASE_URL is required. Copy .env.example to .env and set your local PostgreSQL URL.');
 
 const pool = new pg.Pool({ connectionString: databaseUrl });
-const sessionAuth = new SessionAuthService();
-const localDemoAuth = createLocalDemoAuthAdapter({
-  environment: process.env.NODE_ENV,
-  enabled: process.env.EASYLEDGER_LOCAL_DEMO_ENABLED === 'true',
-  userId: process.env.EASYLEDGER_LOCAL_DEMO_USER_ID,
-});
-const authAdapter = sessionAuth.createAuthenticationAdapter(localDemoAuth);
+const sessionAuth = new SessionAuthService(pool);
 
 const app = createApp({
   pool,
-  authAdapter,
   sessionAuth,
   assemblyApiKey: process.env.ASSEMBLYAI_API_KEY,
   logger: true,

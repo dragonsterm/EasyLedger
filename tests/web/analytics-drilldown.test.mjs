@@ -96,7 +96,7 @@ test('source envelope validates exact minor-unit values, selected datum, revisio
   assert.throws(() => parseSourceTransactionsEnvelope(wrongRevision, request), /do not match/);
 });
 
-test('live analytics and source fetch use same-origin authenticated requests and preserve HTTP status', async (t) => {
+test('live analytics and source fetch include cross-origin session credentials and preserve HTTP status', async (t) => {
   const originalFetch = globalThis.fetch;
   t.after(() => { globalThis.fetch = originalFetch; });
   const calls = [];
@@ -107,7 +107,7 @@ test('live analytics and source fetch use same-origin authenticated requests and
   const request = buildSourceTransactionsRequest(sampleDailyRevenue, 'date', '2026-09-17');
   await fetchSourceTransactions(request);
   assert.equal(calls[0].path, '/api/v1/analytics/source-transactions');
-  assert.equal(calls[0].init.credentials, 'same-origin');
+  assert.equal(calls[0].init.credentials, 'include');
   assert.deepEqual(JSON.parse(calls[0].init.body), request);
 
   globalThis.fetch = async (path, init) => {
@@ -127,7 +127,7 @@ test('live analytics and source fetch use same-origin authenticated requests and
   const live = await fetchAnalyticsQuery({ metric: 'revenue', dimension: 'date' });
   assert.equal(live.ledger_revision, '9');
   assert.equal(calls[1].path, '/api/v1/analytics/query');
-  assert.equal(calls[1].init.credentials, 'same-origin');
+  assert.equal(calls[1].init.credentials, 'include');
 
   globalThis.fetch = async () => ({ ok: false, status: 401 });
   await assert.rejects(fetchAnalyticsQuery({ metric: 'revenue', dimension: 'date' }), (error) => {

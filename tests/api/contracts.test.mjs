@@ -79,7 +79,52 @@ test('read responses are ok and malformed JSON is a safe 400', async (t) => {
 });
 
 test('TASK-26-04: Dashboard API enforces CRUD, optimistic locking, and tenant boundaries', async (t) => {
-  const app = createApp({ pool: stubPool(), authAdapter: () => ({ userId: owner }) });
+  const records = new Map();
+  const dashboardPool = {
+    async query(sql, values = []) {
+      const statement = String(sql);
+      if (statement.includes('FROM businesses')) {
+        return { rows: [{ id: business, currency: 'IDR', ledger_revision: '0', name: 'Contract shop', timezone: 'Asia/Jakarta', is_demo: false }], rowCount: 1 };
+      }
+      if (statement.startsWith('SELECT') && statement.includes('FROM dashboards')) {
+        if (statement.includes('WHERE business_id = $1 AND id = $2')) {
+          const record = records.get(`${values[0]}:${values[1]}`);
+          return { rows: record ? [{ ...record }] : [], rowCount: record ? 1 : 0 };
+        }
+        const list = [...records.values()].filter((record) => record.business_id === values[0]);
+        return { rows: list.map((record) => ({ ...record })), rowCount: list.length };
+      }
+      if (statement.startsWith('INSERT INTO dashboards')) {
+        const [id, businessId, name, schema_version, widgets, layout] = values;
+        const now = new Date('2026-09-29T00:00:00.000Z');
+        const record = {
+          id, business_id: businessId, name, schema_version, version: '1',
+          widgets: JSON.parse(widgets), layout: JSON.parse(layout), created_at: now, updated_at: now,
+        };
+        records.set(`${businessId}:${id}`, record);
+        return { rows: [{ ...record }], rowCount: 1 };
+      }
+      if (statement.startsWith('UPDATE dashboards')) {
+        const [businessId, id, name, widgets, layout, schema_version, expectedVersion] = values;
+        const key = `${businessId}:${id}`;
+        const record = records.get(key);
+        if (!record || (expectedVersion !== null && expectedVersion !== record.version)) return { rows: [], rowCount: 0 };
+        const updated = {
+          ...record, name, widgets: JSON.parse(widgets), layout: JSON.parse(layout), schema_version,
+          version: String(Number(record.version) + 1), updated_at: new Date('2026-09-29T00:01:00.000Z'),
+        };
+        records.set(key, updated);
+        return { rows: [{ ...updated }], rowCount: 1 };
+      }
+      if (statement.startsWith('DELETE FROM dashboards')) {
+        const deleted = records.delete(`${values[0]}:${values[1]}`);
+        return { rows: [], rowCount: deleted ? 1 : 0 };
+      }
+      throw new Error(`Unexpected contract query: ${statement}`);
+    },
+    async connect() { throw new Error('connect not implemented in dashboard contract pool'); },
+  };
+  const app = createApp({ pool: dashboardPool, authAdapter: () => ({ userId: owner }) });
   t.after(() => app.close());
 
   // 1. Unauthenticated request to /api/v1/dashboards returns 401

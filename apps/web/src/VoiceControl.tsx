@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Icon from './Icon';
 import { formatMoneyMinor } from './analytics';
+import { apiFetch } from './api';
 import type { LedgerCurrency } from './analytics';
 import {
   applyVoiceTranscriptDelta,
@@ -163,12 +164,11 @@ async function requestJson<T>(url: string, options: {
   const headers: Record<string, string> = {};
   if (options.body) headers['content-type'] = 'application/json';
   if (options.sessionToken) headers.authorization = `Bearer ${options.sessionToken}`;
-  const response = await fetch(url, {
+  const response = await apiFetch(url, {
     method: options.body ? 'POST' : 'GET',
     headers,
     ...(options.body ? { body: JSON.stringify(options.body) } : {}),
     ...(options.signal ? { signal: options.signal } : {}),
-    credentials: 'same-origin',
   });
   let envelope: ApiEnvelope<T>;
   try {

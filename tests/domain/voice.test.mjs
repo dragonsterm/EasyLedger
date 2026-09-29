@@ -203,6 +203,35 @@ test('SalesQueryService fills bounded date rows and keeps gaps, confirmed zeroes
   });
 });
 
+test('SalesQueryService marks an empty aggregate as no sales while preserving exact zero', async () => {
+  const calls = [];
+  const pool = {
+    async query(sql, values) {
+      calls.push({ sql, values });
+      return {
+        rows: [{ row_key: 'total', row_label: 'Total', quantity_sum: '0', revenue_sum: '0', unknown_price_count: '0', sale_count: '0', data_state: 'no-sales' }],
+        rowCount: 1,
+      };
+    },
+    async connect() { throw new Error('not used'); },
+  };
+
+  const response = await new SalesQueryService(pool).querySales({
+    business_id: businessA,
+    currency: 'USD',
+    ledger_revision: '0',
+    metric: 'revenue',
+    dimension: 'none',
+  });
+
+  assert.match(calls[0].sql, /COUNT\(s\.id\)::text AS sale_count/);
+  assert.match(calls[0].sql, /THEN 'no-sales'/);
+  assert.equal(response.total, '0.00');
+  assert.deepEqual(response.rows, [{
+    key: 'total', label: 'Total', quantity: '0', revenue: '0', data_state: 'no-sales',
+  }]);
+});
+
 test('SalesQueryService rejects an oversized date spine and propagates database failures', async () => {
   let queryCount = 0;
   const pool = {

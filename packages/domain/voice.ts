@@ -44,7 +44,7 @@ export interface ProposalRecord {
   created_at: string;
 }
 
-export type AnalyticsDatumState = 'sales' | 'unknown-price' | 'gap' | 'confirmed-zero';
+export type AnalyticsDatumState = 'sales' | 'unknown-price' | 'gap' | 'confirmed-zero' | 'no-sales';
 export type AnalyticsCoverageState = 'open' | 'complete';
 
 export interface SourceTransactionsQueryOptions {
@@ -572,7 +572,12 @@ export class SalesQueryService {
                      THEN NULL
                      ELSE COALESCE(SUM(CASE WHEN s.unit_price IS NOT NULL THEN (s.quantity::bigint * s.unit_price::bigint) ELSE 0 END), 0)::text
                 END AS revenue_sum,
-                COUNT(CASE WHEN s.unit_price IS NULL THEN 1 END)::text AS unknown_price_count
+                COUNT(CASE WHEN s.unit_price IS NULL THEN 1 END)::text AS unknown_price_count,
+                COUNT(s.id)::text AS sale_count,
+                CASE WHEN COUNT(s.id) = 0 THEN 'no-sales'
+                     WHEN COUNT(CASE WHEN s.unit_price IS NULL THEN 1 END) > 0 THEN 'unknown-price'
+                     ELSE 'sales'
+                END AS data_state
            FROM sales s
            LEFT JOIN products p ON p.id = s.product_id AND p.business_id = s.business_id
           WHERE ${where.join(' AND ')}
@@ -585,6 +590,7 @@ export class SalesQueryService {
       quantity_sum: string | null;
       revenue_sum: string | null;
       unknown_price_count: string;
+      sale_count?: string;
       coverage_state?: AnalyticsCoverageState;
       data_state?: AnalyticsDatumState;
     }>(this.pool, boundedDateSql, values);
@@ -594,7 +600,7 @@ export class SalesQueryService {
       if (uCount > 0n) hasUnknownPrices = true;
       if (row.quantity_sum !== null) totalUnits += BigInt(row.quantity_sum || '0');
       if (row.revenue_sum !== null) totalRevenue += BigInt(row.revenue_sum);
-      const dataState = row.data_state ?? (uCount > 0n ? 'unknown-price' : 'sales');
+      const dataState = row.data_state ?? (uCount > 0n ? 'unknown-price' : row.sale_count === '0' ? 'no-sales' : 'sales');
       rows.push({
         key: row.row_key,
         label: row.row_label,
