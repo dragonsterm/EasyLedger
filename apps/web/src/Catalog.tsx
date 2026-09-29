@@ -3,6 +3,7 @@ import { apiFetch } from './api';
 import { formatMoneyMinor } from './analytics';
 import { formatMoneyInput, parseMoneyInput } from './money';
 import type { LedgerCurrency } from './analytics';
+import CustomSelect from './CustomSelect';
 import Icon from './Icon';
 import { VoiceControl } from './VoiceControl';
 import type { VoiceAgentController } from './VoiceControl';
@@ -59,14 +60,18 @@ function CatalogSearch({ value, onChange }: { value: string; onChange: (value: s
 
 function CatalogSort({ value, onChange, scope }: { value: SortMode; onChange: (value: SortMode) => void; scope: 'collections' | 'products' }) {
   return (
-    <label className="catalog-sort">
-      <img src="/assets/catalog-chevron-down.svg" width="16" height="16" alt="" aria-hidden="true" />
-      <span className="sr-only">Sort {scope}</span>
-      <select value={value} onChange={(event) => onChange(event.target.value as SortMode)} aria-label={`Sort ${scope}`}>
-        <option value="name">Name A–Z</option>
-        <option value="price">{scope === 'collections' ? 'Most products' : 'Price low to high'}</option>
-      </select>
-    </label>
+    <div className="catalog-sort">
+      <CustomSelect
+        value={value}
+        onChange={(val) => onChange(val as SortMode)}
+        ariaLabel={`Sort ${scope}`}
+        variant="pill"
+        options={[
+          { value: 'name', label: 'Name A–Z' },
+          { value: 'price', label: scope === 'collections' ? 'Most products' : 'Price low to high' },
+        ]}
+      />
+    </div>
   );
 }
 

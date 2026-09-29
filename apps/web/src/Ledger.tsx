@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { apiFetch } from './api';
 import { formatMoneyMinor } from './analytics';
 import { formatLedgerAmount, parseMoneyInput, formatMoneyInput } from './money';
+import CustomSelect from './CustomSelect';
 import { VoiceControl } from './VoiceControl';
 import type { VoiceAgentController } from './VoiceControl';
 
@@ -261,20 +262,33 @@ export function LedgerJournal({ businessId, voiceControl, currency, onChanged }:
 
       <section className="canvas-toolbar ledger-canvas-toolbar" aria-label="Ledger filters and actions">
         <div className="filter-controls">
-          <label className="filter-control"><span className="sr-only">Date range</span><select defaultValue="all" aria-label="Date range" disabled><option value="all">All dates</option></select></label>
+          <label className="filter-control">
+            <span className="sr-only">Date range</span>
+            <CustomSelect
+              value="all"
+              disabled
+              ariaLabel="Date range"
+              options={[{ value: 'all', label: 'All dates' }]}
+              onChange={() => {}}
+            />
+          </label>
           <label className="filter-control">
             <span className="sr-only">Product filter</span>
-            <select value={productFilter} onChange={(event) => setProductFilter(event.target.value)} aria-label="Product filter">
-              <option value="all">All products</option>
-              {products.map((product) => <option value={product.id} key={product.id}>{product.name}</option>)}
-            </select>
+            <CustomSelect
+              value={productFilter}
+              ariaLabel="Product filter"
+              options={[{ value: 'all', label: 'All products' }, ...products.map((product) => ({ value: product.id, label: product.name }))]}
+              onChange={setProductFilter}
+            />
           </label>
           <label className="filter-control">
             <span className="sr-only">Version filter</span>
-            <select value={versionFilter} onChange={(event) => setVersionFilter(event.target.value)} aria-label="Version filter">
-              <option value="all">All versions</option>
-              {versions.map((version) => <option value={version} key={version}>v{version}</option>)}
-            </select>
+            <CustomSelect
+              value={versionFilter}
+              ariaLabel="Version filter"
+              options={[{ value: 'all', label: 'All versions' }, ...versions.map((version) => ({ value: version, label: `v${version}` }))]}
+              onChange={setVersionFilter}
+            />
           </label>
         </div>
         <span className="filter-spacer" aria-hidden="true" />
@@ -335,7 +349,21 @@ export function LedgerJournal({ businessId, voiceControl, currency, onChanged }:
             {products.length === 0 ? <div className="chart-state">Create a product in Catalog before recording its first sale.</div> : (
               <form onSubmit={handleRecordSubmit} className="ledger-dialog-form">
                 <div className="form-group"><label htmlFor="record-date">Transaction Date</label><input id="record-date" type="date" value={newDate} onChange={(event) => setNewDate(event.target.value)} required /></div>
-                <div className="form-group"><label htmlFor="record-product">Product</label><select id="record-product" value={newProductId} onChange={(event) => { const product = products.find((item) => item.id === event.target.value); setNewProductId(event.target.value); setNewUnitPrice(product?.default_unit_price === null || !product ? '' : formatMoneyInput(product.default_unit_price, currency)); }} required>{products.filter((product) => product.active).map((product) => <option value={product.id} key={product.id}>{product.name}</option>)}</select></div>
+                <div className="form-group">
+                  <label htmlFor="record-product">Product</label>
+                  <CustomSelect
+                    id="record-product"
+                    ariaLabel="Product"
+                    variant="form"
+                    value={newProductId}
+                    options={products.filter((product) => product.active).map((product) => ({ value: product.id, label: product.name }))}
+                    onChange={(val) => {
+                      const product = products.find((item) => item.id === val);
+                      setNewProductId(val);
+                      setNewUnitPrice(product?.default_unit_price === null || !product ? '' : formatMoneyInput(product.default_unit_price, currency));
+                    }}
+                  />
+                </div>
                 <div className="form-row"><div className="form-group"><label htmlFor="record-quantity">Quantity</label><input id="record-quantity" type="number" min="1" max="1000000" step="1" value={newQuantity} onChange={(event) => setNewQuantity(event.target.value)} required /></div><div className="form-group"><label htmlFor="record-price">Unit Price ({currency})</label><input id="record-price" type="text" inputMode="decimal" placeholder={`Leave blank for unknown (${currency})`} value={newUnitPrice} onChange={(event) => setNewUnitPrice(event.target.value)} /></div></div>
                 {selectedProduct?.default_unit_price !== null && selectedProduct && <p className="form-help">Default price: {formatMoneyMinor(selectedProduct.default_unit_price, currency)}. The recorded price is saved with this sale.</p>}
                 <div className="form-actions"><button className="button" type="button" onClick={() => setIsRecordModalOpen(false)} disabled={busy}>Cancel</button><button className="button button-action-record" type="submit" disabled={busy}>{busy ? 'Saving…' : 'Confirm & Commit'}</button></div>

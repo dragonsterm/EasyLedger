@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { apiFetch } from './api';
+import CustomSelect from './CustomSelect';
 
 export interface MerchantIdentity {
   id: string;
@@ -247,10 +248,16 @@ export function AuthModal({
           </label>
           <label className="home-dialog-field">
             <span>Business currency</span>
-            <select value={currency} onChange={(event) => setCurrency(event.target.value as 'IDR' | 'USD')} required>
-              <option value="IDR">IDR — Indonesian rupiah</option>
-              <option value="USD">USD — US dollar</option>
-            </select>
+            <CustomSelect
+              value={currency}
+              onChange={(val) => setCurrency(val as 'IDR' | 'USD')}
+              variant="form"
+              ariaLabel="Business currency"
+              options={[
+                { value: 'IDR', label: 'IDR — Indonesian rupiah' },
+                { value: 'USD', label: 'USD — US dollar' },
+              ]}
+            />
           </label>
           <div className="home-dialog-actions auth-actions">
             {closeAllowed && <button type="button" className="button button-outline" onClick={onClose} disabled={loading}>Cancel</button>}

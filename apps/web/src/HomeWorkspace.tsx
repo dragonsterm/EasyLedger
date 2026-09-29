@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import { apiFetch } from './api';
+import CustomSelect from './CustomSelect';
 
 type WorkspaceSection = 'all-folders' | 'recent' | 'starred' | 'trash' | 'settings';
 type WorkspaceSort = 'modified' | 'name' | 'count';
@@ -239,12 +240,16 @@ function DashboardCard({
           <>
             <button type="button" onClick={onRename}>Rename dashboard</button>
             <button type="button" onClick={onStar}>{dashboard.starred ? 'Remove from starred' : 'Add to starred'}</button>
-            <label className="home-move-control">
-              Move to folder
-              <select value={dashboard.folderId} onChange={(event) => onMove(event.target.value)} aria-label={`Move ${dashboard.name} to folder`}>
-                {folders.map((folder) => <option value={folder.id} key={folder.id}>{folder.name}</option>)}
-              </select>
-            </label>
+            <div className="home-move-control">
+              <span>Move to folder</span>
+              <CustomSelect
+                value={dashboard.folderId}
+                ariaLabel={`Move ${dashboard.name} to folder`}
+                variant="compact"
+                options={folders.map((folder) => ({ value: folder.id, label: folder.name }))}
+                onChange={onMove}
+              />
+            </div>
             <button className="home-menu-danger" type="button" onClick={onDelete}>Move to trash</button>
           </>
         )}
@@ -853,15 +858,19 @@ export default function HomeWorkspace({
                   <span className="sr-only">Search dashboards or folders</span>
                   <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={activeFolder ? 'Search this folder' : 'Search dashboards or folders'} aria-label={activeFolder ? 'Search this folder' : 'Search dashboards or folders'} />
                 </label>
-                <label className="home-sort">
-                  {icon('/assets/home-chevron.svg')}
-                  <span className="sr-only">Sort workspace</span>
-                  <select value={sort} onChange={(event) => setSort(event.target.value as WorkspaceSort)} aria-label="Sort workspace">
-                    <option value="modified">Last modified</option>
-                    <option value="name">Name A–Z</option>
-                    {isFolderListing && <option value="count">Most dashboards</option>}
-                  </select>
-                </label>
+                <div className="home-sort">
+                  <CustomSelect
+                    value={sort}
+                    ariaLabel="Sort workspace"
+                    variant="pill"
+                    options={[
+                      { value: 'modified', label: 'Last modified' },
+                      { value: 'name', label: 'Name A–Z' },
+                      ...(isFolderListing ? [{ value: 'count', label: 'Most dashboards' }] : []),
+                    ]}
+                    onChange={(val) => setSort(val as WorkspaceSort)}
+                  />
+                </div>
                 <div className="home-view-toggle" role="group" aria-label="Workspace view">
                   <button type="button" className={view === 'grid' ? 'home-view-active' : ''} onClick={() => setView('grid')} aria-label="Grid view" aria-pressed={view === 'grid'}>{icon('/assets/home-grid-item.svg')}</button>
                   <button type="button" className={view === 'list' ? 'home-view-active' : ''} onClick={() => setView('list')} aria-label="List view" aria-pressed={view === 'list'}>{icon('/assets/home-list.svg')}</button>
@@ -949,10 +958,18 @@ export default function HomeWorkspace({
               {dialog.type === 'create-dashboard' && (
                 <label className="home-dialog-field">
                   <span>Folder</span>
-                  <select value={dialogFolderId} onChange={(event) => setDialogFolderId(event.target.value)} required={activeFolders.length > 0} disabled={activeFolders.length === 0}>
-                    {activeFolders.length === 0 && <option value="">My dashboards (created on save)</option>}
-                    {activeFolders.map((folder) => <option value={folder.id} key={folder.id}>{folder.name}</option>)}
-                  </select>
+                  <CustomSelect
+                    value={dialogFolderId}
+                    ariaLabel="Folder"
+                    variant="form"
+                    disabled={activeFolders.length === 0}
+                    options={
+                      activeFolders.length === 0
+                        ? [{ value: '', label: 'My dashboards (created on save)' }]
+                        : activeFolders.map((folder) => ({ value: folder.id, label: folder.name }))
+                    }
+                    onChange={setDialogFolderId}
+                  />
                 </label>
               )}
               {dialogError && <p className="home-dialog-error" role="alert">{dialogError}</p>}

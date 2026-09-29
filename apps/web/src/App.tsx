@@ -3,6 +3,7 @@ import type { ReactNode, RefObject } from 'react';
 import type { EChartsOption } from 'echarts';
 import ReactGridLayout, { useContainerWidth } from 'react-grid-layout';
 import type { Layout } from 'react-grid-layout';
+import CustomSelect from './CustomSelect';
 import EChart from './EChart';
 import Icon from './Icon';
 import LedgerJournal from './Ledger';
@@ -594,21 +595,33 @@ function DashboardFilters({
       <div className="filter-controls">
         <label className="filter-control">
           <span className="sr-only">Date range</span>
-          <select defaultValue="all" aria-label="Date range" disabled>
-            <option value="all">All dates</option>
-          </select>
+          <CustomSelect
+            value="all"
+            disabled
+            ariaLabel="Date range"
+            options={[{ value: 'all', label: 'All dates' }]}
+            onChange={() => {}}
+          />
         </label>
         <label className="filter-control">
           <span className="sr-only">Product filter</span>
-          <select defaultValue="all" aria-label="Product filter" disabled>
-            <option value="all">All products</option>
-          </select>
+          <CustomSelect
+            value="all"
+            disabled
+            ariaLabel="Product filter"
+            options={[{ value: 'all', label: 'All products' }]}
+            onChange={() => {}}
+          />
         </label>
         <label className="filter-control">
           <span className="sr-only">Comparison period</span>
-          <select defaultValue="none" aria-label="Comparison period" disabled>
-            <option value="none">No comparison</option>
-          </select>
+          <CustomSelect
+            value="none"
+            disabled
+            ariaLabel="Comparison period"
+            options={[{ value: 'none', label: 'No comparison' }]}
+            onChange={() => {}}
+          />
         </label>
       </div>
       <span className="filter-spacer" aria-hidden="true" />
@@ -616,9 +629,12 @@ function DashboardFilters({
         <div className="canvas-toolbar-actions">
           <label className="filter-control add-widget-type">
             <span className="sr-only">Widget type to add</span>
-            <select value={widgetKind} aria-label="Widget type to add" onChange={(event) => onWidgetKindChange(event.target.value as DashboardWidgetKind)}>
-              {dashboardWidgetOptions.map((option) => <option key={option.kind} value={option.kind}>{option.label}</option>)}
-            </select>
+            <CustomSelect
+              value={widgetKind}
+              ariaLabel="Widget type to add"
+              options={dashboardWidgetOptions.map((option) => ({ value: option.kind, label: option.label }))}
+              onChange={(val) => onWidgetKindChange(val as DashboardWidgetKind)}
+            />
           </label>
           <button className="button button-add" id="add-widget" type="button" onClick={onAddWidget}>+ Add widget</button>
           <button className="button button-save" type="button" onClick={onSave} disabled={!canSave || saving} title={!canSave ? 'Open a saved dashboard from Home before saving changes' : undefined}>{saving ? 'Saving…' : 'Save dashboard'}</button>
@@ -875,16 +891,26 @@ function Inspector({
 
               <label className="inspector-field inspector-select-field">
                 <span>Metric</span>
-                <select aria-label="Metric" value={widget.metric} disabled={metrics.length < 2} onChange={(event) => selectMetric(event.target.value)}>
-                  {metrics.map((metric) => <option key={metric} value={metric}>{metricLabel(metric)}</option>)}
-                </select>
+                <CustomSelect
+                  ariaLabel="Metric"
+                  value={widget.metric}
+                  disabled={metrics.length < 2}
+                  variant="form"
+                  options={metrics.map((metric) => ({ value: metric, label: metricLabel(metric) }))}
+                  onChange={selectMetric}
+                />
               </label>
 
               <label className="inspector-field inspector-select-field">
                 <span>Group by</span>
-                <select aria-label="Group by" value={widget.dimension} disabled={dimensions.length < 2} onChange={(event) => selectDimension(event.target.value)}>
-                  {dimensions.map((dimension) => <option key={dimension} value={dimension}>{dimension}</option>)}
-                </select>
+                <CustomSelect
+                  ariaLabel="Group by"
+                  value={widget.dimension}
+                  disabled={dimensions.length < 2}
+                  variant="form"
+                  options={dimensions.map((dimension) => ({ value: dimension, label: dimension }))}
+                  onChange={selectDimension}
+                />
               </label>
 
               <section className="inspector-rules" aria-label="Supported data mapping">
