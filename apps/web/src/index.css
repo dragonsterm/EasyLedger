@@ -2224,10 +2224,25 @@ dd {
 
 .position-controls {
   display: flex;
-  height: 88px;
-  flex: 0 0 88px;
+  min-height: 88px;
   flex-direction: column;
   gap: 12px;
+}
+
+.position-buttons-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.preset-buttons-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+}
+
+.size-presets-controls {
+  margin-top: 4px;
 }
 
 .position-controls > div {
