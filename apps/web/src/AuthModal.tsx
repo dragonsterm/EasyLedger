@@ -142,7 +142,7 @@ export function AuthModal({
     <section className="home-dialog auth-modal-dialog" aria-labelledby="auth-modal-title">
       <div className="auth-modal-header">
         <div className="rail-brand">
-          <strong>EasyLedger</strong>
+          <img src="/assets/easyledger-logo.svg" alt="EasyLedger" />
           <span>Sales, made clear.</span>
         </div>
         {closeAllowed && (

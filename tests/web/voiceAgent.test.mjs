@@ -95,6 +95,19 @@ test('user transcript deltas replace snapshots and agent deltas append fragments
   assert.deepEqual(applyVoiceTranscriptDelta(agentPartial, 'transcript.agent.delta', { delta: 'two matches.' }), {
     role: 'EasyLedger', text: 'I found two matches.',
   });
+
+  // Word-level streaming tokens without whitespace delimiters
+  let streamingTokens = applyVoiceTranscriptDelta(null, 'transcript.agent.delta', { delta: 'Mango' });
+  streamingTokens = applyVoiceTranscriptDelta(streamingTokens, 'transcript.agent.delta', { delta: 'Juice' });
+  streamingTokens = applyVoiceTranscriptDelta(streamingTokens, 'transcript.agent.delta', { delta: 'at' });
+  streamingTokens = applyVoiceTranscriptDelta(streamingTokens, 'transcript.agent.delta', { delta: '18,000' });
+  streamingTokens = applyVoiceTranscriptDelta(streamingTokens, 'transcript.agent.delta', { delta: 'IDR' });
+  streamingTokens = applyVoiceTranscriptDelta(streamingTokens, 'transcript.agent.delta', { delta: 'per' });
+  streamingTokens = applyVoiceTranscriptDelta(streamingTokens, 'transcript.agent.delta', { delta: 'unit.' });
+  streamingTokens = applyVoiceTranscriptDelta(streamingTokens, 'transcript.agent.delta', { delta: 'Orange' });
+  streamingTokens = applyVoiceTranscriptDelta(streamingTokens, 'transcript.agent.delta', { delta: 'Juice' });
+  streamingTokens = applyVoiceTranscriptDelta(streamingTokens, 'transcript.agent.delta', { delta: '?' });
+  assert.equal(streamingTokens?.text, 'Mango Juice at 18,000 IDR per unit. Orange Juice?');
 });
 
 function runAudioWorklet(sampleRate, frames) {

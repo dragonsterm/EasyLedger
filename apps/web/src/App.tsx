@@ -1646,7 +1646,7 @@ function App() {
     <div className={`app-shell${activeNav === 'catalog' ? ' app-shell-catalog' : ''}${activeNav === 'home' ? ' app-shell-home' : ''}`}>
       <header className="builder-toolbar">
         <div className="rail-brand">
-          <strong>EasyLedger</strong>
+          <img src="/assets/easyledger-logo.svg" alt="EasyLedger" />
           <span>Sales, made clear.</span>
         </div>
 

@@ -437,6 +437,7 @@ export function useVoiceAgent(callbacks: VoiceCallbacks = {}): VoiceAgentControl
     }
     if (type === 'reply.started') {
       runtime.lastEvent = type;
+      runtime.playbackTime = 0;
       setStatus('processing');
       return;
     }
@@ -445,7 +446,7 @@ export function useVoiceAgent(callbacks: VoiceCallbacks = {}): VoiceAgentControl
       if (event.status === 'interrupted') {
         runtime.turnId += 1;
         runtime.pendingToolResults = [];
-        runtime.playbackTime = runtime.audioContext.currentTime;
+        runtime.playbackTime = 0;
         for (const source of runtime.playbackSources) {
           try { source.stop(); } catch { /* Source may already have ended. */ }
         }
@@ -486,7 +487,9 @@ export function useVoiceAgent(callbacks: VoiceCallbacks = {}): VoiceAgentControl
       const source = runtime.audioContext.createBufferSource();
       source.buffer = buffer;
       source.connect(runtime.audioContext.destination);
-      const playAt = Math.max(runtime.playbackTime, runtime.audioContext.currentTime);
+      const now = runtime.audioContext.currentTime;
+      // Absorb network packet jitter with 50ms buffer lead if starting fresh or behind
+      const playAt = runtime.playbackTime < now ? now + 0.05 : runtime.playbackTime;
       source.start(playAt);
       runtime.playbackTime = playAt + buffer.duration;
       runtime.playbackSources.add(source);

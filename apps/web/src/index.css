@@ -130,7 +130,7 @@ dd {
 .rail-brand {
   display: flex;
   width: 144px;
-  height: 43px;
+  height: 45px;
   flex: 0 0 144px;
   flex-direction: column;
   align-items: flex-start;
@@ -138,11 +138,11 @@ dd {
   white-space: nowrap;
 }
 
-.rail-brand strong {
-  color: var(--ink);
-  font-size: 20px;
-  font-weight: 700;
-  line-height: 28px;
+.rail-brand img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 32px;
 }
 
 .rail-brand span {
@@ -2509,10 +2509,6 @@ dd {
   .rail-brand {
     width: 112px;
     flex-basis: 112px;
-  }
-
-  .rail-brand strong {
-    font-size: 18px;
   }
 
   .primary-nav {

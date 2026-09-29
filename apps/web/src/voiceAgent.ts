@@ -268,6 +268,19 @@ export interface VoiceTranscriptPartial {
   text: string;
 }
 
+/** Append streaming word tokens with natural boundary spacing and punctuation handling. */
+export function appendWordDelta(currentText: string, delta: string): string {
+  if (!currentText) return delta;
+  if (!delta) return currentText;
+  const isPunctuationStart = /^[,.:;!?')\]}%’”]/.test(delta);
+  const endsWithSpace = /\s$/.test(currentText);
+  const endsWithOpenQuoteOrBracket = /[([{‘“]$/.test(currentText);
+  if (isPunctuationStart || endsWithSpace || endsWithOpenQuoteOrBracket || delta.startsWith(' ')) {
+    return currentText + delta;
+  }
+  return `${currentText} ${delta}`;
+}
+
 /** The user delta is a replacement snapshot; the agent delta is an append-only fragment. */
 export function applyVoiceTranscriptDelta(
   current: VoiceTranscriptPartial | null,
@@ -282,7 +295,7 @@ export function applyVoiceTranscriptDelta(
   if (delta === null) return current;
   return {
     role: 'EasyLedger',
-    text: current?.role === 'EasyLedger' ? current.text + delta : delta,
+    text: current?.role === 'EasyLedger' ? appendWordDelta(current.text, delta) : delta,
   };
 }
 
