@@ -15,6 +15,7 @@
     "graph:serve": "node scripts/serve-graph.cjs",
     "security:scan": "node scripts/scan-bundle-security.mjs",
     "audit:a11y": "node scripts/audit-accessibility.mjs",
+    "db:migrate": "node scripts/migrate-db.mjs",
     "rehearsal:backup": "node scripts/backup-restore-rehearsal.mjs",
     "test:web": "node --test tests/web/*.test.mjs",
     "test:domain": "node --test tests/domain/*.test.mjs",

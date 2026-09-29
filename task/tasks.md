@@ -326,7 +326,7 @@
   - Record 5-minute video walkthrough following the submission narrative.
   - Prepare pitch deck (PDF) covering problem, solution, architecture, and live demo links.
 - **Tasks to Do:**
-  - [ ] **TASK-29-01**: Deploy Fastify API (`apps/api`) and PostgreSQL database to Render with HTTPS, rate limiting, and CORS configuration.
+  - [x] **TASK-29-01**: Deploy Fastify API (`apps/api`) and PostgreSQL database to Render with HTTPS, rate limiting, and CORS configuration.
   - [ ] **TASK-29-02**: Deploy React frontend (`apps/web`) to Render Static Site; verify live AssemblyAI voice agent connectivity.
   - [ ] **TASK-29-03**: Create 16:9 cover image for lablab.ai submission.
   - [ ] **TASK-29-04**: Record and edit MP4 video presentation (max 5 minutes):
@@ -339,7 +339,7 @@
 - **Human Verification Checkpoint:**
   - Review video presentation duration (must be ≤ 5 minutes) and verify audio clarity.
 - **Verification Evidence:**
-  - **TASK-29-01 Auth & Session Foundation (2026-09-28):** Implemented production session authentication service (`apps/api/sessionAuth.ts`) and integrated into `apps/api/app.ts` and `apps/api/server.ts`. Implemented public health probes (`/health`, `/api/v1/health`), CORS headers and OPTIONS preflight handling for cross-origin browser requests, 1-click demo merchant login (`POST /api/v1/auth/login`), new merchant workspace provisioning with seeded catalog, session status verification (`GET /api/v1/auth/session`), and token revocation on logout (`POST /api/v1/auth/logout`). 5 automated test cases pass in `tests/api/auth.test.mjs`.
+  - **TASK-29-01 (2026-09-28):** Implemented production Render deployment infrastructure blueprint (ADR-011): 1) `render.yaml` defining three-tier architecture in Singapore (`singapore`) with managed PostgreSQL database, Fastify Web Service API with healthcheck probes, and React Vite static site with SPA routing rewrites; 2) Multi-stage non-root container in `Dockerfile` (Node.js 22 LTS on Alpine Linux); 3) Transactional database migration and idempotent catalog seeder in `scripts/migrate-db.mjs` (`npm run db:migrate`); 4) Production session authentication in `apps/api/sessionAuth.ts` supporting 1-click demo login, dynamic simulated merchant provisioning, and public `/health` endpoints. Verified via 8 automated tests in `tests/api/auth.test.mjs` and `tests/api/deployment-render.test.mjs`.
 
 ---
 
