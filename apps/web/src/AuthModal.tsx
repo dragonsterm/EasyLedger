@@ -142,8 +142,11 @@ export function AuthModal({
     <section className="home-dialog auth-modal-dialog" aria-labelledby="auth-modal-title">
       <div className="auth-modal-header">
         <div className="rail-brand">
-          <img src="/assets/easyledger-logo.svg" alt="EasyLedger" />
-          <span>Sales, made clear.</span>
+          <img className="rail-brand-icon" src="/assets/easyledger-icon.svg" alt="" aria-hidden="true" />
+          <div className="rail-brand-copy">
+            <strong>EasyLedger</strong>
+            <span>Sales, made clear.</span>
+          </div>
         </div>
         {closeAllowed && (
           <button type="button" className="inspector-close" onClick={onClose} aria-label="Close account switcher">

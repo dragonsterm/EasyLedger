@@ -1646,8 +1646,11 @@ function App() {
     <div className={`app-shell${activeNav === 'catalog' ? ' app-shell-catalog' : ''}${activeNav === 'home' ? ' app-shell-home' : ''}`}>
       <header className="builder-toolbar">
         <div className="rail-brand">
-          <img src="/assets/easyledger-logo.svg" alt="EasyLedger" />
-          <span>Sales, made clear.</span>
+          <img className="rail-brand-icon" src="/assets/easyledger-icon.svg" alt="" aria-hidden="true" />
+          <div className="rail-brand-copy">
+            <strong>EasyLedger</strong>
+            <span>Sales, made clear.</span>
+          </div>
         </div>
 
         <nav className="primary-nav" aria-label="Primary navigation">

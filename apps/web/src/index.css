@@ -129,26 +129,43 @@ dd {
 
 .rail-brand {
   display: flex;
-  width: 144px;
-  height: 45px;
-  flex: 0 0 144px;
-  flex-direction: column;
-  align-items: flex-start;
-  overflow: clip;
+  align-items: center;
+  gap: 10px;
+  width: auto;
+  min-width: 0;
+  height: 42px;
+  flex: 0 0 auto;
   white-space: nowrap;
 }
 
-.rail-brand img {
+.rail-brand-icon {
   display: block;
-  width: 100%;
-  height: auto;
-  max-height: 32px;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
 }
 
-.rail-brand span {
+.rail-brand-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 1px;
+}
+
+.rail-brand-copy strong {
+  color: var(--ink);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.rail-brand-copy span {
   color: var(--muted);
   font-size: 11px;
-  line-height: 15px;
+  font-weight: 400;
+  line-height: 1.2;
 }
 
 .primary-nav {
@@ -2507,8 +2524,8 @@ dd {
   }
 
   .rail-brand {
-    width: 112px;
-    flex-basis: 112px;
+    width: auto;
+    flex-basis: auto;
   }
 
   .primary-nav {
@@ -5128,8 +5145,8 @@ body:has(.app-shell-home) {
   }
 
   .app-shell-home .rail-brand {
-    width: 112px;
-    flex-basis: 112px;
+    width: auto;
+    flex-basis: auto;
   }
 
   .app-shell-home .primary-nav {
