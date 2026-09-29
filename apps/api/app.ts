@@ -2039,6 +2039,12 @@ export function createApp(options: AppOptions) {
         const currency = body.currency === 'USD' ? 'USD' : 'IDR';
 
         await poolQuery(options.pool, `
+          INSERT INTO users (id, email, name, role)
+          VALUES ($1, $2, $3, 'merchant')
+          ON CONFLICT (id) DO NOTHING
+        `, [ownerUserId, `${ownerUserId}@merchant.easyledger.local`, merchantName]);
+
+        await poolQuery(options.pool, `
           INSERT INTO businesses (id, owner_user_id, name, currency, timezone, is_demo)
           VALUES ($1, $2, $3, $4, 'Asia/Jakarta', FALSE)
         `, [businessId, ownerUserId, merchantName, currency]);

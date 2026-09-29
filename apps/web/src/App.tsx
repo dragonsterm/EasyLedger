@@ -17,6 +17,7 @@ import {
   createInitialDashboardWidgets,
   createUniqueDashboardWidgetId,
   canMoveDashboardLayoutItem,
+  applyLayoutSizePreset,
   computePreviewLayout,
   dashboardWidgetKindForType,
   dashboardWidgetKindsForType,
@@ -29,7 +30,7 @@ import {
   sanitizeDashboardWidgetTitle,
   updateDashboardLayoutForWidgetKind,
 } from './dashboardLayout';
-import type { DashboardLayoutItem, DashboardWidgetDefinition, DashboardWidgetKind, DashboardWidgetMetric, DashboardWidgetStyle, DashboardWidgetType } from './dashboardLayout';
+import type { DashboardLayoutItem, DashboardWidgetDefinition, DashboardWidgetKind, DashboardWidgetMetric, DashboardWidgetStyle, DashboardWidgetType, LayoutSizePreset } from './dashboardLayout';
 import {
   AnalyticsHttpError,
   buildSourceTransactionsRequest,
@@ -696,22 +697,28 @@ function Inspector({
   mode,
   canMoveLeft,
   canMoveRight,
+  canMoveUp,
+  canMoveDown,
   onClose,
   onTitleChange,
   onKindChange,
   onStyleChange,
   onMove,
+  onApplyPreset,
   onRemove,
 }: {
   widget: WidgetSelection | null;
   mode: DashboardMode;
   canMoveLeft: boolean;
   canMoveRight: boolean;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
   onClose: () => void;
   onTitleChange: (id: string, title: string) => void;
   onKindChange: (id: string, kind: DashboardWidgetKind) => void;
   onStyleChange: (id: string, style: DashboardWidgetStyle) => void;
-  onMove: (id: string, direction: 'left' | 'right') => void;
+  onMove: (id: string, direction: 'left' | 'right' | 'up' | 'down') => void;
+  onApplyPreset: (id: string, preset: LayoutSizePreset) => void;
   onRemove: (id: string) => void;
 }) {
   const [activeTab, setActiveTab] = useState<'setup' | 'style'>('setup');
@@ -844,10 +851,21 @@ function Inspector({
           )}
 
           <section className="position-controls" aria-label="Widget position">
-            <h3>Position</h3>
-            <div>
+            <h3>Position &amp; Order</h3>
+            <div className="position-buttons-grid">
               <button type="button" disabled={!canMoveLeft} onClick={() => onMove(widget.id, 'left')}>Move left</button>
               <button type="button" disabled={!canMoveRight} onClick={() => onMove(widget.id, 'right')}>Move right</button>
+              <button type="button" disabled={!canMoveUp} onClick={() => onMove(widget.id, 'up')} aria-label={`Move ${widget.title} up`}>Move up</button>
+              <button type="button" disabled={!canMoveDown} onClick={() => onMove(widget.id, 'down')} aria-label={`Move ${widget.title} down`}>Move down</button>
+            </div>
+          </section>
+
+          <section className="position-controls size-presets-controls" aria-label="Widget size presets">
+            <h3>Size Presets (Mobile &amp; Touch)</h3>
+            <div className="preset-buttons-group">
+              <button type="button" onClick={() => onApplyPreset(widget.id, 'compact')}>Compact</button>
+              <button type="button" onClick={() => onApplyPreset(widget.id, 'standard')}>Standard</button>
+              <button type="button" onClick={() => onApplyPreset(widget.id, 'expanded')}>Full Width</button>
             </div>
           </section>
 
@@ -1025,12 +1043,17 @@ function Dashboard({
     setWidgets((current) => current.map((item) => item.id === id ? { ...item, style } : item));
   };
 
-  const moveWidget = (id: string, direction: 'left' | 'right') => {
+  const moveWidget = (id: string, direction: 'left' | 'right' | 'up' | 'down') => {
     if (!isEditing) return;
     setLayout((current) => moveDashboardLayoutItem(current, id, direction));
   };
 
-  const canMoveSelectedWidget = (direction: 'left' | 'right') => currentWidget !== null
+  const applySizePreset = (id: string, preset: LayoutSizePreset) => {
+    if (!isEditing) return;
+    setLayout((current) => applyLayoutSizePreset(current, id, preset, 12));
+  };
+
+  const canMoveSelectedWidget = (direction: 'left' | 'right' | 'up' | 'down') => currentWidget !== null
     && canMoveDashboardLayoutItem(layout, currentWidget.id, direction);
 
   const renderWidget = (item: WidgetSelection) => {
@@ -1211,11 +1234,14 @@ function Dashboard({
         mode={mode}
         canMoveLeft={canMoveSelectedWidget('left')}
         canMoveRight={canMoveSelectedWidget('right')}
+        canMoveUp={canMoveSelectedWidget('up')}
+        canMoveDown={canMoveSelectedWidget('down')}
         onClose={onClose}
         onTitleChange={changeWidgetTitle}
         onKindChange={changeWidgetKind}
         onStyleChange={changeWidgetStyle}
         onMove={moveWidget}
+        onApplyPreset={applySizePreset}
         onRemove={removeWidget}
       />
       {selectedDatum && sourceState && <SourceTransactionsDialog datum={selectedDatum} state={sourceState} onClose={closeSourceDialog} onLoadMore={loadMore} onRefresh={onRefresh} />}
