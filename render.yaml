@@ -17,7 +17,7 @@ services:
     name: easyledger-api
     runtime: node
     region: singapore
-    plan: starter
+    plan: 0.5c-512mb
     buildCommand: npm ci && node scripts/migrate-db.mjs
     startCommand: node apps/api/server.ts
     healthCheckPath: /health
@@ -45,7 +45,6 @@ services:
   - type: web
     name: easyledger-web
     runtime: static
-    plan: free
     rootDir: apps/web
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
