@@ -1,0 +1,67 @@
+# EasyLedger Render Cloud Infrastructure Blueprint (ADR-011, TASK-29-01, TASK-29-02)
+# Three-tier deployment: Managed PostgreSQL + Fastify Web Service API + React Vite Static Site
+# Region: Singapore (sin) for optimal latency with Indonesian business hours (Asia/Jakarta)
+
+databases:
+  - name: easyledger-postgres
+    databaseName: easyledger
+    user: easyledger_owner
+    region: singapore
+    plan: free
+    ipAllowList: [] # Private internal VPC network access only
+
+services:
+  # Tier 1: Fastify Node.js API Web Service
+  - type: web
+    name: easyledger-api
+    runtime: node
+    region: singapore
+    plan: free
+    buildCommand: npm ci && node scripts/migrate-db.mjs
+    startCommand: node apps/api/server.ts
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: easyledger-postgres
+          property: connectionString
+      - key: ASSEMBLYAI_API_KEY
+        sync: false # Set securely in Render dashboard secrets
+      - key: CORS_ALLOWED_ORIGIN
+        value: https://easyledger.onrender.com
+
+  # Tier 2: React + Vite Static Site SPA
+  - type: web
+    name: easyledger-web
+    runtime: static
+    region: singapore
+    plan: free
+    rootDir: apps/web
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    autoDeploy: true
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Permissions-Policy
+        value: "microphone=(self)"
+    routes:
+      # SPA fallback routing rule
+      - type: rewrite
+        source: /*
+        destination: /index.html
