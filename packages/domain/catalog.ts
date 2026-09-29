@@ -275,19 +275,51 @@ export class CatalogService {
       const claim = await claimOperation(client, { businessId, actorUserId, idempotencyKey, payloadHash });
       if (claim.receipt) return claim.receipt;
       const business = await lockBusiness(client, businessId);
-      const inserted = await client.query<ProductRow>(
-        `INSERT INTO products (id, business_id, name, default_unit_price, version)
-         VALUES ($1, $2, $3, $4, 1)
-         RETURNING id, business_id, name, active, default_unit_price::text AS default_unit_price,
-                   version::text AS version, created_at, updated_at`,
-        [randomUUID(), businessId, name, defaultUnitPrice?.toString() ?? null],
+
+      const existing = await client.query<ProductRow>(
+        `SELECT id, business_id, name, active, default_unit_price::text AS default_unit_price,
+                version::text AS version, created_at, updated_at
+           FROM products
+          WHERE business_id = $1 AND name_normalized = normalize_product_name($2)`,
+        [businessId, name],
       );
+      let targetRow: ProductRow;
+      if (existing.rowCount && existing.rows[0]) {
+        const prod = existing.rows[0];
+        if (!prod.active) {
+          const updated = await client.query<ProductRow>(
+            `UPDATE products
+                SET active = true,
+                    name = $3,
+                    default_unit_price = $4,
+                    version = version + 1,
+                    updated_at = now()
+              WHERE id = $1 AND business_id = $2
+            RETURNING id, business_id, name, active, default_unit_price::text AS default_unit_price,
+                      version::text AS version, created_at, updated_at`,
+            [prod.id, businessId, name, defaultUnitPrice?.toString() ?? null],
+          );
+          targetRow = updated.rows[0];
+        } else {
+          throw new OperationError('CONFLICT', 'A product with that name already exists');
+        }
+      } else {
+        const inserted = await client.query<ProductRow>(
+          `INSERT INTO products (id, business_id, name, default_unit_price, version)
+           VALUES ($1, $2, $3, $4, 1)
+           RETURNING id, business_id, name, active, default_unit_price::text AS default_unit_price,
+                     version::text AS version, created_at, updated_at`,
+          [randomUUID(), businessId, name, defaultUnitPrice?.toString() ?? null],
+        );
+        targetRow = inserted.rows[0];
+      }
+
       const ledgerRevision = await incrementLedgerRevision(client, businessId);
       const receipt: ProductReceipt = {
         operation_id: claim.operationId,
         operation_type: 'product_create',
         status: 'committed',
-        product: productView(inserted.rows[0]),
+        product: productView(targetRow),
         currency: business.currency,
         ledger_revision: ledgerRevision,
         warnings: [],

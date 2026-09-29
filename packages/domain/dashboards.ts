@@ -392,6 +392,14 @@ export class DashboardService {
     return this.drafts.delete(key);
   }
 
+  clearAllDrafts(businessId: string): void {
+    for (const key of this.drafts.keys()) {
+      if (key.startsWith(`${businessId}:`)) {
+        this.drafts.delete(key);
+      }
+    }
+  }
+
   async updateDashboardDraft(input: UpdateDashboardDraftInput): Promise<DashboardDraftView> {
     if (!input.operations || input.operations.length === 0) {
       throw new OperationError('VALIDATION_ERROR', 'At least one operation is required', {

@@ -2029,6 +2029,21 @@ export function createApp(options: AppOptions) {
     }));
   });
 
+  const resetDemoWorkspaceData = async (businessId: string) => {
+    await poolQuery(options.pool, 'DELETE FROM sale_revisions WHERE business_id = $1', [businessId]);
+    await poolQuery(options.pool, 'DELETE FROM sales WHERE business_id = $1', [businessId]);
+    await poolQuery(options.pool, 'DELETE FROM coverage_revisions WHERE business_id = $1', [businessId]);
+    await poolQuery(options.pool, 'DELETE FROM day_coverages WHERE business_id = $1', [businessId]);
+    await poolQuery(options.pool, 'DELETE FROM operations WHERE business_id = $1', [businessId]);
+    await poolQuery(options.pool, 'DELETE FROM proposals WHERE business_id = $1', [businessId]);
+    await poolQuery(options.pool, 'DELETE FROM dashboards WHERE business_id = $1', [businessId]);
+    await poolQuery(options.pool, 'DELETE FROM products WHERE business_id = $1 AND id NOT IN (\'00000000-0000-4000-8000-000000000010\', \'00000000-0000-4000-8000-000000000011\')', [businessId]);
+    await poolQuery(options.pool, 'UPDATE products SET active = true, default_unit_price = CASE WHEN id = \'00000000-0000-4000-8000-000000000010\' THEN 15000 WHEN id = \'00000000-0000-4000-8000-000000000011\' THEN 18000 END WHERE business_id = $1', [businessId]);
+    await poolQuery(options.pool, 'UPDATE businesses SET ledger_revision = 0 WHERE id = $1', [businessId]);
+    proposals.clearMemoryProposals(businessId);
+    dashboards.clearAllDrafts(businessId);
+  };
+
   const registerDemoResetRoute = (routePath: string) => {
     app.post(routePath, { schema: { body: demoResetSchema } }, async (request, reply) => {
       const context = (request as unknown as { easyLedger: { business: { id: string; currency: 'IDR' | 'USD'; ledger_revision: string; name: string; is_demo: boolean } } }).easyLedger;
@@ -2036,16 +2051,7 @@ export function createApp(options: AppOptions) {
         throw new ApiError('FORBIDDEN', 'Reset operation is restricted to demo workspaces only (FR-16)', { httpStatus: 403 });
       }
 
-      await poolQuery(options.pool, 'DELETE FROM sale_revisions WHERE business_id = $1', [context.business.id]);
-      await poolQuery(options.pool, 'DELETE FROM sales WHERE business_id = $1', [context.business.id]);
-      await poolQuery(options.pool, 'DELETE FROM coverage_revisions WHERE business_id = $1', [context.business.id]);
-      await poolQuery(options.pool, 'DELETE FROM day_coverages WHERE business_id = $1', [context.business.id]);
-      await poolQuery(options.pool, 'DELETE FROM operations WHERE business_id = $1', [context.business.id]);
-      await poolQuery(options.pool, 'DELETE FROM proposals WHERE business_id = $1', [context.business.id]);
-      await poolQuery(options.pool, 'DELETE FROM dashboards WHERE business_id = $1', [context.business.id]);
-      await poolQuery(options.pool, 'UPDATE businesses SET ledger_revision = 0 WHERE id = $1', [context.business.id]);
-
-      proposals.clearMemoryProposals(context.business.id);
+      await resetDemoWorkspaceData(context.business.id);
 
       return reply.code(200).send(successEnvelope(String(request.id), {
         business_id: context.business.id,
@@ -2208,6 +2214,7 @@ export function createApp(options: AppOptions) {
       );
       const demoBusiness = demo.rows[0];
       if (!demoBusiness) throw new ApiError('SERVICE_UNAVAILABLE', 'The demo workspace is not available.', { httpStatus: 503, retryable: true });
+      await resetDemoWorkspaceData(demoBusiness.id);
       const session = await sessionAuth.createSession({ userId: demoBusiness.owner_user_id, businessId: demoBusiness.id });
       setSessionCookie(reply, session.token, session.expiresAt);
       return reply.code(200).send(successEnvelope(String(request.id), {
@@ -2217,7 +2224,7 @@ export function createApp(options: AppOptions) {
           name: demoBusiness.name,
           currency: demoBusiness.currency,
           is_demo: demoBusiness.is_demo,
-          ledger_revision: demoBusiness.ledger_revision,
+          ledger_revision: '0',
         },
         expires_at: new Date(session.expiresAt).toISOString(),
       }));
@@ -2228,7 +2235,16 @@ export function createApp(options: AppOptions) {
 
     app.post(`${prefix}/auth/logout`, async (request, reply) => {
       const token = sessionAuth.extractTokenFromRequest(request);
-      if (token) await sessionAuth.revokeSession(token);
+      if (token) {
+        const session = await sessionAuth.validateSession(token);
+        if (session) {
+          const business = await resolveBusiness(options.pool, session.userId).catch(() => null);
+          if (business?.is_demo) {
+            await resetDemoWorkspaceData(business.id);
+          }
+        }
+        await sessionAuth.revokeSession(token);
+      }
       clearSessionCookie(reply);
       return reply.code(200).send(successEnvelope(String(request.id), { message: 'Logged out successfully' }));
     });

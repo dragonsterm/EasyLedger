@@ -492,7 +492,10 @@ export default function HomeWorkspace({
             : workspace.folders.map((folder) => folder.id === targetFolder.id
               ? { ...folder, modifiedAt: now, modifiedLabel: 'Updated just now' }
               : folder),
-          dashboards: [dashboard, ...workspace.dashboards.filter((item) => item.id !== dashboard.id)],
+          dashboards: [
+            dashboard,
+            ...workspace.dashboards.filter((item) => item.id !== dashboard.id && !(item.folderId === targetFolder.id && item.name.toLocaleLowerCase() === name.toLocaleLowerCase())),
+          ],
         };
         setServerDashboardIds((current) => new Set([...(current ?? []), dashboard.id]));
         setDashboardLoadError(null);
@@ -588,9 +591,25 @@ export default function HomeWorkspace({
     });
   };
 
-  const trashDashboard = (dashboardId: string) => updateDashboard(dashboardId, { deletedAt: Date.now() });
+  const trashDashboard = (dashboardId: string) => {
+    updateDashboard(dashboardId, { deletedAt: Date.now() });
+    void apiFetch(`/api/v1/dashboards/${dashboardId}`, { method: 'DELETE' }).catch(() => null);
+    setServerDashboardIds((current) => new Set([...(current ?? [])].filter((id) => id !== dashboardId)));
+  };
 
-  const restoreDashboard = (dashboardId: string) => updateDashboard(dashboardId, { deletedAt: null });
+  const restoreDashboard = (dashboardId: string) => {
+    updateDashboard(dashboardId, { deletedAt: null });
+    const dashboard = workspace.dashboards.find((item) => item.id === dashboardId);
+    if (dashboard) {
+      void apiFetch('/api/v1/dashboards', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ id: dashboard.id, name: dashboard.name, widgets: [], layout: [], schema_version: 1 }),
+      }).then((res) => {
+        if (res.ok) setServerDashboardIds((current) => new Set([...(current ?? []), dashboard.id]));
+      }).catch(() => null);
+    }
+  };
 
   const permanentlyDeleteDashboard = async (dashboardId: string) => {
     const dashboard = workspace.dashboards.find((item) => item.id === dashboardId);
@@ -610,6 +629,7 @@ export default function HomeWorkspace({
 
   const trashFolder = (folderId: string) => {
     const now = Date.now();
+    const folderDashboards = workspace.dashboards.filter((d) => d.folderId === folderId);
     commitWorkspace({
       ...workspace,
       folders: workspace.folders.map((folder) => folder.id === folderId
@@ -620,6 +640,10 @@ export default function HomeWorkspace({
         : dashboard),
     });
     setSelectedFolderId(null);
+    for (const d of folderDashboards) {
+      void apiFetch(`/api/v1/dashboards/${d.id}`, { method: 'DELETE' }).catch(() => null);
+    }
+    setServerDashboardIds((current) => new Set([...(current ?? [])].filter((id) => !folderDashboards.some((d) => d.id === id))));
   };
 
   const restoreFolder = (folderId: string) => {
@@ -953,8 +977,19 @@ export default function HomeWorkspace({
             <form onSubmit={submitDialog}>
               <label className="home-dialog-field">
                 <span>{dialog.type.endsWith('folder') ? 'Folder name' : 'Dashboard name'}</span>
-                <input autoFocus maxLength={64} value={dialogName} onChange={(event) => setDialogName(event.target.value)} placeholder={dialog.type.endsWith('folder') ? 'For example, Sales reports' : 'For example, Weekly sales overview'} />
+                <input
+                  autoFocus
+                  maxLength={64}
+                  value={dialogName}
+                  onChange={(event) => {
+                    setDialogName(event.target.value);
+                    if (dialogError) setDialogError('');
+                  }}
+                  aria-invalid={dialogError ? 'true' : undefined}
+                  placeholder={dialog.type.endsWith('folder') ? 'For example, Sales reports' : 'For example, Weekly sales overview'}
+                />
               </label>
+              {dialogError && <p className="home-dialog-error" role="alert">{dialogError}</p>}
               {dialog.type === 'create-dashboard' && (
                 <label className="home-dialog-field">
                   <span>Folder</span>
@@ -972,7 +1007,6 @@ export default function HomeWorkspace({
                   />
                 </label>
               )}
-              {dialogError && <p className="home-dialog-error" role="alert">{dialogError}</p>}
               <div className="home-dialog-actions">
                 <button className="home-button home-button-secondary" type="button" onClick={closeDialog} disabled={creatingDashboard}>Cancel</button>
                 <button className="home-button home-button-primary" type="submit" disabled={creatingDashboard}>{creatingDashboard ? 'Saving…' : submitLabel}</button>

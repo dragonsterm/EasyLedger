@@ -84,6 +84,18 @@ export function AuthModal({
     setLoading(true);
     setErrorMessage(null);
     try {
+      try {
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < window.localStorage.length; i++) {
+          const key = window.localStorage.key(i);
+          if (key && (key.includes('00000000-0000-4000-8000-000000000001') || key.startsWith('easyledger.home-workspace') || key.includes('demo'))) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach((k) => window.localStorage.removeItem(k));
+      } catch {
+        // LocalStorage access may fail in restricted environments
+      }
       const business = await submitAuth('/api/v1/auth/login', { merchant: 'demo' });
       onLoginSuccess(business);
       onClose();
@@ -125,6 +137,21 @@ export function AuthModal({
     setLoading(true);
     setErrorMessage(null);
     try {
+      if (currentBusiness?.is_demo) {
+        await apiFetch('/api/v1/demo/reset', { method: 'POST' }).catch(() => null);
+        try {
+          const keysToRemove: string[] = [];
+          for (let i = 0; i < window.localStorage.length; i++) {
+            const key = window.localStorage.key(i);
+            if (key && (key.includes(currentBusiness.id) || key.startsWith('easyledger.home-workspace') || key.includes('demo'))) {
+              keysToRemove.push(key);
+            }
+          }
+          keysToRemove.forEach((k) => window.localStorage.removeItem(k));
+        } catch {
+          // LocalStorage access may fail
+        }
+      }
       const response = await apiFetch('/api/v1/auth/logout', { method: 'POST' });
       const result = await response.json().catch(() => null) as AuthResponse | null;
       if (!response.ok) throw new Error(result?.message ?? `Sign out failed (${response.status}).`);
