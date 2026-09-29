@@ -7,7 +7,7 @@ databases:
     databaseName: easyledger
     user: easyledger_owner
     region: singapore
-    plan: 0.1c-256mb
+    plan: free
     postgresMajorVersion: '17'
     ipAllowList: [] # Private internal VPC network access only
 
@@ -17,7 +17,7 @@ services:
     name: easyledger-api
     runtime: node
     region: singapore
-    plan: free
+    plan: starter
     buildCommand: npm ci && node scripts/migrate-db.mjs
     startCommand: node apps/api/server.ts
     healthCheckPath: /health
