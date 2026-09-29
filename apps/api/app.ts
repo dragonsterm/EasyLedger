@@ -2064,8 +2064,8 @@ export function createApp(options: AppOptions) {
             const p2Id = randomUUID();
             await poolQuery(options.pool, `
               INSERT INTO products (id, business_id, name, default_unit_price)
-              VALUES ($1, $2, $3, 15000), ($4, $2, $5, 20000)
-            `, [p1Id, businessId, 'Produk Standar A', p2Id, 'Produk Standar B']);
+              VALUES ($1, $2, $3, 15000), ($4, $2, $5, 18000)
+            `, [p1Id, businessId, 'Orange Juice', p2Id, 'Mango Juice']);
           }
         }
 
@@ -2119,11 +2119,11 @@ export function createApp(options: AppOptions) {
         const p1Id = randomUUID();
         const p2Id = randomUUID();
         const p1Price = currency === 'IDR' ? 15000 : 150;
-        const p2Price = currency === 'IDR' ? 20000 : 200;
+        const p2Price = currency === 'IDR' ? 18000 : 180;
         await poolQuery(options.pool, `
           INSERT INTO products (id, business_id, name, default_unit_price)
           VALUES ($1, $2, $3, $4), ($5, $2, $6, $7)
-        `, [p1Id, businessId, 'Produk Standar A', p1Price, p2Id, businessId, 'Produk Standar B', p2Price]);
+        `, [p1Id, businessId, 'Orange Juice', p1Price, p2Id, businessId, 'Mango Juice', p2Price]);
 
         const session = sessionAuth.createSession({
           userId: ownerUserId,

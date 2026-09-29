@@ -22,7 +22,7 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ isOpen, onClose, onLoginSuccess, currentBusiness }: AuthModalProps) {
-  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
+  const [activeTab, setActiveTab] = useState<'demo' | 'login' | 'register'>('demo');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [businessName, setBusinessName] = useState('');
@@ -43,12 +43,12 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, currentBusiness }: 
       });
       const body = await res.json();
       if (!res.ok || body.code) {
-        throw new Error(body.message || 'Demo login failed');
+        throw new Error(body.message || 'Failed to initialize evaluation demo');
       }
       onLoginSuccess(body.data.business);
       onClose();
     } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : 'Failed to login as demo merchant');
+      setErrorMessage(err instanceof Error ? err.message : 'Failed to launch demo workspace');
     } finally {
       setLoading(false);
     }
@@ -62,9 +62,8 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, currentBusiness }: 
     try {
       if (activeTab === 'login') {
         if (!username.trim() || !password) {
-          throw new Error('Please enter both username and password');
+          throw new Error('Please provide both username/email and password.');
         }
-        // In local/demo mode, authenticates user by username or provisions session
         const res = await fetch('/api/v1/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -76,14 +75,13 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, currentBusiness }: 
         });
         const body = await res.json();
         if (!res.ok || body.code) {
-          throw new Error(body.message || 'Login failed');
+          throw new Error(body.message || 'Authentication failed');
         }
         onLoginSuccess(body.data.business);
         onClose();
-      } else {
-        // Register new merchant account
+      } else if (activeTab === 'register') {
         if (!businessName.trim()) {
-          throw new Error('Please enter your business or store name');
+          throw new Error('Please enter your business or store name.');
         }
         const res = await fetch('/api/v1/auth/login', {
           method: 'POST',
@@ -97,13 +95,13 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, currentBusiness }: 
         });
         const body = await res.json();
         if (!res.ok || body.code) {
-          throw new Error(body.message || 'Account registration failed');
+          throw new Error(body.message || 'Merchant registration failed');
         }
         onLoginSuccess(body.data.business);
         onClose();
       }
     } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : 'Authentication failed');
+      setErrorMessage(err instanceof Error ? err.message : 'Authentication encountered an error');
     } finally {
       setLoading(false);
     }
@@ -127,7 +125,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, currentBusiness }: 
             type="button"
             className="inspector-close"
             onClick={onClose}
-            aria-label="Close authentication modal"
+            aria-label="Close authentication dialog"
           >
             <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true" focusable="false">
               <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
@@ -136,10 +134,10 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, currentBusiness }: 
         </div>
 
         <h2 id="auth-modal-title">
-          {currentBusiness ? 'Switch Workspace / Account' : 'Merchant Login'}
+          {currentBusiness ? 'Switch Workspace' : 'Merchant Workspace'}
         </h2>
         <p className="auth-modal-subtitle">
-          Manage your sales ledger, live dashboards, and voice-assisted accounting.
+          Access your sales journals, real-time analytics, and voice-assisted bookkeeping.
         </p>
 
         {errorMessage && (
@@ -148,32 +146,17 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, currentBusiness }: 
           </div>
         )}
 
-        {/* Option 1: 1-Click Demo Merchant Access (Hackathon Judge Flow) */}
-        <section className="auth-demo-section" aria-label="Demo merchant quick access">
-          <div className="auth-demo-badge">
-            <span className="mode-pill mode-pill-demo">[DEMO DATA]</span>
-            <span className="auth-demo-tag">Ready for Voice &amp; Ledger</span>
-          </div>
-          <div className="auth-demo-info">
-            <strong>EasyLedger Juice Stall</strong>
-            <small>IDR · 2 Sample Juices · Append-only ledger</small>
-          </div>
+        {/* Clean Segmented Tab Switcher */}
+        <div className="auth-tabs" role="tablist" aria-label="Authentication modes">
           <button
             type="button"
-            className="button button-action auth-demo-btn"
-            onClick={handleDemoLogin}
-            disabled={loading}
+            className={`auth-tab-btn ${activeTab === 'demo' ? 'auth-tab-active' : ''}`}
+            onClick={() => setActiveTab('demo')}
+            role="tab"
+            aria-selected={activeTab === 'demo'}
           >
-            {loading ? 'Entering...' : 'Masuk sebagai Demo Merchant (1-Click) →'}
+            Evaluation Demo
           </button>
-        </section>
-
-        <div className="auth-divider" role="separator">
-          <span>atau masuk dengan akun</span>
-        </div>
-
-        {/* Tab switcher: Login vs Register */}
-        <div className="auth-tabs" role="tablist" aria-label="Account options">
           <button
             type="button"
             className={`auth-tab-btn ${activeTab === 'login' ? 'auth-tab-active' : ''}`}
@@ -181,7 +164,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, currentBusiness }: 
             role="tab"
             aria-selected={activeTab === 'login'}
           >
-            Masuk Akun
+            Sign In
           </button>
           <button
             type="button"
@@ -190,92 +173,153 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, currentBusiness }: 
             role="tab"
             aria-selected={activeTab === 'register'}
           >
-            Buka Gerai Baru
+            New Merchant
           </button>
         </div>
 
-        {/* Form: Username & Password / New Merchant */}
-        <form onSubmit={handleAccountSubmit} className="auth-form">
-          {activeTab === 'login' ? (
-            <>
-              <label className="home-dialog-field">
-                <span>Username atau Email</span>
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="admin@easyledger.local atau nama akun"
-                  autoComplete="username"
-                  required
-                />
-              </label>
+        {/* Tab 1: Hackathon Evaluation Demo (1-Click) */}
+        {activeTab === 'demo' && (
+          <div className="auth-demo-card">
+            <div className="auth-demo-badge">
+              <span className="mode-pill mode-pill-demo">EVALUATION FIXTURE</span>
+              <span className="auth-demo-tag">AssemblyAI Voice Ready</span>
+            </div>
+            
+            <div className="auth-demo-details">
+              <strong>EasyLedger Juice Stall</strong>
+              <p>Pre-configured merchant workspace with verified append-only ledger entries, catalog items, and live ECharts reconciliation.</p>
+              
+              <div className="auth-demo-meta-grid">
+                <div>
+                  <small>Currency</small>
+                  <span>IDR (Indonesian Rupiah)</span>
+                </div>
+                <div>
+                  <small>Catalog</small>
+                  <span>Orange &amp; Mango Juices</span>
+                </div>
+              </div>
 
-              <label className="home-dialog-field">
-                <span>Password</span>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  autoComplete="current-password"
-                  required
-                />
-              </label>
-            </>
-          ) : (
-            <>
-              <label className="home-dialog-field">
-                <span>Nama Usaha / Gerai</span>
-                <input
-                  type="text"
-                  value={businessName}
-                  onChange={(e) => setBusinessName(e.target.value)}
-                  placeholder="contoh: Kopi Senja Cirebon"
-                  required
-                />
-              </label>
+              <div className="auth-demo-hint">
+                <span className="auth-demo-hint-label">Sample Voice Instruction:</span>
+                <code>"Record sale of 3 orange juices at fifteen thousand rupiah"</code>
+              </div>
+            </div>
 
-              <label className="home-dialog-field">
-                <span>Username Pemilik (Opsional)</span>
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="pemilik_toko"
-                />
-              </label>
-
-              <label className="home-dialog-field">
-                <span>Mata Uang Pembukuan</span>
-                <select
-                  value={currency}
-                  onChange={(e) => setCurrency(e.target.value as 'IDR' | 'USD')}
-                >
-                  <option value="IDR">IDR (Rupiah) — Standar Indonesia</option>
-                  <option value="USD">USD (Dollar) — Cents</option>
-                </select>
-              </label>
-            </>
-          )}
-
-          <div className="home-dialog-actions auth-actions">
             <button
               type="button"
-              className="button button-outline"
-              onClick={onClose}
+              className="button button-action auth-demo-btn"
+              onClick={handleDemoLogin}
               disabled={loading}
             >
-              Batal
-            </button>
-            <button
-              type="submit"
-              className="button button-primary auth-submit-btn"
-              disabled={loading}
-            >
-              {loading ? 'Memproses...' : activeTab === 'login' ? 'Masuk ke Akun' : 'Daftarkan Gerai'}
+              {loading ? 'Entering...' : 'Launch Evaluation Demo →'}
             </button>
           </div>
-        </form>
+        )}
+
+        {/* Tab 2: Standard Sign In (Username & Password) */}
+        {activeTab === 'login' && (
+          <form onSubmit={handleAccountSubmit} className="auth-form">
+            <label className="home-dialog-field">
+              <span>Username or Email</span>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="merchant@easyledger.local or username"
+                autoComplete="username"
+                required
+                autoFocus
+              />
+            </label>
+
+            <label className="home-dialog-field">
+              <span>Password</span>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                autoComplete="current-password"
+                required
+              />
+            </label>
+
+            <div className="home-dialog-actions auth-actions">
+              <button
+                type="button"
+                className="button button-outline"
+                onClick={onClose}
+                disabled={loading}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="button button-primary auth-submit-btn"
+                disabled={loading}
+              >
+                {loading ? 'Authenticating...' : 'Sign In to Workspace'}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* Tab 3: Register New Merchant Workspace */}
+        {activeTab === 'register' && (
+          <form onSubmit={handleAccountSubmit} className="auth-form">
+            <label className="home-dialog-field">
+              <span>Store / Business Name</span>
+              <input
+                type="text"
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+                placeholder="e.g. Orchard Fresh Juices"
+                required
+                autoFocus
+              />
+            </label>
+
+            <label className="home-dialog-field">
+              <span>Owner Username (Optional)</span>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="e.g. alex_merchant"
+              />
+            </label>
+
+            <label className="home-dialog-field">
+              <span>Accounting Currency</span>
+              <select
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value as 'IDR' | 'USD')}
+              >
+                <option value="IDR">IDR — Indonesian Rupiah</option>
+                <option value="USD">USD — US Dollar</option>
+              </select>
+            </label>
+
+            <div className="home-dialog-actions auth-actions">
+              <button
+                type="button"
+                className="button button-outline"
+                onClick={onClose}
+                disabled={loading}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="button button-primary auth-submit-btn"
+                disabled={loading}
+              >
+                {loading ? 'Creating...' : 'Create Merchant Workspace'}
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );

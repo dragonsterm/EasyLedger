@@ -223,14 +223,14 @@ test('TASK-29-01 auth: create new simulated merchant creates isolated tenant and
     url: '/api/v1/auth/login',
     payload: {
       merchant: 'new',
-      name: 'Warung Kopi Barokah',
+      name: 'Downtown Roast Cafe',
       currency: 'IDR',
     },
   });
   assert.equal(res.statusCode, 200);
   const body = res.json();
   assert.equal(body.status, 'ok');
-  assert.equal(body.data.business.name, 'Warung Kopi Barokah');
+  assert.equal(body.data.business.name, 'Downtown Roast Cafe');
   assert.equal(body.data.business.currency, 'IDR');
   assert.equal(body.data.business.is_demo, false);
 
@@ -267,7 +267,7 @@ test('TASK-29-01 auth: login with username and password authenticates merchant a
     url: '/api/v1/auth/login',
     payload: {
       merchant: 'account',
-      username: 'budi_merchant',
+      username: 'alex_merchant',
       password: 'secretPassword123',
     },
   });
@@ -275,7 +275,7 @@ test('TASK-29-01 auth: login with username and password authenticates merchant a
   const body = res.json();
   assert.equal(body.status, 'ok');
   assert.ok(body.data.token.startsWith('eld_'));
-  assert.equal(body.data.business.name, 'budi_merchant Store');
+  assert.equal(body.data.business.name, 'alex_merchant Store');
 
   // Authenticated sales access
   const salesRes = await app.inject({
