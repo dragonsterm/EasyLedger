@@ -74,6 +74,10 @@ export class SessionAuthService {
     };
   }
 
+  async validateSession(token: string): Promise<MerchantSession | null> {
+    return this.getSession(token);
+  }
+
   async revokeSession(token: string): Promise<boolean> {
     if (!token || typeof token !== 'string') return false;
     if (typeof this.pool?.query !== 'function') throw new Error('Session storage requires a PostgreSQL query executor');

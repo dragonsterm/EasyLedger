@@ -2234,16 +2234,26 @@ export function createApp(options: AppOptions) {
     app.post(`${prefix}/auth/signup`, { schema: { body: authLoginSchema } }, (request, reply) => handleLogin(request, reply, 'new'));
 
     app.post(`${prefix}/auth/logout`, async (request, reply) => {
-      const token = sessionAuth.extractTokenFromRequest(request);
-      if (token) {
-        const session = await sessionAuth.validateSession(token);
-        if (session) {
-          const business = await resolveBusiness(options.pool, session.userId).catch(() => null);
-          if (business?.is_demo) {
-            await resetDemoWorkspaceData(business.id);
+      try {
+        const token = sessionAuth.extractTokenFromRequest(request);
+        if (token) {
+          const session = await sessionAuth.getSession(token);
+          if (session) {
+            const businessRes = await poolQuery<{ id: string; is_demo: boolean }>(
+              options.pool,
+              'SELECT id, is_demo FROM businesses WHERE id = $1',
+              [session.businessId],
+            ).catch(() => null);
+            if (businessRes?.rows[0]?.is_demo) {
+              await resetDemoWorkspaceData(session.businessId).catch((err) => {
+                request.log?.error(err, 'Failed to reset demo workspace on logout');
+              });
+            }
           }
+          await sessionAuth.revokeSession(token).catch(() => null);
         }
-        await sessionAuth.revokeSession(token);
+      } catch (err) {
+        request.log?.error(err, 'Error during logout');
       }
       clearSessionCookie(reply);
       return reply.code(200).send(successEnvelope(String(request.id), { message: 'Logged out successfully' }));

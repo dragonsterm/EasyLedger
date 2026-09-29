@@ -138,7 +138,11 @@ export function AuthModal({
     setErrorMessage(null);
     try {
       if (currentBusiness?.is_demo) {
-        await apiFetch('/api/v1/demo/reset', { method: 'POST' }).catch(() => null);
+        await apiFetch('/api/v1/demo/reset', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ confirm: true }),
+        }).catch(() => null);
         try {
           const keysToRemove: string[] = [];
           for (let i = 0; i < window.localStorage.length; i++) {

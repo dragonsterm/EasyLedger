@@ -120,3 +120,29 @@ test('login never creates an account and unknown credentials do not set a sessio
   assert.equal(attemptedProvision.headers['set-cookie'], undefined);
   assert.equal(statements.some((sql) => /INSERT INTO (users|businesses|auth_sessions)/i.test(sql)), false);
 });
+
+test('logout revokes session and clears cookie without throwing errors', async (t) => {
+  const pool = mockPool(async (sql) => {
+    if (String(sql).includes('FROM auth_sessions')) {
+      return {
+        rows: [{ user_id: 'user-1', business_id: 'biz-1', created_at: new Date(), expires_at: new Date(Date.now() + 10000) }],
+        rowCount: 1,
+      };
+    }
+    if (String(sql).includes('FROM businesses')) {
+      return { rows: [{ id: 'biz-1', is_demo: true }], rowCount: 1 };
+    }
+    return { rows: [], rowCount: 1 };
+  });
+  const app = createApp({ pool });
+  t.after(() => app.close());
+
+  const response = await app.inject({
+    method: 'POST',
+    url: '/api/v1/auth/logout',
+    headers: { cookie: 'easyledger_session=test-token' },
+  });
+  assert.equal(response.statusCode, 200);
+  assert.match(response.headers['set-cookie'], /easyledger_session=;/);
+  assert.equal(response.json().data.message, 'Logged out successfully');
+});
