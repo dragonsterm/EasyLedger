@@ -259,7 +259,7 @@ export function LedgerJournal({ businessId, voiceControl, currency, onChanged }:
     <>
       <VoiceControl controller={voiceControl} headingId="ledger-voice-title" description="Try “show transactions with missing price” or “record ten orange juices today”" />
 
-      <section className="canvas-toolbar" aria-label="Ledger filters and actions">
+      <section className="canvas-toolbar ledger-canvas-toolbar" aria-label="Ledger filters and actions">
         <div className="filter-controls">
           <label className="filter-control"><span className="sr-only">Date range</span><select defaultValue="all" aria-label="Date range" disabled><option value="all">All dates</option></select></label>
           <label className="filter-control">

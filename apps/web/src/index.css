@@ -32,7 +32,9 @@ html,
 body,
 #root {
   width: 100%;
-  min-height: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 html {
@@ -40,10 +42,10 @@ html {
 }
 
 body {
-  min-width: 1024px;
-  min-height: max(100vh, 1120px);
+  min-width: 0;
+  height: 100vh;
   margin: 0;
-  overflow-x: auto;
+  overflow: hidden;
   background: var(--page);
   color: var(--ink);
 }
@@ -99,24 +101,30 @@ dd {
 
 
 .app-shell {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   width: 100%;
-  min-width: 1024px;
-  height: max(100vh, 1120px);
-  min-height: 1120px;
-  grid-template-rows: 76px minmax(1044px, 1fr);
+  min-width: 0;
+  height: 100vh;
+  min-height: 0;
+  max-height: 100vh;
   background: var(--page);
+  overflow: hidden;
 }
 
 .builder-toolbar {
   display: flex;
   width: 100%;
-  min-width: 1024px;
+  min-width: 0;
   height: 76px;
+  flex: 0 0 76px;
   align-items: center;
   gap: 16px;
   padding: 0 24px;
   background: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
 
 .rail-brand {
@@ -305,26 +313,37 @@ dd {
   display: grid;
   width: 100%;
   min-width: 0;
-  min-height: 1044px;
+  height: calc(100vh - 76px);
+  min-height: 0;
+  flex: 1 1 0;
   grid-template-columns: 144px minmax(0, 1fr);
   background: var(--page);
+  overflow: hidden;
 }
 
 .nav-rail {
   display: flex;
   width: 144px;
   height: 100%;
-  min-height: 1044px;
+  min-height: 0;
   flex: 0 0 144px;
   flex-direction: column;
-  gap: 20px;
-  padding: 20px 8px 22px;
+  gap: clamp(8px, 1.5vh, 16px);
+  padding: 16px 8px 16px;
   background: var(--surface);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+}
+
+.nav-rail::-webkit-scrollbar {
+  display: none;
 }
 
 .rail-spacer-top {
-  height: 279px;
-  flex: 0 0 279px;
+  height: clamp(8px, 6vh, 120px);
+  min-height: 8px;
+  flex: 0 1 auto;
 }
 
 .rail-actions {
@@ -403,18 +422,19 @@ dd {
 }
 
 .rail-spacer {
-  min-height: 0;
+  min-height: 8px;
   flex: 1 1 auto;
 }
 
 .rail-help {
   display: flex;
   width: 128px;
-  height: 132px;
-  flex: 0 0 132px;
+  height: auto;
+  min-height: 80px;
+  flex: 0 0 auto;
   flex-direction: column;
   gap: 8px;
-  padding: 14px;
+  padding: 12px;
   border-radius: 20px;
   background: #ecefe5;
 }
@@ -437,8 +457,9 @@ dd {
 .rail-footer {
   display: flex;
   width: 128px;
-  height: 110px;
-  flex: 0 0 110px;
+  height: auto;
+  min-height: 80px;
+  flex: 0 0 auto;
   flex-direction: column;
   gap: 8px;
   padding: 12px;
@@ -487,32 +508,39 @@ dd {
 }
 
 .workspace {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   width: 100%;
   min-width: 0;
-  min-height: 1044px;
   height: 100%;
-  grid-template-rows: 108px minmax(936px, 1fr);
+  min-height: 0;
   background: var(--page);
+  overflow: hidden;
 }
 
 .dashboard-header {
   display: flex;
   width: 100%;
-  height: 108px;
-  flex: 0 0 108px;
+  height: auto;
+  min-height: 80px;
+  flex: 0 0 auto;
   align-items: center;
-  padding: 13px 60px 13px 36px;
+  padding: 12px 36px;
   background: var(--page);
+  position: sticky;
+  top: 0;
+  z-index: 20;
 }
 
 .dashboard-header-inner {
   display: grid;
-  width: min(1200px, 100%);
+  width: 100%;
+  max-width: 1200px;
   min-width: 0;
-  grid-template-columns: minmax(0, 734fr) minmax(0, 450fr);
-  column-gap: 16px;
-  align-items: start;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 20px;
+  align-items: center;
+  margin-inline: auto;
 }
 
 .dashboard-heading {
@@ -608,10 +636,12 @@ dd {
   display: grid;
   width: 100%;
   min-width: 0;
-  min-height: 936px;
   height: 100%;
+  min-height: 0;
+  flex: 1 1 0;
   grid-template-columns: minmax(0, 1fr);
   background: var(--page);
+  overflow: hidden;
 }
 
 .editor-body.inspector-open {
@@ -624,10 +654,14 @@ dd {
 
 .canvas {
   position: relative;
+  width: 100%;
   min-width: 0;
-  min-height: 936px;
-  overflow: auto;
-  padding: 24px 24px 16px;
+  height: 100%;
+  min-height: 0;
+  flex: 1 1 0;
+  overflow-y: auto;
+  overflow-x: auto;
+  padding: 24px 24px 32px;
   background-color: var(--canvas);
   background-image: radial-gradient(circle, rgba(98, 107, 89, 0.23) 0.9px, transparent 1px);
   background-position: 12px 12px;
@@ -637,7 +671,8 @@ dd {
 
 .canvas-inner {
   display: grid;
-  width: min(920px, 100%);
+  width: 100%;
+  max-width: 1200px;
   grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   margin-inline: auto;
@@ -1922,10 +1957,11 @@ dd {
 .inspector {
   display: flex;
   min-width: 0;
-  min-height: 936px;
+  height: 100%;
+  min-height: 0;
   flex-direction: column;
   gap: 18px;
-  overflow: auto;
+  overflow-y: auto;
   padding: 24px;
   background: var(--surface-raised);
   scrollbar-color: #c9cec1 transparent;
@@ -2453,11 +2489,11 @@ dd {
 
 @media (max-width: 1024px) {
   body {
-    min-width: 800px;
+    min-width: 0;
   }
 
   .app-shell {
-    min-width: 800px;
+    min-width: 0;
   }
 
   .builder-toolbar {
@@ -2885,22 +2921,22 @@ dd {
 }
 
 body:has(.app-shell-catalog) {
-  min-height: max(100vh, 1000px);
+  min-height: 100vh;
 }
 
 .app-shell-catalog {
-  height: max(100vh, 1000px);
-  min-height: 1000px;
-  grid-template-rows: 76px minmax(924px, 1fr);
+  height: 100vh;
+  min-height: 0;
 }
 
 .app-shell-catalog .dashboard-shell {
-  height: 100%;
-  min-height: 924px;
+  height: calc(100vh - 76px);
+  min-height: 0;
 }
 
 .app-shell-catalog .nav-rail {
-  min-height: 924px;
+  height: 100%;
+  min-height: 0;
   gap: 12px;
   padding: 16px;
 }
@@ -2971,33 +3007,37 @@ body:has(.app-shell-catalog) {
 }
 
 .app-shell-catalog .workspace {
-  min-height: 924px;
-  grid-template-rows: 112px minmax(812px, 1fr);
+  height: 100%;
+  min-height: 0;
 }
 
 .app-shell-catalog .dashboard-header {
-  height: 112px;
-  flex-basis: 112px;
-  padding: 13.5px 32px;
+  height: auto;
+  min-height: 80px;
+  flex: 0 0 auto;
+  padding: 12px 32px;
 }
 
 .app-shell-catalog .dashboard-header-inner {
   width: 100%;
+  max-width: 1200px;
   grid-template-columns: minmax(0, 1fr) 185px;
   column-gap: 16px;
+  margin-inline: auto;
 }
 
 .app-shell-catalog .dashboard-heading {
-  height: 85px;
+  height: auto;
+  min-height: 60px;
 }
 
 .catalog-status {
   display: flex;
   min-width: 0;
-  height: 40px;
+  height: auto;
   flex-direction: column;
   gap: 4px;
-  margin-top: 22px;
+  margin-top: 0;
 }
 
 .catalog-status strong {
@@ -3016,18 +3056,21 @@ body:has(.app-shell-catalog) {
 }
 
 .editor-body.catalog-editor-body {
-  min-height: 812px;
+  height: 100%;
+  min-height: 0;
 }
 
 .canvas.catalog-canvas {
-  min-height: 812px;
-  padding: 32px 24px 16px;
+  height: 100%;
+  min-height: 0;
+  padding: 24px 24px 32px;
   background-image: none;
 }
 
 .catalog-content {
   display: flex;
-  width: min(928px, 100%);
+  width: 100%;
+  max-width: 1200px;
   flex-direction: column;
   gap: 24px;
   margin-inline: auto;
@@ -3539,13 +3582,12 @@ body:has(.app-shell-catalog) {
 
 /* Dashboard workspace Home */
 body:has(.app-shell-home) {
-  min-height: max(100vh, 1000px);
+  min-height: 100vh;
 }
 
 .app-shell-home {
-  height: max(100vh, 1000px);
-  min-height: 1000px;
-  grid-template-rows: 76px minmax(924px, 1fr);
+  height: 100vh;
+  min-height: 0;
 }
 
 .app-shell-home .builder-toolbar {
@@ -3615,9 +3657,10 @@ body:has(.app-shell-home) {
 }
 
 .dashboard-shell-home {
-  height: 100%;
-  min-height: 924px;
+  height: calc(100vh - 76px);
+  min-height: 0;
   grid-template-columns: minmax(0, 1fr);
+  overflow: hidden;
 }
 
 .dashboard-shell-home > .nav-rail {
@@ -3627,27 +3670,32 @@ body:has(.app-shell-home) {
 .dashboard-shell-home > .workspace {
   display: block;
   width: 100%;
-  min-height: 924px;
+  min-height: 0;
   height: 100%;
   background: var(--page);
+  overflow: hidden;
 }
 
 .home-workspace-layout {
   display: grid;
   width: 100%;
   height: 100%;
-  min-height: 924px;
+  min-height: 0;
   grid-template-columns: 240px minmax(0, 1fr);
   background: var(--page);
+  overflow: hidden;
 }
 
 .home-sidebar {
   display: flex;
   min-width: 0;
-  min-height: 924px;
+  height: 100%;
+  min-height: 0;
   flex-direction: column;
   padding: 32px 20px 24px;
   background: var(--surface);
+  overflow-y: auto;
+  scrollbar-width: none;
 }
 
 .home-sidebar-identity {
@@ -3789,9 +3837,11 @@ body:has(.app-shell-home) {
 
 .home-main {
   min-width: 0;
-  min-height: 924px;
+  height: 100%;
+  min-height: 0;
   padding: 40px;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: auto;
   background: var(--page);
 }
 
