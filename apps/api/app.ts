@@ -1,4 +1,6 @@
 import Fastify from 'fastify';
+import { randomUUID } from 'node:crypto';
+import { SessionAuthService } from './sessionAuth.ts';
 
 import {
   CatalogNotFoundError,
@@ -52,6 +54,7 @@ export interface AppOptions {
   authAdapter?: AuthenticationAdapter;
   authenticate?: AuthenticationAdapter;
   auth?: AuthenticationAdapter;
+  sessionAuth?: SessionAuthService;
   logger?: boolean;
   assemblyApiKey?: string;
   assemblyTokenGenerator?: (options?: { expiresInSeconds?: number; maxSessionDurationSeconds?: number }) => Promise<string> | string;
@@ -543,6 +546,16 @@ const demoResetSchema = {
   },
 };
 
+const authLoginSchema = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    merchant: { type: 'string', enum: ['demo', 'new'] },
+    name: { type: 'string', minLength: 1, maxLength: 100 },
+    currency: { type: 'string', enum: ['IDR', 'USD'] },
+  },
+};
+
 function text(value: unknown, field: string): string {
   if (typeof value !== 'string' || value.trim() === '') {
     throw new ApiError('VALIDATION_ERROR', `${field} is required`, { httpStatus: 422, fieldErrors: { [field]: 'required' } });
@@ -824,9 +837,63 @@ export function createApp(options: AppOptions) {
   const proposals = new ProposalService(options.pool);
   const salesQueries = new SalesQueryService(options.pool);
   const dashboards = new DashboardService(options.pool);
+  const sessionAuth = options.sessionAuth ?? new SessionAuthService();
 
-  app.addHook('onRequest', async (request) => {
+  app.addHook('onRequest', async (request, reply) => {
+    const origin = (request.headers.origin as string) || '*';
+    reply.header('Access-Control-Allow-Origin', origin);
+    reply.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    reply.header('Access-Control-Allow-Headers', 'Authorization, Content-Type, x-session-token, x-easyledger-session, x-request-id, idempotency-key');
+    reply.header('Access-Control-Allow-Credentials', 'true');
+
+    if (request.method === 'OPTIONS') {
+      return reply.code(204).send();
+    }
+
     const rawUrl = request.raw.url ?? request.url;
+    const path = rawUrl.split('?')[0];
+
+    const isPublic = path === '/health'
+      || path === '/api/health'
+      || path === '/api/v1/health'
+      || path === '/api/auth/login'
+      || path === '/api/v1/auth/login'
+      || path === '/api/auth/session'
+      || path === '/api/v1/auth/session'
+      || path === '/api/auth/me'
+      || path === '/api/v1/auth/me'
+      || path === '/api/auth/logout'
+      || path === '/api/v1/auth/logout';
+
+    if (isPublic) {
+      let maybeUserId: string | undefined;
+      const token = sessionAuth.extractTokenFromRequest(request);
+      if (token) {
+        const session = sessionAuth.getSession(token);
+        if (session) maybeUserId = session.userId;
+      }
+      if (!maybeUserId && adapter) {
+        try {
+          const identity = typeof adapter === 'function' ? await adapter(request) : await adapter.authenticate(request);
+          maybeUserId = typeof identity === 'string' ? identity : identity?.userId ?? identity?.user_id;
+        } catch {
+          // ignore error for public route context discovery
+        }
+      }
+      if (maybeUserId) {
+        try {
+          const business = await resolveBusiness(options.pool, maybeUserId.trim());
+          (request as unknown as { easyLedger?: { userId: string; business: typeof business } }).easyLedger = {
+            userId: maybeUserId.trim(),
+            business,
+          };
+        } catch {
+          // ignore
+        }
+      }
+      return;
+    }
+
     const isVoiceTool = rawUrl.startsWith('/api/v1/voice/tools') || rawUrl.startsWith('/api/voice/tools');
 
     if (isVoiceTool) {
@@ -862,11 +929,23 @@ export function createApp(options: AppOptions) {
       return;
     }
 
-    if (!adapter) throw new ApiError('UNAUTHORIZED', 'Authentication is required', { httpStatus: 401 });
-    const identity = typeof adapter === 'function' ? await adapter(request) : await adapter.authenticate(request);
-    const userId = typeof identity === 'string'
-      ? identity
-      : identity?.userId ?? identity?.user_id;
+    let userId: string | undefined;
+    const sessionToken = sessionAuth.extractTokenFromRequest(request);
+    if (sessionToken) {
+      const session = sessionAuth.getSession(sessionToken);
+      if (session) {
+        userId = session.userId;
+      }
+    }
+
+    if (!userId) {
+      if (!adapter) throw new ApiError('UNAUTHORIZED', 'Authentication is required', { httpStatus: 401 });
+      const identity = typeof adapter === 'function' ? await adapter(request) : await adapter.authenticate(request);
+      userId = typeof identity === 'string'
+        ? identity
+        : identity?.userId ?? identity?.user_id;
+    }
+
     if (typeof userId !== 'string' || userId.trim() === '') {
       throw new ApiError('UNAUTHORIZED', 'Authentication is required', { httpStatus: 401 });
     }
@@ -1888,6 +1967,180 @@ export function createApp(options: AppOptions) {
   };
   registerDemoResetRoute('/api/v1/demo/reset');
   registerDemoResetRoute('/api/demo/reset');
+
+  const registerHealthRoute = (routePath: string) => {
+    app.get(routePath, async (_request, reply) => {
+      return reply.code(200).send({
+        status: 'ok',
+        service: 'easyledger-api',
+        timestamp: new Date().toISOString(),
+      });
+    });
+  };
+  registerHealthRoute('/health');
+  registerHealthRoute('/api/health');
+  registerHealthRoute('/api/v1/health');
+
+  const registerAuthRoutes = (prefix: string) => {
+    app.get(`${prefix}/auth/session`, async (request, reply) => {
+      const context = (request as unknown as { easyLedger?: { userId: string; business: { id: string; name: string; currency: 'IDR' | 'USD'; is_demo: boolean; ledger_revision: string } } }).easyLedger;
+      if (context?.business) {
+        return reply.code(200).send(successEnvelope(String(request.id), {
+          authenticated: true,
+          user_id: context.userId,
+          business: {
+            id: context.business.id,
+            name: context.business.name,
+            currency: context.business.currency,
+            is_demo: context.business.is_demo,
+            ledger_revision: context.business.ledger_revision,
+          },
+        }));
+      }
+      return reply.code(200).send(successEnvelope(String(request.id), {
+        authenticated: false,
+      }));
+    });
+
+    app.get(`${prefix}/auth/me`, async (request, reply) => {
+      const context = (request as unknown as { easyLedger?: { userId: string; business: { id: string; name: string; currency: 'IDR' | 'USD'; is_demo: boolean; ledger_revision: string } } }).easyLedger;
+      if (context?.business) {
+        return reply.code(200).send(successEnvelope(String(request.id), {
+          authenticated: true,
+          user_id: context.userId,
+          business: {
+            id: context.business.id,
+            name: context.business.name,
+            currency: context.business.currency,
+            is_demo: context.business.is_demo,
+            ledger_revision: context.business.ledger_revision,
+          },
+        }));
+      }
+      return reply.code(200).send(successEnvelope(String(request.id), {
+        authenticated: false,
+      }));
+    });
+
+    app.post(`${prefix}/auth/login`, { schema: { body: authLoginSchema } }, async (request, reply) => {
+      const body = (request.body as { merchant?: 'demo' | 'new'; name?: string; currency?: 'IDR' | 'USD' }) ?? {};
+      const mode = body.merchant ?? 'demo';
+
+      if (mode === 'new') {
+        const merchantName = (body.name ?? '').trim();
+        if (!merchantName) {
+          throw new ApiError('VALIDATION_ERROR', 'name is required when creating a new merchant', {
+            httpStatus: 422,
+            fieldErrors: { name: 'required' },
+          });
+        }
+        const businessId = randomUUID();
+        const ownerUserId = randomUUID();
+        const currency = body.currency === 'USD' ? 'USD' : 'IDR';
+
+        await poolQuery(options.pool, `
+          INSERT INTO users (id, email, name, role)
+          VALUES ($1, $2, $3, 'merchant')
+          ON CONFLICT (id) DO NOTHING
+        `, [ownerUserId, `${ownerUserId}@merchant.easyledger.local`, merchantName]);
+
+        await poolQuery(options.pool, `
+          INSERT INTO businesses (id, owner_user_id, name, currency, timezone, is_demo)
+          VALUES ($1, $2, $3, $4, 'Asia/Jakarta', FALSE)
+        `, [businessId, ownerUserId, merchantName, currency]);
+
+        const p1Id = randomUUID();
+        const p2Id = randomUUID();
+        const p1Price = currency === 'IDR' ? 15000 : 150;
+        const p2Price = currency === 'IDR' ? 20000 : 200;
+        await poolQuery(options.pool, `
+          INSERT INTO products (id, business_id, name, default_unit_price)
+          VALUES ($1, $2, $3, $4), ($5, $2, $6, $7)
+        `, [p1Id, businessId, 'Produk Standar A', p1Price, p2Id, businessId, 'Produk Standar B', p2Price]);
+
+        const session = sessionAuth.createSession({
+          userId: ownerUserId,
+          businessId,
+          businessName: merchantName,
+          isDemo: false,
+          currency,
+        });
+
+        reply.header('Set-Cookie', `easyledger_session=${session.token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800`);
+        return reply.code(200).send(successEnvelope(String(request.id), {
+          token: session.token,
+          user_id: ownerUserId,
+          business: {
+            id: businessId,
+            name: merchantName,
+            currency,
+            is_demo: false,
+            ledger_revision: '0',
+          },
+          expires_at: new Date(session.expiresAt).toISOString(),
+        }));
+      }
+
+      // Demo login
+      let demoBusiness: { id: string; owner_user_id: string; name: string; currency: 'IDR' | 'USD'; ledger_revision: string; is_demo: boolean } | null = null;
+      const res = await poolQuery<{ id: string; owner_user_id: string; name: string; currency: 'IDR' | 'USD'; ledger_revision: string; is_demo: boolean }>(
+        options.pool,
+        `SELECT id, owner_user_id, name, currency, ledger_revision::text AS ledger_revision, is_demo
+           FROM businesses
+          WHERE is_demo = TRUE
+          ORDER BY created_at ASC
+          LIMIT 1`,
+      );
+      if (res.rowCount && res.rows[0]) {
+        demoBusiness = res.rows[0];
+      } else {
+        demoBusiness = {
+          id: '00000000-0000-4000-8000-000000000001',
+          owner_user_id: '00000000-0000-4000-8000-000000000101',
+          name: '[DEMO] EasyLedger Juice Stall',
+          currency: 'IDR',
+          ledger_revision: '0',
+          is_demo: true,
+        };
+      }
+
+      const session = sessionAuth.createSession({
+        userId: demoBusiness.owner_user_id,
+        businessId: demoBusiness.id,
+        businessName: demoBusiness.name,
+        isDemo: true,
+        currency: demoBusiness.currency,
+      });
+
+      reply.header('Set-Cookie', `easyledger_session=${session.token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800`);
+      return reply.code(200).send(successEnvelope(String(request.id), {
+        token: session.token,
+        user_id: session.userId,
+        business: {
+          id: demoBusiness.id,
+          name: demoBusiness.name,
+          currency: demoBusiness.currency,
+          is_demo: Boolean(demoBusiness.is_demo),
+          ledger_revision: demoBusiness.ledger_revision,
+        },
+        expires_at: new Date(session.expiresAt).toISOString(),
+      }));
+    });
+
+    app.post(`${prefix}/auth/logout`, async (request, reply) => {
+      const token = sessionAuth.extractTokenFromRequest(request);
+      if (token) {
+        sessionAuth.revokeSession(token);
+      }
+      reply.header('Set-Cookie', 'easyledger_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT');
+      return reply.code(200).send(successEnvelope(String(request.id), {
+        message: 'Logged out successfully',
+      }));
+    });
+  };
+
+  registerAuthRoutes('/api/v1');
+  registerAuthRoutes('/api');
 
   // A catalog row missing from the tenant is deliberately normalized to the
   // same 404 as an unknown ID.  Keep this explicit for callers that import
