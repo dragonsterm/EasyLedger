@@ -5,6 +5,7 @@ import { formatMoneyMinor } from './analytics';
 import { apiFetch } from './api';
 import type { LedgerCurrency } from './analytics';
 import {
+  EASYLEDGER_VOICE_TOOLS,
   applyVoiceTranscriptDelta,
   createVoiceSessionUpdate,
   parseVoiceToolArguments,
@@ -131,22 +132,14 @@ interface VoiceCallbacks {
   activeDashboardId?: string | null;
   activeDashboardName?: string | null;
   onLedgerCommitted?: () => void;
-  onProductCreated?: (product: unknown) => void;
+  onCatalogChanged?: (product: unknown) => void;
   onDashboardDraft?: (draft: VoiceDashboardDraft) => void;
   onDashboardSaved?: (dashboard: { id: string; name: string; version: string }) => void;
 }
 
 const toolNames = new Set<string>([
-  'get_context',
-  'list_sales',
-  'propose_sales',
-  'propose_correction',
-  'query_sales',
-  'get_dashboard_draft',
-  'update_dashboard',
-  'save_dashboard',
-  'create_product',
-  'add_product',
+  ...EASYLEDGER_VOICE_TOOLS.map((tool) => tool.name),
+  'add_product', // Preserve the API's legacy alias for existing provider sessions.
 ]);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -402,8 +395,18 @@ export function useVoiceAgent(callbacks: VoiceCallbacks = {}): VoiceAgentControl
           operationId: prod.id,
         });
         appendTranscript({ role: 'EasyLedger', text: `Product “${prodName}” has been added to your catalog.` });
-        activeCallbacksRef.current.onProductCreated?.(data);
-        activeCallbacksRef.current.onLedgerCommitted?.();
+        activeCallbacksRef.current.onCatalogChanged?.(data);
+      }
+      if (name === 'update_product' && isRecord(data)) {
+        const prod = data as { name?: string; id?: string };
+        const prodName = typeof prod.name === 'string' ? prod.name : 'Product';
+        setReceipt({
+          kind: 'product',
+          title: `Default price for “${prodName}” updated`,
+          operationId: prod.id,
+        });
+        appendTranscript({ role: 'EasyLedger', text: `The default price for “${prodName}” has been updated.` });
+        activeCallbacksRef.current.onCatalogChanged?.(data);
       }
       runtime.pendingToolResults.push({ callId, value: sanitizeVoiceToolResult(data) });
       flushToolResults(runtime);

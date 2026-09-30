@@ -1554,7 +1554,7 @@ function App() {
     activeDashboardId,
     activeDashboardName,
     onLedgerCommitted: () => setRefreshCount((count) => count + 1),
-    onProductCreated: () => setRefreshCount((count) => count + 1),
+    onCatalogChanged: () => setRefreshCount((count) => count + 1),
     onDashboardDraft: (draft) => {
       if (draft.id && draft.id !== 'default') {
         setActiveDashboardId(draft.id);

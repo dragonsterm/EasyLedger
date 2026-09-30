@@ -282,6 +282,17 @@ const toolCreateProductSchema = {
   additionalProperties: false,
 };
 
+const toolUpdateProductSchema = {
+  type: 'object',
+  required: ['product_id', 'expected_version', 'default_unit_price'],
+  properties: {
+    product_id: uuidSchema,
+    expected_version: integerSchema,
+    default_unit_price: { type: ['string', 'number', 'null'] },
+  },
+  additionalProperties: false,
+};
+
 const toolSaleLineSchema = {
   type: 'object',
   additionalProperties: false,
@@ -1513,6 +1524,7 @@ export function createApp(options: AppOptions) {
         id: p.id,
         name: p.name,
         default_unit_price: p.default_unit_price,
+        version: p.version,
       })),
       dashboard_id: activeId,
       dashboard_name: activeDashboard?.name ?? null,
@@ -2112,6 +2124,38 @@ export function createApp(options: AppOptions) {
     }));
   };
 
+  const handleUpdateProductVoice = async (request: unknown, reply: unknown) => {
+    const req = request as {
+      id: string;
+      body: {
+        product_id: string;
+        expected_version: string;
+        default_unit_price: string | number | null;
+      };
+      easyLedger: { userId: string; business: { id: string; currency: 'IDR' | 'USD'; ledger_revision: string } };
+    };
+    const rep = reply as { code: (status: number) => { send: (payload: unknown) => unknown } };
+    const context = req.easyLedger;
+    const body = req.body;
+    const price = parseVoicePrice(body.default_unit_price, context.business.currency);
+
+    const receipt = await catalog.updateProduct({
+      business_id: context.business.id,
+      actor_user_id: context.userId,
+      idempotency_key: `voice-product-update-${randomUUID()}`,
+      product_id: body.product_id,
+      expected_version: body.expected_version,
+      changes: { default_unit_price: price },
+    });
+
+    return rep.code(200).send(successEnvelope(String(req.id), receipt.product, {
+      operation_id: receipt.operation_id,
+      currency: receipt.currency,
+      ledger_revision: receipt.ledger_revision,
+      product: receipt.product,
+    }));
+  };
+
   for (const prefix of ['/api/v1/voice/tools', '/api/voice/tools']) {
     app.post(`${prefix}/get_context`, { schema: { body: toolGetContextSchema } }, handleGetContext);
     app.get(`${prefix}/get_context`, handleGetContext);
@@ -2127,6 +2171,7 @@ export function createApp(options: AppOptions) {
     app.post(`${prefix}/cancel_proposal`, { schema: { body: toolCancelProposalSchema } }, handleCancelProposal);
     app.post(`${prefix}/create_product`, { schema: { body: toolCreateProductSchema } }, handleCreateProductVoice);
     app.post(`${prefix}/add_product`, { schema: { body: toolCreateProductSchema } }, handleCreateProductVoice);
+    app.post(`${prefix}/update_product`, { schema: { body: toolUpdateProductSchema } }, handleUpdateProductVoice);
 
     app.post(`${prefix}/:tool`, async (request, reply) => {
       const toolName = (request.params as { tool: string }).tool;
@@ -2156,6 +2201,8 @@ export function createApp(options: AppOptions) {
         case 'create_product':
         case 'add_product':
           return handleCreateProductVoice(request, reply);
+        case 'update_product':
+          return handleUpdateProductVoice(request, reply);
         default:
           throw new ApiError('NOT_FOUND', `Tool ${toolName} is unavailable`, { httpStatus: 404 });
       }
