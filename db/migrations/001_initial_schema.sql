@@ -160,7 +160,15 @@ CREATE FUNCTION prevent_revision_mutation()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 AS $$
+DECLARE
+    v_is_demo BOOLEAN;
 BEGIN
+    IF TG_OP = 'DELETE' THEN
+        SELECT is_demo INTO v_is_demo FROM businesses WHERE id = OLD.business_id;
+        IF v_is_demo THEN
+            RETURN OLD;
+        END IF;
+    END IF;
     RAISE EXCEPTION 'ledger revisions are append-only' USING ERRCODE = '55000';
 END;
 $$;

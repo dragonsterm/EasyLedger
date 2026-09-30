@@ -2032,6 +2032,23 @@ export function createApp(options: AppOptions) {
 
   const resetDemoWorkspaceData = async (businessId: string, requestedCurrency?: 'IDR' | 'USD') => {
     await poolQuery(options.pool, `
+      CREATE OR REPLACE FUNCTION prevent_revision_mutation()
+      RETURNS TRIGGER
+      LANGUAGE plpgsql
+      AS $$
+      DECLARE
+          v_is_demo BOOLEAN;
+      BEGIN
+          IF TG_OP = 'DELETE' THEN
+              SELECT is_demo INTO v_is_demo FROM businesses WHERE id = OLD.business_id;
+              IF v_is_demo THEN
+                  RETURN OLD;
+              END IF;
+          END IF;
+          RAISE EXCEPTION 'ledger revisions are append-only' USING ERRCODE = '55000';
+      END;
+      $$;
+
       CREATE OR REPLACE FUNCTION prevent_business_currency_change()
       RETURNS TRIGGER
       LANGUAGE plpgsql
@@ -2057,8 +2074,10 @@ export function createApp(options: AppOptions) {
     await poolQuery(options.pool, 'DELETE FROM sales WHERE business_id = $1', [businessId]);
     await poolQuery(options.pool, 'DELETE FROM coverage_revisions WHERE business_id = $1', [businessId]);
     await poolQuery(options.pool, 'DELETE FROM day_coverages WHERE business_id = $1', [businessId]);
+    await poolQuery(options.pool, 'UPDATE operations SET undo_of_operation_id = NULL WHERE business_id = $1', [businessId]).catch(() => null);
     await poolQuery(options.pool, 'DELETE FROM operations WHERE business_id = $1', [businessId]);
     await poolQuery(options.pool, 'DELETE FROM proposals WHERE business_id = $1', [businessId]);
+    await poolQuery(options.pool, 'DELETE FROM voice_sessions WHERE business_id = $1', [businessId]).catch(() => null);
     await poolQuery(options.pool, 'DELETE FROM dashboards WHERE business_id = $1', [businessId]);
     await poolQuery(options.pool, "DELETE FROM products WHERE business_id = $1 AND id NOT IN ('00000000-0000-4000-8000-000000000011', '00000000-0000-4000-8000-000000000012', '00000000-0000-4000-8000-000000000013')", [businessId]);
 

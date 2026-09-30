@@ -208,6 +208,38 @@ export async function runDatabaseMigrations(pool) {
       console.log('[db:migrate] Demo catalog already present.');
     }
 
+    // Ensure demo mutability exceptions for currency and demo cleanup are active
+    await client.query(`
+      CREATE OR REPLACE FUNCTION prevent_revision_mutation()
+      RETURNS TRIGGER
+      LANGUAGE plpgsql
+      AS $$
+      DECLARE
+          v_is_demo BOOLEAN;
+      BEGIN
+          IF TG_OP = 'DELETE' THEN
+              SELECT is_demo INTO v_is_demo FROM businesses WHERE id = OLD.business_id;
+              IF v_is_demo THEN
+                  RETURN OLD;
+              END IF;
+          END IF;
+          RAISE EXCEPTION 'ledger revisions are append-only' USING ERRCODE = '55000';
+      END;
+      $$;
+
+      CREATE OR REPLACE FUNCTION prevent_business_currency_change()
+      RETURNS TRIGGER
+      LANGUAGE plpgsql
+      AS $$
+      BEGIN
+          IF NEW.currency <> OLD.currency AND NOT OLD.is_demo THEN
+              RAISE EXCEPTION 'business currency is immutable after creation' USING ERRCODE = '22000';
+          END IF;
+          RETURN NEW;
+      END;
+      $$;
+    `);
+
     await client.query('COMMIT');
     console.log('[db:migrate] All migrations and seeding successfully committed.');
     return { success: true, appliedCount: sqlFiles.length };
