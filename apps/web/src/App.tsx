@@ -1009,6 +1009,8 @@ function Dashboard({
   voiceDashboardDraft,
   hasNoDashboards = false,
   onCreateDashboard,
+  dashboards,
+  onSelectDashboard,
 }: {
   businessId: string;
   dashboardId: string | null;
@@ -1024,6 +1026,8 @@ function Dashboard({
   voiceDashboardDraft: VoiceDashboardDraft | null;
   hasNoDashboards?: boolean;
   onCreateDashboard?: () => void;
+  dashboards?: Array<{ id: string; name: string }>;
+  onSelectDashboard?: (dashboardId: string | null) => void;
 }) {
   const [widgets, setWidgets] = useState<WidgetSelection[]>(initialWidgetSelections);
   const [layout, setLayout] = useState<DashboardLayoutItem[]>(createInitialDashboardLayout);
@@ -1356,6 +1360,9 @@ function Dashboard({
               controller={voiceControl}
               headingId="voice-title"
               description="Try “show revenue this week”"
+              dashboards={dashboards}
+              activeDashboardId={dashboardId}
+              onSelectDashboard={onSelectDashboard}
             />
             <section className="dashboard-grid-empty api-state-card" role="status" aria-label="No dashboard available">
               <h1>No dashboard yet</h1>
@@ -1384,6 +1391,9 @@ function Dashboard({
             controller={voiceControl}
             headingId="voice-title"
             description="Try “show revenue this week”"
+            dashboards={dashboards}
+            activeDashboardId={dashboardId}
+            onSelectDashboard={onSelectDashboard}
           />
 
           <DashboardFilters
@@ -1544,6 +1554,7 @@ function App() {
     activeDashboardId,
     activeDashboardName,
     onLedgerCommitted: () => setRefreshCount((count) => count + 1),
+    onProductCreated: () => setRefreshCount((count) => count + 1),
     onDashboardDraft: (draft) => {
       if (draft.id && draft.id !== 'default') {
         setActiveDashboardId(draft.id);
@@ -1564,6 +1575,16 @@ function App() {
   });
 
   const [businessDashboards, setBusinessDashboards] = useState<Array<{ id: string; name: string }> | null>(null);
+
+  const handleSelectVoiceDashboard = (id: string | null) => {
+    setActiveDashboardId(id);
+    if (id) {
+      const found = businessDashboards?.find((d) => d.id === id);
+      if (found) setActiveDashboardName(found.name);
+    } else {
+      setActiveDashboardName('New dashboard draft');
+    }
+  };
 
   useEffect(() => {
     if (!currentMerchant) {
@@ -1966,7 +1987,18 @@ function App() {
           ) : activeNav === 'catalog' ? (
             <div className="editor-body catalog-editor-body">
               <main className="canvas catalog-canvas" id="catalog">
-                <Catalog key={currentMerchant.id} businessId={currentMerchant.id} currency={currency} section={catalogSection} onSectionChange={setCatalogSection} voiceControl={voiceControl} onChanged={refreshCharts} />
+                <Catalog
+                  key={currentMerchant.id}
+                  businessId={currentMerchant.id}
+                  currency={currency}
+                  section={catalogSection}
+                  onSectionChange={setCatalogSection}
+                  voiceControl={voiceControl}
+                  onChanged={refreshCharts}
+                  dashboards={businessDashboards || []}
+                  activeDashboardId={activeDashboardId}
+                  onSelectDashboard={handleSelectVoiceDashboard}
+                />
               </main>
             </div>
           ) : (
@@ -1989,6 +2021,8 @@ function App() {
                 setActiveNav('home');
                 window.location.hash = 'home';
               }}
+              dashboards={businessDashboards || []}
+              onSelectDashboard={handleSelectVoiceDashboard}
             />
           )}
             </>

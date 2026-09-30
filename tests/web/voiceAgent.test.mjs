@@ -25,6 +25,7 @@ test('voice tools expose the authorized proposal, query, and dashboard surface o
   assert.deepEqual(names, [
     'get_context',
     'list_sales',
+    'create_product',
     'propose_sales',
     'propose_correction',
     'query_sales',

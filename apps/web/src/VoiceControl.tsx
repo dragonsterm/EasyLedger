@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Icon from './Icon';
+import CustomSelect from './CustomSelect';
 import { formatMoneyMinor } from './analytics';
 import { apiFetch } from './api';
 import type { LedgerCurrency } from './analytics';
@@ -53,7 +54,7 @@ export interface VoiceDashboardSaveRequest {
 }
 
 export interface VoiceReceipt {
-  kind: 'sale' | 'correction' | 'dashboard';
+  kind: 'sale' | 'correction' | 'dashboard' | 'product';
   title: string;
   operationId?: string;
   ledgerRevision?: string;
@@ -130,11 +131,12 @@ interface VoiceCallbacks {
   activeDashboardId?: string | null;
   activeDashboardName?: string | null;
   onLedgerCommitted?: () => void;
+  onProductCreated?: (product: unknown) => void;
   onDashboardDraft?: (draft: VoiceDashboardDraft) => void;
   onDashboardSaved?: (dashboard: { id: string; name: string; version: string }) => void;
 }
 
-const toolNames = new Set<EasyLedgerVoiceToolName>([
+const toolNames = new Set<string>([
   'get_context',
   'list_sales',
   'propose_sales',
@@ -143,6 +145,8 @@ const toolNames = new Set<EasyLedgerVoiceToolName>([
   'get_dashboard_draft',
   'update_dashboard',
   'save_dashboard',
+  'create_product',
+  'add_product',
 ]);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -381,6 +385,18 @@ export function useVoiceAgent(callbacks: VoiceCallbacks = {}): VoiceAgentControl
       if (name === 'get_dashboard_draft') {
         const nextDraft = isRecord(data) && data.is_draft === true ? data as unknown as VoiceDashboardDraft : null;
         setDashboardDraft(nextDraft);
+      }
+      if ((name === 'create_product' || name === 'add_product') && isRecord(data)) {
+        const prod = data as { name?: string; id?: string };
+        const prodName = typeof prod.name === 'string' ? prod.name : 'New product';
+        setReceipt({
+          kind: 'product',
+          title: `Product “${prodName}” added to catalog`,
+          operationId: prod.id,
+        });
+        appendTranscript({ role: 'EasyLedger', text: `Product “${prodName}” has been added to your catalog.` });
+        activeCallbacksRef.current.onProductCreated?.(data);
+        activeCallbacksRef.current.onLedgerCommitted?.();
       }
       runtime.pendingToolResults.push({ callId, value: sanitizeVoiceToolResult(data) });
       flushToolResults(runtime);
@@ -925,11 +941,17 @@ export function VoiceControl({
   headingId,
   description,
   catalog = false,
+  dashboards,
+  activeDashboardId,
+  onSelectDashboard,
 }: {
   controller: VoiceAgentController;
   headingId: string;
   description: string;
   catalog?: boolean;
+  dashboards?: Array<{ id: string; name: string }>;
+  activeDashboardId?: string | null;
+  onSelectDashboard?: (dashboardId: string | null) => void;
 }) {
   const active = controller.status === 'connecting'
     || controller.status === 'listening'
@@ -952,15 +974,32 @@ export function VoiceControl({
         </span>
         {controller.permissionPending && <span className="voice-connection-hint">Allow microphone access in the browser prompt to continue.</span>}
       </div>
-      <button
-        className={`voice-shortcut${active ? ' voice-stop-button' : ''}`}
-        type="button"
-        aria-label={active ? 'Stop microphone and voice session' : 'Start microphone and voice session'}
-        onClick={active ? controller.stop : controller.start}
-        disabled={needsReview}
-      >
-        {active ? 'Stop voice' : needsReview ? 'Review pending action' : controller.status === 'error' ? 'Try again' : 'Start voice'}
-      </button>
+      <div className="voice-header-actions">
+        {dashboards && dashboards.length > 0 && (
+          <div className="voice-dashboard-picker">
+            <CustomSelect
+              value={activeDashboardId || ''}
+              onChange={(val) => onSelectDashboard?.(val || null)}
+              variant="pill"
+              ariaLabel="Select target dashboard for voice modifications"
+              options={[
+                ...dashboards.map((d) => ({ value: d.id, label: `Dashboard: ${d.name}` })),
+                { value: '', label: '+ New draft dashboard' },
+              ]}
+              disabled={active}
+            />
+          </div>
+        )}
+        <button
+          className={`voice-shortcut${active ? ' voice-stop-button' : ''}`}
+          type="button"
+          aria-label={active ? 'Stop microphone and voice session' : 'Start microphone and voice session'}
+          onClick={active ? controller.stop : controller.start}
+          disabled={needsReview}
+        >
+          {active ? 'Stop voice' : needsReview ? 'Review pending action' : controller.status === 'error' ? 'Try again' : 'Start voice'}
+        </button>
+      </div>
 
       {(controller.error || controller.proposal || controller.dashboardSave || controller.dashboardDraft || controller.receipt || controller.transcripts.length > 0) && (
         <div className="voice-details">

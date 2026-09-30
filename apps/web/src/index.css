@@ -740,11 +740,36 @@ dd {
   line-height: 17px;
 }
 
+.voice-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+.voice-dashboard-picker {
+  min-width: 170px;
+  max-width: 230px;
+}
+
+.voice-dashboard-picker .custom-select-button {
+  height: 34px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 17px;
+  background: #f7faf2;
+  border: 1px solid #d5ddce;
+  color: #4d5942;
+  padding: 0 14px;
+}
+
 .voice-shortcut {
   display: inline-flex;
-  width: 192px;
+  width: auto;
+  min-width: 130px;
+  padding: 0 18px;
   height: 34px;
-  flex: 0 0 192px;
+  flex: 0 0 auto;
   align-items: center;
   justify-content: center;
   border: 0;

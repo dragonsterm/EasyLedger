@@ -25,6 +25,9 @@ interface CatalogProps {
   onSectionChange: (section: CatalogSection) => void;
   voiceControl: VoiceAgentController;
   onChanged: () => void;
+  dashboards?: Array<{ id: string; name: string }>;
+  activeDashboardId?: string | null;
+  onSelectDashboard?: (dashboardId: string | null) => void;
 }
 
 type ViewMode = 'grid' | 'list';
@@ -140,7 +143,17 @@ function CatalogNote({ children }: { children: string }) {
   return <aside className="catalog-note"><img src="/assets/catalog-note-cube.svg" width="18" height="18" alt="" aria-hidden="true" /><p>{children}</p></aside>;
 }
 
-export default function Catalog({ businessId, currency, section, onSectionChange, voiceControl, onChanged }: CatalogProps) {
+export default function Catalog({
+  businessId,
+  currency,
+  section,
+  onSectionChange,
+  voiceControl,
+  onChanged,
+  dashboards,
+  activeDashboardId,
+  onSelectDashboard,
+}: CatalogProps) {
   const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortMode>('name');
@@ -239,7 +252,15 @@ export default function Catalog({ businessId, currency, section, onSectionChange
 
   return (
     <div className="catalog-content">
-      <VoiceControl controller={voiceControl} headingId="catalog-voice-title" description="Try “show my products” or “find orange juice”" catalog />
+      <VoiceControl
+        controller={voiceControl}
+        headingId="catalog-voice-title"
+        description="Try “show my products” or “find orange juice”"
+        catalog
+        dashboards={dashboards}
+        activeDashboardId={activeDashboardId}
+        onSelectDashboard={onSelectDashboard}
+      />
       <CatalogToolbar section={section} search={search} onSearch={setSearch} sort={sort} onSort={setSort} viewMode={viewMode} onViewMode={setViewMode} onBack={() => onSectionChange(null)} onAdd={beginAdd} />
       {loadError && <div className="home-dialog-error" role="alert">{loadError} <button className="button button-outline" type="button" onClick={() => void loadProducts()}>Retry</button></div>}
       {mutationError && !isProductDialogOpen && <div className="home-dialog-error" role="alert">{mutationError}</div>}

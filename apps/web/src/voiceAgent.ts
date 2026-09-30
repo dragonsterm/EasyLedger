@@ -40,6 +40,20 @@ export const EASYLEDGER_VOICE_TOOLS = [
   },
   {
     type: 'function',
+    name: 'create_product',
+    description: 'Add a new product to your active catalog. Provide the product name and optional default unit price in minor units (integer whole rupiah for IDR, integer cents for USD).',
+    parameters: {
+      type: 'object',
+      required: ['name'],
+      properties: {
+        name: { type: 'string', minLength: 1, maxLength: 100 },
+        default_unit_price: { type: ['string', 'null'], pattern: '^(0|[1-9][0-9]*)$' },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    type: 'function',
     name: 'propose_sales',
     description: 'Prepare a sale proposal for visible user review. This does not commit a sale. Use a product ID from the active catalog, whole quantity, and explicit business date. Leave unit_price out to use the listed default; do not guess a price.',
     parameters: {
@@ -215,6 +229,7 @@ export function buildVoiceSystemPrompt(context: VoiceBusinessContext): string {
     `Active catalog: ${JSON.stringify(catalog)}. Match product names carefully and use exact catalog IDs. Ask if the product is unknown or ambiguous.`,
     dashboardDirective,
     'Never ask for, invent, or include business_id or actor_user_id in tool arguments. The server binds identity and authorization.',
+    'You can add new products to the catalog using the create_product tool with the product name and optional default_unit_price in minor units.',
     'Use get_context for current business details. Use list_sales to find a unique sale ID and current version before proposing a correction. Ask the user to identify the target when multiple sales could match.',
     'CRITICAL: For sales and corrections, you MUST call the propose_sales or propose_correction tool. Never claim or speak that you have prepared a proposal unless you actually called the propose_sales tool. Never claim a ledger change has happened before the user presses the visible Confirm button. The browser does not provide commit tools to you.',
     'When a proposal is ready, tell the user to review it in the EasyLedger card and confirm there. Do not ask the user to speak a secret or confirmation token.',

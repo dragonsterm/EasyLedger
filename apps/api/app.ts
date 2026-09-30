@@ -270,6 +270,16 @@ const toolGetDashboardDraftSchema = {
   properties: { dashboard_id: dashboardIdSchema },
 };
 
+const toolCreateProductSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['name'],
+  properties: {
+    name: { type: 'string', minLength: 1, maxLength: 100 },
+    default_unit_price: moneySchema,
+  },
+};
+
 const toolSaleLineSchema = {
   type: 'object',
   additionalProperties: false,
@@ -1980,6 +1990,32 @@ export function createApp(options: AppOptions) {
     }
   };
 
+  const handleCreateProductVoice = async (request: unknown, reply: unknown) => {
+    const req = request as {
+      id: string;
+      body: { name: string; default_unit_price?: string | null };
+      easyLedger: { userId: string; business: { id: string; currency: 'IDR' | 'USD'; ledger_revision: string } };
+    };
+    const rep = reply as { code: (status: number) => { send: (payload: unknown) => unknown } };
+    const context = req.easyLedger;
+    const body = req.body;
+
+    const receipt = await catalog.createProduct({
+      business_id: context.business.id,
+      actor_user_id: context.userId,
+      idempotency_key: `voice-product-${randomUUID()}`,
+      name: body.name,
+      default_unit_price: body.default_unit_price,
+    });
+
+    return rep.code(201).send(successEnvelope(String(req.id), receipt.product, {
+      operation_id: receipt.operation_id,
+      currency: receipt.currency,
+      ledger_revision: receipt.ledger_revision,
+      product: receipt.product,
+    }));
+  };
+
   for (const prefix of ['/api/v1/voice/tools', '/api/voice/tools']) {
     app.post(`${prefix}/get_context`, { schema: { body: toolGetContextSchema } }, handleGetContext);
     app.get(`${prefix}/get_context`, handleGetContext);
@@ -1993,6 +2029,8 @@ export function createApp(options: AppOptions) {
     app.post(`${prefix}/save_dashboard`, { schema: { body: toolSaveDashboardSchema } }, handleSaveDashboard);
     app.post(`${prefix}/update_dashboard`, { schema: { body: toolUpdateDashboardSchema } }, handleUpdateDashboard);
     app.post(`${prefix}/cancel_proposal`, { schema: { body: toolCancelProposalSchema } }, handleCancelProposal);
+    app.post(`${prefix}/create_product`, { schema: { body: toolCreateProductSchema } }, handleCreateProductVoice);
+    app.post(`${prefix}/add_product`, { schema: { body: toolCreateProductSchema } }, handleCreateProductVoice);
 
     app.post(`${prefix}/:tool`, async (request, reply) => {
       const toolName = (request.params as { tool: string }).tool;
@@ -2019,6 +2057,9 @@ export function createApp(options: AppOptions) {
           return handleCancelProposal(request, reply);
         case 'query_sales':
           return handleQuerySales(request, reply);
+        case 'create_product':
+        case 'add_product':
+          return handleCreateProductVoice(request, reply);
         default:
           throw new ApiError('NOT_FOUND', `Tool ${toolName} is unavailable`, { httpStatus: 404 });
       }
