@@ -127,6 +127,8 @@ interface VoiceRuntime {
 }
 
 interface VoiceCallbacks {
+  activeDashboardId?: string | null;
+  activeDashboardName?: string | null;
   onLedgerCommitted?: () => void;
   onDashboardDraft?: (draft: VoiceDashboardDraft) => void;
   onDashboardSaved?: (dashboard: { id: string; name: string; version: string }) => void;
@@ -278,6 +280,10 @@ export function useVoiceAgent(callbacks: VoiceCallbacks = {}): VoiceAgentControl
   const startAbortRef = useRef<AbortController | null>(null);
   const activeCallbacksRef = useRef(callbacks);
   activeCallbacksRef.current = callbacks;
+  const activeDashboardIdRef = useRef(callbacks.activeDashboardId);
+  activeDashboardIdRef.current = callbacks.activeDashboardId;
+  const activeDashboardNameRef = useRef(callbacks.activeDashboardName);
+  activeDashboardNameRef.current = callbacks.activeDashboardName;
 
   const appendTranscript = useCallback((line: TranscriptLine) => {
     setTranscripts((current) => [...current.slice(-7), line]);
@@ -324,11 +330,17 @@ export function useVoiceAgent(callbacks: VoiceCallbacks = {}): VoiceAgentControl
     setStatus('processing');
     setError(null);
     try {
+      const currentDashId = activeDashboardIdRef.current;
+      if (currentDashId && (name === 'update_dashboard' || name === 'get_dashboard_draft' || name === 'save_dashboard')) {
+        if (!argumentsValue.dashboard_id || argumentsValue.dashboard_id === 'default') {
+          argumentsValue.dashboard_id = currentDashId;
+        }
+      }
+
       if (name === 'save_dashboard') {
-        const saveName = typeof argumentsValue.name === 'string' ? argumentsValue.name.trim() : '';
-        if (!saveName) throw new Error('Dashboard name is required before it can be saved.');
+        const saveName = typeof argumentsValue.name === 'string' && argumentsValue.name.trim() ? argumentsValue.name.trim() : (activeDashboardNameRef.current || 'Sales dashboard');
         setDashboardSave({
-          ...(typeof argumentsValue.dashboard_id === 'string' ? { dashboard_id: argumentsValue.dashboard_id } : {}),
+          ...(typeof argumentsValue.dashboard_id === 'string' ? { dashboard_id: argumentsValue.dashboard_id } : currentDashId ? { dashboard_id: currentDashId } : {}),
           name: saveName,
           ...(typeof argumentsValue.expected_version === 'string' ? { expected_version: argumentsValue.expected_version } : {}),
           saving: false,
@@ -589,15 +601,21 @@ export function useVoiceAgent(callbacks: VoiceCallbacks = {}): VoiceAgentControl
         await audioResume;
         if (audioContext.state !== 'running') throw new Error('The browser could not start audio playback. Try starting voice again.');
         assertCurrent();
+        const currentDashId = activeDashboardIdRef.current;
         const session = await requestJson<ProviderSessionBootstrap>('/api/v1/voice/sessions', {
-          body: { ttl_seconds: 600 },
+          body: {
+            ttl_seconds: 600,
+            ...(currentDashId ? { selected_dashboard_id: currentDashId } : {}),
+          },
           signal: abortController.signal,
         });
         assertCurrent();
         sessionTokenRef.current = session.session_token;
         const context = await requestJson<VoiceBusinessContext>('/api/v1/voice/tools/get_context', {
           sessionToken: session.session_token,
-          body: {},
+          body: {
+            ...(currentDashId ? { dashboard_id: currentDashId } : {}),
+          },
           signal: abortController.signal,
         });
         assertCurrent();
@@ -757,8 +775,10 @@ export function useVoiceAgent(callbacks: VoiceCallbacks = {}): VoiceAgentControl
     const draft = dashboardDraft;
     if ((!pending && !draft) || pending?.saving) return;
 
-    const saveName = pending?.name || draft?.name || 'Sales dashboard';
-    const saveId = pending?.dashboard_id || (draft && draft.id !== 'default' ? draft.id : undefined);
+    const currentDashId = activeDashboardIdRef.current;
+    const currentDashName = activeDashboardNameRef.current;
+    const saveId = pending?.dashboard_id || (draft && draft.id !== 'default' ? draft.id : (currentDashId || undefined));
+    const saveName = pending?.name || (saveId && saveId === currentDashId && currentDashName ? currentDashName : (draft?.name || currentDashName || 'Sales dashboard'));
     const saveVersion = pending?.expected_version || draft?.version;
 
     setDashboardSave({ name: saveName, dashboard_id: saveId, expected_version: saveVersion, saving: true });

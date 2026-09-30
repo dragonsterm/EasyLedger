@@ -1541,9 +1541,13 @@ function App() {
   const isLive = dashboardAnalytics !== null;
   const currency = currentMerchant?.currency ?? 'IDR';
   const voiceControl = useVoiceAgent({
+    activeDashboardId,
+    activeDashboardName,
     onLedgerCommitted: () => setRefreshCount((count) => count + 1),
     onDashboardDraft: (draft) => {
-      setActiveDashboardId(null);
+      if (draft.id && draft.id !== 'default') {
+        setActiveDashboardId(draft.id);
+      }
       setActiveDashboardName(draft.name);
       setDashboardMode('editing');
       setActiveNav('dashboard');

@@ -5,10 +5,13 @@ export interface VoiceBusinessContext {
   today: string;
   catalog: Array<{ id: string; name: string; default_unit_price: string | null }>;
   dashboard_id?: string | null;
+  dashboard_name?: string | null;
+  dashboards?: Array<{ id: string; name: string }>;
   ledger_revision?: string;
 }
 
 const uuid = { type: 'string', format: 'uuid' } as const;
+const dashboardId = { type: 'string', pattern: '^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|default)$' } as const;
 const integerString = { type: 'string', pattern: '^(0|[1-9][0-9]*)$' } as const;
 const date = { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}$' } as const;
 
@@ -110,7 +113,7 @@ export const EASYLEDGER_VOICE_TOOLS = [
     description: 'Read the current dashboard draft and its widgets/layout before editing or saving it.',
     parameters: {
       type: 'object',
-      properties: { dashboard_id: uuid },
+      properties: { dashboard_id: dashboardId },
       additionalProperties: false,
     },
   },
@@ -122,7 +125,7 @@ export const EASYLEDGER_VOICE_TOOLS = [
       type: 'object',
       required: ['operations'],
       properties: {
-        dashboard_id: uuid,
+        dashboard_id: dashboardId,
         expected_version: integerString,
         selected_widget_id: { type: ['string', 'null'], maxLength: 100 },
         operations: {
@@ -185,7 +188,7 @@ export const EASYLEDGER_VOICE_TOOLS = [
       type: 'object',
       required: ['name'],
       properties: {
-        dashboard_id: uuid,
+        dashboard_id: dashboardId,
         name: { type: 'string', minLength: 1, maxLength: 200 },
         expected_version: integerString,
       },
@@ -202,17 +205,22 @@ export function buildVoiceSystemPrompt(context: VoiceBusinessContext): string {
     name: product.name,
     default_unit_price: product.default_unit_price,
   }));
+  const dashboardDirective = context.dashboard_id
+    ? `Active dashboard: "${context.dashboard_name ?? 'Current dashboard'}" (ID: ${context.dashboard_id}). When adding widgets or editing, ALWAYS pass dashboard_id: "${context.dashboard_id}" in update_dashboard and get_dashboard_draft to edit this current dashboard directly. Never create a new dashboard unless explicitly asked to create a new one.`
+    : 'No active dashboard. Use update_dashboard to draft a new dashboard.';
+
   return [
     'You are EasyLedger, a concise voice assistant for one authenticated merchant.',
     `Business: ${context.business_name}. Currency: ${context.currency}. Timezone: ${context.timezone}. Today: ${context.today}.`,
     `Active catalog: ${JSON.stringify(catalog)}. Match product names carefully and use exact catalog IDs. Ask if the product is unknown or ambiguous.`,
+    dashboardDirective,
     'Never ask for, invent, or include business_id or actor_user_id in tool arguments. The server binds identity and authorization.',
     'Use get_context for current business details. Use list_sales to find a unique sale ID and current version before proposing a correction. Ask the user to identify the target when multiple sales could match.',
     'CRITICAL: For sales and corrections, you MUST call the propose_sales or propose_correction tool. Never claim or speak that you have prepared a proposal unless you actually called the propose_sales tool. Never claim a ledger change has happened before the user presses the visible Confirm button. The browser does not provide commit tools to you.',
     'When a proposal is ready, tell the user to review it in the EasyLedger card and confirm there. Do not ask the user to speak a secret or confirmation token.',
     'For unknown default prices, do not guess. Explain that the proposal will be marked as having unknown revenue, or ask the merchant for a price.',
     'Query totals come from the server. State the currency, date range, ledger revision when useful, and say when revenue is incomplete.',
-    'For dashboard edits, read the draft first when the target is unclear, then use typed operations. The dashboard canvas supports: 1) Total revenue KPI: type "kpi", metric "revenue", dimension "none"; 2) Units sold KPI: type "kpi", metric "units", dimension "none"; 3) Daily revenue line chart: type "line", metric "revenue", dimension "date" (line charts only support metric "revenue"); 4) Sales by product bar chart: type "bar", metric "units", dimension "product". For product-focused cards, set a descriptive title (e.g. "Orange Juice Revenue", "Orange Juice Sales"). When the user asks to save or confirms saving the dashboard, call save_dashboard with the dashboard name so the user can confirm the save in the EasyLedger card.',
+    'For dashboard edits, read the draft first when the target is unclear, then use typed operations. The dashboard canvas supports: 1) Total revenue KPI: type "kpi", metric "revenue", dimension "none"; 2) Units sold KPI: type "kpi", metric "units", dimension "none"; 3) Daily revenue line chart: type "line", metric "revenue", dimension "date" (line charts only support metric "revenue"); 4) Sales by product bar chart: type "bar", metric "units", dimension "product". For product-focused cards, set a descriptive title (e.g. "Orange Juice Revenue", "Lemon Juice Sales"). Always add widgets to the active dashboard draft.',
     'Keep replies short, speak plainly, and ask one clarification at a time.',
   ].join('\n');
 }

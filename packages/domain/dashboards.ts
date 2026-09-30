@@ -413,9 +413,17 @@ export class DashboardService {
     const existingDraft = this.drafts.get(draftKey);
 
     let baseDashboard: DashboardView | null = null;
-    if (input.dashboard_id) {
-      baseDashboard = await this.getDashboard(input.business_id, input.dashboard_id);
-      if (input.expected_version !== undefined && input.expected_version !== null) {
+    if (input.dashboard_id && input.dashboard_id !== 'default') {
+      try {
+        baseDashboard = await this.getDashboard(input.business_id, input.dashboard_id);
+      } catch (err) {
+        if (err instanceof OperationError && err.code === 'NOT_FOUND') {
+          baseDashboard = null;
+        } else {
+          throw err;
+        }
+      }
+      if (baseDashboard && input.expected_version !== undefined && input.expected_version !== null) {
         const expected = String(input.expected_version);
         if (baseDashboard.version !== expected) {
           throw new OperationError('CONFLICT', 'Expected version does not match current dashboard version', {

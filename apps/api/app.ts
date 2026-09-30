@@ -90,9 +90,11 @@ class ApiError extends Error {
 }
 
 const UUID_PATTERN = '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$';
+const DASHBOARD_ID_PATTERN = '^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|default)$';
 const DATE_PATTERN = '^\\d{4}-\\d{2}-\\d{2}$';
 const INTEGER_PATTERN = '^(0|[1-9][0-9]*)$';
 const uuidSchema = { type: 'string', pattern: UUID_PATTERN };
+const dashboardIdSchema = { type: 'string', pattern: DASHBOARD_ID_PATTERN };
 const dateSchema = { type: 'string', pattern: DATE_PATTERN };
 const integerSchema = { type: 'string', pattern: INTEGER_PATTERN };
 const moneySchema = { type: ['string', 'null'], pattern: INTEGER_PATTERN };
@@ -265,7 +267,7 @@ const toolListSalesSchema = {
 const toolGetDashboardDraftSchema = {
   type: 'object',
   additionalProperties: false,
-  properties: { dashboard_id: uuidSchema },
+  properties: { dashboard_id: dashboardIdSchema },
 };
 
 const toolSaleLineSchema = {
@@ -445,7 +447,7 @@ const toolSaveDashboardSchema = {
   additionalProperties: false,
   required: ['name'],
   properties: {
-    dashboard_id: uuidSchema,
+    dashboard_id: dashboardIdSchema,
     name: { type: 'string', minLength: 1, maxLength: 200 },
     expected_version: integerSchema,
     widgets: { type: 'array', maxItems: 20, items: widgetSchema },
@@ -529,7 +531,7 @@ const toolUpdateDashboardSchema = {
   type: 'object',
   additionalProperties: false,
   properties: {
-    dashboard_id: uuidSchema,
+    dashboard_id: dashboardIdSchema,
     expected_version: integerSchema,
     selected_widget_id: { type: ['string', 'null'], maxLength: 100 },
     operations: {
@@ -1484,6 +1486,10 @@ export function createApp(options: AppOptions) {
     const products = await catalog.listProducts(context.business.id, { active: true });
     const today = new Intl.DateTimeFormat('en-CA', { timeZone: context.business.timezone }).format(new Date());
 
+    const userDashboards = await dashboards.listDashboards(context.business.id).catch(() => []);
+    const activeId = body.dashboard_id ?? context.voiceSession?.selected_dashboard_id ?? (userDashboards[0]?.id ?? null);
+    const activeDashboard = activeId ? userDashboards.find((d) => d.id === activeId) : null;
+
     const data = {
       business_id: context.business.id,
       business_name: context.business.name,
@@ -1496,7 +1502,9 @@ export function createApp(options: AppOptions) {
         name: p.name,
         default_unit_price: p.default_unit_price,
       })),
-      dashboard_id: context.voiceSession?.selected_dashboard_id ?? body.dashboard_id ?? null,
+      dashboard_id: activeId,
+      dashboard_name: activeDashboard?.name ?? null,
+      dashboards: userDashboards.map((d) => ({ id: d.id, name: d.name })),
     };
 
     return rep.code(200).send(successEnvelope(String(req.id), data, {
