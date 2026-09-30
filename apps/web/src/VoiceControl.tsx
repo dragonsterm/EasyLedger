@@ -312,12 +312,15 @@ export function useVoiceAgent(callbacks: VoiceCallbacks = {}): VoiceAgentControl
     }
 
     if ((name === 'propose_sales' || name === 'propose_correction') && proposalRef.current) {
-      runtime.pendingToolResults.push({ callId, value: { error: 'A proposal is already waiting for the user. Ask them to confirm or cancel it first.' } });
-      flushToolResults(runtime);
-      return;
+      const oldProposal = proposalRef.current;
+      void requestJson('/api/v1/voice/tools/cancel_proposal', {
+        sessionToken: runtime.session.session_token,
+        body: { proposal_id: oldProposal.proposalId, reason: 'Superseded by new proposal' },
+      }).catch(() => undefined);
+      proposalRef.current = null;
+      setProposal(null);
     }
 
-    const thisTurn = runtime.turnId;
     setStatus('processing');
     setError(null);
     try {
@@ -352,16 +355,6 @@ export function useVoiceAgent(callbacks: VoiceCallbacks = {}): VoiceAgentControl
         }
         return;
       }
-      if (runtime.turnId !== thisTurn) {
-        if ((name === 'propose_sales' || name === 'propose_correction') && isRecord(data)) {
-          const created = readPrivateProposal(data, name === 'propose_sales' ? 'sale' : 'correction').privateValue;
-          void requestJson('/api/v1/voice/tools/cancel_proposal', {
-            sessionToken: runtime.session.session_token,
-            body: { proposal_id: created.proposalId, reason: 'The voice reply was interrupted before the proposal was presented' },
-          }).catch(() => undefined);
-        }
-        return;
-      }
 
       if ((name === 'propose_sales' || name === 'propose_correction') && isRecord(data)) {
         const result = readPrivateProposal(data, name === 'propose_sales' ? 'sale' : 'correction');
@@ -380,12 +373,12 @@ export function useVoiceAgent(callbacks: VoiceCallbacks = {}): VoiceAgentControl
       runtime.pendingToolResults.push({ callId, value: sanitizeVoiceToolResult(data) });
       flushToolResults(runtime);
     } catch (toolError) {
-      if (runtime.turnId !== thisTurn || !runtime.active) return;
+      if (!runtime.active) return;
       const message = describeError(toolError);
       runtime.pendingToolResults.push({ callId, value: { error: message } });
       flushToolResults(runtime);
     } finally {
-      if (runtime.active && runtime.turnId === thisTurn && runtime.lastEvent === 'reply.done') setStatus('listening');
+      if (runtime.active && runtime.lastEvent === 'reply.done') setStatus('listening');
     }
   }, [flushToolResults]);
 

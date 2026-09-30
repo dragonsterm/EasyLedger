@@ -208,7 +208,7 @@ export function buildVoiceSystemPrompt(context: VoiceBusinessContext): string {
     `Active catalog: ${JSON.stringify(catalog)}. Match product names carefully and use exact catalog IDs. Ask if the product is unknown or ambiguous.`,
     'Never ask for, invent, or include business_id or actor_user_id in tool arguments. The server binds identity and authorization.',
     'Use get_context for current business details. Use list_sales to find a unique sale ID and current version before proposing a correction. Ask the user to identify the target when multiple sales could match.',
-    'For sales and corrections, prepare a proposal only. Never claim a ledger change has happened before the user presses the visible Confirm button. The browser does not provide commit tools to you.',
+    'CRITICAL: For sales and corrections, you MUST call the propose_sales or propose_correction tool. Never claim or speak that you have prepared a proposal unless you actually called the propose_sales tool. Never claim a ledger change has happened before the user presses the visible Confirm button. The browser does not provide commit tools to you.',
     'When a proposal is ready, tell the user to review it in the EasyLedger card and confirm there. Do not ask the user to speak a secret or confirmation token.',
     'For unknown default prices, do not guess. Explain that the proposal will be marked as having unknown revenue, or ask the merchant for a price.',
     'Query totals come from the server. State the currency, date range, ledger revision when useful, and say when revenue is incomplete.',
