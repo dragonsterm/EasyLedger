@@ -2213,6 +2213,7 @@ export function createApp(options: AppOptions) {
           });
           setSessionCookie(reply, session.token, session.expiresAt);
           return reply.code(201).send(successEnvelope(String(request.id), {
+            token: session.token,
             user_id: userId,
             business: { id: businessId, name: businessName, currency, is_demo: false, ledger_revision: '0' },
             expires_at: new Date(session.expiresAt).toISOString(),
@@ -2250,6 +2251,7 @@ export function createApp(options: AppOptions) {
         const session = await sessionAuth.createSession({ userId: user.id, businessId: business.id });
         setSessionCookie(reply, session.token, session.expiresAt);
         return reply.code(200).send(successEnvelope(String(request.id), {
+          token: session.token,
           user_id: user.id,
           business: {
             id: business.id,
@@ -2276,17 +2278,24 @@ export function createApp(options: AppOptions) {
       const demoBusiness = demo.rows[0];
       if (!demoBusiness) throw new ApiError('SERVICE_UNAVAILABLE', 'The demo workspace is not available.', { httpStatus: 503, retryable: true });
       const demoCurrency = body.currency === 'USD' ? 'USD' : 'IDR';
-      const { currency: finalCurrency } = await resetDemoWorkspaceData(demoBusiness.id, demoCurrency);
+      let finalCurrency = demoBusiness.currency;
+      let finalRevision = demoBusiness.ledger_revision;
+      if (demoBusiness.currency !== demoCurrency) {
+        const resetRes = await resetDemoWorkspaceData(demoBusiness.id, demoCurrency);
+        finalCurrency = resetRes.currency;
+        finalRevision = '0';
+      }
       const session = await sessionAuth.createSession({ userId: demoBusiness.owner_user_id, businessId: demoBusiness.id });
       setSessionCookie(reply, session.token, session.expiresAt);
       return reply.code(200).send(successEnvelope(String(request.id), {
+        token: session.token,
         user_id: demoBusiness.owner_user_id,
         business: {
           id: demoBusiness.id,
           name: demoBusiness.name,
           currency: finalCurrency,
           is_demo: demoBusiness.is_demo,
-          ledger_revision: '0',
+          ledger_revision: finalRevision,
         },
         expires_at: new Date(session.expiresAt).toISOString(),
       }));

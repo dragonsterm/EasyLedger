@@ -10,7 +10,7 @@ import LedgerJournal from './Ledger';
 import Catalog, { type CatalogSection } from './Catalog';
 import HomeWorkspace from './HomeWorkspace';
 import { AuthModal, type AuthTab, type MerchantIdentity } from './AuthModal';
-import { apiFetch } from './api';
+import { apiFetch, clearAuthToken } from './api';
 import { VoiceControl, useVoiceAgent } from './VoiceControl';
 import type { VoiceDashboardDraft } from './VoiceControl';
 import {
@@ -2001,6 +2001,7 @@ function App() {
         }}
         onClose={() => setAuthModalOpen(false)}
         onLogout={() => {
+          clearAuthToken();
           voiceControl.stop();
           setCurrentMerchant(null);
           setAuthTab('login');

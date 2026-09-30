@@ -18,6 +18,31 @@ function configuredApiBase(): string | null {
 }
 
 const apiBase = configuredApiBase();
+const TOKEN_KEY = 'easyledger_auth_token';
+
+export function getAuthToken(): string | null {
+  try {
+    return window.localStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function setAuthToken(token: string): void {
+  try {
+    window.localStorage.setItem(TOKEN_KEY, token);
+  } catch {
+    // LocalStorage access may fail in restricted environments
+  }
+}
+
+export function clearAuthToken(): void {
+  try {
+    window.localStorage.removeItem(TOKEN_KEY);
+  } catch {
+    // LocalStorage access may fail
+  }
+}
 
 export function apiUrl(path: string): string {
   if (!path.startsWith('/')) throw new Error('API paths must start with /.');
@@ -25,5 +50,10 @@ export function apiUrl(path: string): string {
 }
 
 export function apiFetch(path: string, options: RequestInit = {}): Promise<Response> {
-  return fetch(apiUrl(path), { ...options, credentials: 'include' });
+  const headers = new Headers(options.headers || {});
+  const token = getAuthToken();
+  if (token && !headers.has('authorization')) {
+    headers.set('authorization', `Bearer ${token}`);
+  }
+  return fetch(apiUrl(path), { ...options, headers, credentials: 'include' });
 }

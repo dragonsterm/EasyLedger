@@ -1,6 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { apiFetch } from './api';
+import { apiFetch, clearAuthToken, setAuthToken } from './api';
 import CustomSelect from './CustomSelect';
+
+export type AuthTab = 'demo' | 'login' | 'register';
 
 export interface MerchantIdentity {
   id: string;
@@ -10,42 +12,37 @@ export interface MerchantIdentity {
   ledger_revision: string;
 }
 
-export interface AuthSessionState {
-  authenticated: boolean;
-  userId?: string;
-  business?: MerchantIdentity;
-}
+  export interface AuthModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onLoginSuccess: (business: MerchantIdentity) => void;
+    onLogout: () => void;
+    currentBusiness?: MerchantIdentity;
+    initialTab?: AuthTab;
+    isPage?: boolean;
+    onModeChange?: (tab: AuthTab) => void;
+    initialError?: string | null;
+  }
 
-export type AuthTab = 'demo' | 'login' | 'register';
+  interface AuthResponse {
+    data?: { business?: MerchantIdentity; token?: string };
+    message?: string;
+  }
 
-interface AuthModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onLoginSuccess: (business: MerchantIdentity) => void;
-  onLogout: () => void;
-  currentBusiness?: MerchantIdentity;
-  initialTab?: AuthTab;
-  isPage?: boolean;
-  onModeChange?: (tab: AuthTab) => void;
-  initialError?: string | null;
-}
-
-interface AuthResponse {
-  data?: { business?: MerchantIdentity };
-  message?: string;
-}
-
-async function submitAuth(path: string, payload: Record<string, unknown>): Promise<MerchantIdentity> {
-  const response = await apiFetch(path, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-  const result = await response.json().catch(() => null) as AuthResponse | null;
-  if (!response.ok) throw new Error(result?.message ?? `EasyLedger could not complete the request (${response.status}).`);
-  if (!result?.data?.business) throw new Error('EasyLedger returned an incomplete account response.');
-  return result.data.business;
-}
+  async function submitAuth(path: string, payload: Record<string, unknown>): Promise<MerchantIdentity> {
+    const response = await apiFetch(path, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const result = await response.json().catch(() => null) as AuthResponse | null;
+    if (!response.ok) throw new Error(result?.message ?? `EasyLedger could not complete the request (${response.status}).`);
+    if (!result?.data?.business) throw new Error('EasyLedger returned an incomplete account response.');
+    if (result.data.token && typeof result.data.token === 'string') {
+      setAuthToken(result.data.token);
+    }
+    return result.data.business;
+  }
 
 export function AuthModal({
   isOpen,
@@ -85,18 +82,6 @@ export function AuthModal({
     setLoading(true);
     setErrorMessage(null);
     try {
-      try {
-        const keysToRemove: string[] = [];
-        for (let i = 0; i < window.localStorage.length; i++) {
-          const key = window.localStorage.key(i);
-          if (key && (key.includes('00000000-0000-4000-8000-000000000001') || key.startsWith('easyledger.home-workspace') || key.includes('demo'))) {
-            keysToRemove.push(key);
-          }
-        }
-        keysToRemove.forEach((k) => window.localStorage.removeItem(k));
-      } catch {
-        // LocalStorage access may fail in restricted environments
-      }
       const business = await submitAuth('/api/v1/auth/login', { merchant: 'demo', currency: demoCurrency });
       onLoginSuccess(business);
       onClose();
@@ -157,6 +142,7 @@ export function AuthModal({
           // LocalStorage access may fail
         }
       }
+      clearAuthToken();
       const response = await apiFetch('/api/v1/auth/logout', { method: 'POST' });
       const result = await response.json().catch(() => null) as AuthResponse | null;
       if (!response.ok) throw new Error(result?.message ?? `Sign out failed (${response.status}).`);
