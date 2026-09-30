@@ -492,14 +492,16 @@ function supportedVoiceWidgetKind(widget: VoiceDraftWidget): DashboardWidgetKind
   if (widget.filters && (
     (widget.filters.date_from !== undefined && widget.filters.date_from !== null)
     || (widget.filters.date_to !== undefined && widget.filters.date_to !== null)
-    || (widget.filters.product_ids?.length ?? 0) > 0
   )) return null;
-  if (widget.type === 'kpi' && (!widget.dimension || widget.dimension === 'none')) {
+  if (widget.type === 'kpi') {
     if (widget.metric === 'revenue') return 'revenue-kpi';
-    if (widget.metric === 'units') return 'units-kpi';
+    if (widget.metric === 'units') {
+      if (widget.dimension === 'date') return 'complete-days';
+      return 'units-kpi';
+    }
   }
-  if (widget.type === 'line' && widget.metric === 'revenue' && widget.dimension === 'date') return 'daily-revenue';
-  if (widget.type === 'bar' && widget.metric === 'units' && widget.dimension === 'product') return 'product-sales';
+  if (widget.type === 'line' && widget.metric === 'revenue' && (widget.dimension === 'date' || !widget.dimension)) return 'daily-revenue';
+  if (widget.type === 'bar' && widget.metric === 'units') return 'product-sales';
   return null;
 }
 

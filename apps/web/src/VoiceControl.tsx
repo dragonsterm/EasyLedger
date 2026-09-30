@@ -761,35 +761,77 @@ export function useVoiceAgent(callbacks: VoiceCallbacks = {}): VoiceAgentControl
 
   const confirmDashboardSave = useCallback(() => {
     const pending = dashboardSave;
-    const sessionToken = sessionTokenRef.current;
-    if (!pending || !sessionToken || pending.saving) return;
-    setDashboardSave({ ...pending, saving: true });
-    setError(null);
-    void requestJson<Record<string, unknown>>('/api/v1/voice/tools/save_dashboard', {
-      sessionToken,
-      body: {
-        ...(pending.dashboard_id ? { dashboard_id: pending.dashboard_id } : {}),
-        name: pending.name,
-        ...(pending.expected_version ? { expected_version: pending.expected_version } : {}),
-      },
-    }).then((data) => {
-      const saved = {
-        id: requiredText(data.id, 'Dashboard ID'),
-        name: requiredText(data.name, 'Dashboard name'),
-        version: requiredText(data.version, 'Dashboard version'),
-      };
-      setDashboardSave(null);
-      setDashboardDraft(null);
-      setReceipt({ kind: 'dashboard', title: `Dashboard “${saved.name}” saved`, dashboardVersion: saved.version });
-      appendTranscript({ role: 'EasyLedger', text: `Dashboard “${saved.name}” saved as version ${saved.version}.` });
-      activeCallbacksRef.current.onDashboardSaved?.(saved);
-    }).catch((saveError: unknown) => {
-      setDashboardSave((current) => current ? { ...current, saving: false } : current);
-      setError(describeError(saveError));
-    });
-  }, [appendTranscript, dashboardSave]);
+    const draft = dashboardDraft;
+    if ((!pending && !draft) || pending?.saving) return;
 
-  const cancelDashboardSave = useCallback(() => setDashboardSave(null), []);
+    const saveName = pending?.name || draft?.name || 'Sales dashboard';
+    const saveId = pending?.dashboard_id || (draft && draft.id !== 'default' ? draft.id : undefined);
+    const saveVersion = pending?.expected_version || draft?.version;
+
+    setDashboardSave({ name: saveName, dashboard_id: saveId, expected_version: saveVersion, saving: true });
+    setError(null);
+
+    const sessionToken = sessionTokenRef.current;
+    if (sessionToken) {
+      void requestJson<Record<string, unknown>>('/api/v1/voice/tools/save_dashboard', {
+        sessionToken,
+        body: {
+          ...(saveId ? { dashboard_id: saveId } : {}),
+          name: saveName,
+          ...(saveVersion ? { expected_version: saveVersion } : {}),
+        },
+      }).then((data) => {
+        const saved = {
+          id: requiredText(data.id, 'Dashboard ID'),
+          name: requiredText(data.name, 'Dashboard name'),
+          version: requiredText(data.version, 'Dashboard version'),
+        };
+        setDashboardSave(null);
+        setDashboardDraft(null);
+        setReceipt({ kind: 'dashboard', title: `Dashboard “${saved.name}” saved`, dashboardVersion: saved.version });
+        appendTranscript({ role: 'EasyLedger', text: `Dashboard “${saved.name}” saved as version ${saved.version}.` });
+        activeCallbacksRef.current.onDashboardSaved?.(saved);
+      }).catch((saveError: unknown) => {
+        setDashboardSave((current) => current ? { ...current, saving: false } : current);
+        setError(describeError(saveError));
+      });
+    } else {
+      void apiFetch(saveId ? `/api/v1/dashboards/${saveId}` : '/api/v1/dashboards', {
+        method: saveId ? 'PUT' : 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          name: saveName,
+          ...(saveVersion ? { expected_version: saveVersion } : {}),
+          widgets: draft?.widgets ?? [],
+          layout: draft?.layout ?? [],
+          schema_version: 1,
+        }),
+      }).then(async (response) => {
+        const payload = await response.json().catch(() => null) as { data?: { id?: string; name?: string; version?: string }; message?: string } | null;
+        if (!response.ok || !payload?.data?.id) {
+          throw new Error(payload?.message ?? 'Dashboard could not be saved.');
+        }
+        const saved = {
+          id: payload.data.id,
+          name: payload.data.name ?? saveName,
+          version: String(payload.data.version ?? '1'),
+        };
+        setDashboardSave(null);
+        setDashboardDraft(null);
+        setReceipt({ kind: 'dashboard', title: `Dashboard “${saved.name}” saved`, dashboardVersion: saved.version });
+        appendTranscript({ role: 'EasyLedger', text: `Dashboard “${saved.name}” saved as version ${saved.version}.` });
+        activeCallbacksRef.current.onDashboardSaved?.(saved);
+      }).catch((saveError: unknown) => {
+        setDashboardSave((current) => current ? { ...current, saving: false } : current);
+        setError(describeError(saveError));
+      });
+    }
+  }, [appendTranscript, dashboardSave, dashboardDraft]);
+
+  const cancelDashboardSave = useCallback(() => {
+    setDashboardSave(null);
+    setDashboardDraft(null);
+  }, []);
 
   useEffect(() => () => {
     generationRef.current += 1;
@@ -930,7 +972,7 @@ export function VoiceControl({
             </section>
           )}
 
-          {controller.dashboardSave && (
+          {controller.dashboardSave && !controller.dashboardDraft && (
             <section className="voice-review-card" aria-label="Dashboard save awaiting confirmation">
               <div className="voice-review-heading">
                 <div>
@@ -969,6 +1011,24 @@ export function VoiceControl({
                 })}
                 {controller.dashboardDraft.widgets.length === 0 && <li><span>No widgets in this draft.</span></li>}
               </ul>
+              <div className="voice-review-actions" style={{ marginTop: '14px' }}>
+                <button
+                  className="button button-primary"
+                  type="button"
+                  onClick={controller.confirmDashboardSave}
+                  disabled={controller.dashboardSave?.saving}
+                >
+                  {controller.dashboardSave?.saving ? 'Saving…' : 'Save dashboard'}
+                </button>
+                <button
+                  className="button button-secondary"
+                  type="button"
+                  onClick={controller.cancelDashboardSave}
+                  disabled={controller.dashboardSave?.saving}
+                >
+                  Discard draft
+                </button>
+              </div>
             </section>
           )}
 

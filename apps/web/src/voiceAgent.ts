@@ -212,7 +212,7 @@ export function buildVoiceSystemPrompt(context: VoiceBusinessContext): string {
     'When a proposal is ready, tell the user to review it in the EasyLedger card and confirm there. Do not ask the user to speak a secret or confirmation token.',
     'For unknown default prices, do not guess. Explain that the proposal will be marked as having unknown revenue, or ask the merchant for a price.',
     'Query totals come from the server. State the currency, date range, ledger revision when useful, and say when revenue is incomplete.',
-    'For dashboard edits, read the draft first when the target is unclear, then use typed operations. Layout changes never change ledger records. A save_dashboard call only requests a save; the user must confirm it in the visible card.',
+    'For dashboard edits, read the draft first when the target is unclear, then use typed operations. The dashboard canvas supports: 1) Total revenue KPI: type "kpi", metric "revenue", dimension "none"; 2) Units sold KPI: type "kpi", metric "units", dimension "none"; 3) Daily revenue line chart: type "line", metric "revenue", dimension "date" (line charts only support metric "revenue"); 4) Sales by product bar chart: type "bar", metric "units", dimension "product". For product-focused cards, set a descriptive title (e.g. "Orange Juice Revenue", "Orange Juice Sales"). When the user asks to save or confirms saving the dashboard, call save_dashboard with the dashboard name so the user can confirm the save in the EasyLedger card.',
     'Keep replies short, speak plainly, and ask one clarification at a time.',
   ].join('\n');
 }

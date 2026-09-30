@@ -1007,6 +1007,8 @@ function Dashboard({
   onRefresh,
   voiceControl,
   voiceDashboardDraft,
+  hasNoDashboards = false,
+  onCreateDashboard,
 }: {
   businessId: string;
   dashboardId: string | null;
@@ -1020,6 +1022,8 @@ function Dashboard({
   onRefresh: () => void;
   voiceControl: ReturnType<typeof useVoiceAgent>;
   voiceDashboardDraft: VoiceDashboardDraft | null;
+  hasNoDashboards?: boolean;
+  onCreateDashboard?: () => void;
 }) {
   const [widgets, setWidgets] = useState<WidgetSelection[]>(initialWidgetSelections);
   const [layout, setLayout] = useState<DashboardLayoutItem[]>(createInitialDashboardLayout);
@@ -1343,6 +1347,35 @@ function Dashboard({
     );
   }
 
+  if (hasNoDashboards) {
+    return (
+      <div className={`editor-body dashboard-mode-${mode}`}>
+        <main className="canvas" id="dashboard">
+          <div className="canvas-inner">
+            <VoiceControl
+              controller={voiceControl}
+              headingId="voice-title"
+              description="Try “show revenue this week”"
+            />
+            <section className="dashboard-grid-empty api-state-card" role="status" aria-label="No dashboard available">
+              <h1>No dashboard yet</h1>
+              <p>Please create a dashboard first from the Home workspace to customize widgets and view sales analytics.</p>
+              <div style={{ marginTop: '16px' }}>
+                <button
+                  className="button button-primary"
+                  type="button"
+                  onClick={onCreateDashboard}
+                >
+                  Create a dashboard
+                </button>
+              </div>
+            </section>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className={`editor-body${currentWidget ? ' inspector-open' : ' inspector-closed'} dashboard-mode-${mode}`}>
       <main className="canvas" id="dashboard">
@@ -1517,9 +1550,40 @@ function App() {
       window.location.hash = 'dashboard';
     },
     onDashboardSaved: (dashboard) => {
+      setActiveDashboardId(dashboard.id);
       setActiveDashboardName(dashboard.name);
+      setDashboardMode('preview');
+      setActiveNav('dashboard');
+      window.location.hash = 'dashboard';
+      setRefreshCount((count) => count + 1);
     },
   });
+
+  const [businessDashboards, setBusinessDashboards] = useState<Array<{ id: string; name: string }> | null>(null);
+
+  useEffect(() => {
+    if (!currentMerchant) {
+      setBusinessDashboards(null);
+      return;
+    }
+    let cancelled = false;
+    void apiFetch('/api/v1/dashboards').then(async (response) => {
+      const payload = await response.json().catch(() => null) as { data?: { dashboards?: Array<{ id: string; name: string }> } } | null;
+      if (cancelled) return;
+      if (response.ok && Array.isArray(payload?.data?.dashboards)) {
+        setBusinessDashboards(payload.data.dashboards);
+        if (payload.data.dashboards.length > 0 && !activeDashboardId) {
+          setActiveDashboardId(payload.data.dashboards[0].id);
+          setActiveDashboardName(payload.data.dashboards[0].name);
+        }
+      } else {
+        setBusinessDashboards([]);
+      }
+    }).catch(() => {
+      if (!cancelled) setBusinessDashboards([]);
+    });
+    return () => { cancelled = true; };
+  }, [currentMerchant, refreshCount, activeDashboardId]);
 
   useEffect(() => {
     const handleHash = () => {
@@ -1916,6 +1980,11 @@ function App() {
               onRefresh={refreshCharts}
               voiceControl={voiceControl}
               voiceDashboardDraft={voiceControl.dashboardDraft}
+              hasNoDashboards={!activeDashboardId && !voiceControl.dashboardDraft && businessDashboards !== null && businessDashboards.length === 0}
+              onCreateDashboard={() => {
+                setActiveNav('home');
+                window.location.hash = 'home';
+              }}
             />
           )}
             </>
