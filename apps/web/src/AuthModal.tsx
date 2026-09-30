@@ -64,6 +64,7 @@ export function AuthModal({
   const [password, setPassword] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [currency, setCurrency] = useState<'IDR' | 'USD'>('IDR');
+  const [demoCurrency, setDemoCurrency] = useState<'IDR' | 'USD'>(currentBusiness?.currency ?? 'IDR');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -96,7 +97,7 @@ export function AuthModal({
       } catch {
         // LocalStorage access may fail in restricted environments
       }
-      const business = await submitAuth('/api/v1/auth/login', { merchant: 'demo' });
+      const business = await submitAuth('/api/v1/auth/login', { merchant: 'demo', currency: demoCurrency });
       onLoginSuccess(business);
       onClose();
     } catch (error) {
@@ -225,18 +226,37 @@ export function AuthModal({
           </div>
           <div className="auth-demo-details">
             <strong>[DEMO] EasyLedger Juice Stall</strong>
-            <p>Uses the shared demo business and its two seeded catalog items. Sales start empty; anything you record stays in this demo workspace.</p>
+            <p>Uses the shared demo business and its seeded catalog items. Sales start empty; anything you record stays in this demo workspace.</p>
+
+            <label className="home-dialog-field" style={{ margin: '14px 0 10px' }}>
+              <span>Choose demo currency</span>
+              <CustomSelect
+                value={demoCurrency}
+                onChange={(val) => setDemoCurrency(val as 'IDR' | 'USD')}
+                variant="form"
+                ariaLabel="Choose demo currency"
+                options={[
+                  { value: 'IDR', label: 'IDR — Indonesian rupiah (Rp)' },
+                  { value: 'USD', label: 'USD — US dollar ($)' },
+                ]}
+              />
+            </label>
+
             <div className="auth-demo-meta-grid">
-              <div><small>Currency</small><span>IDR (Rp)</span></div>
-              <div><small>Catalog</small><span>Orange Juice · Mango Juice</span></div>
+              <div><small>Currency</small><span>{demoCurrency === 'IDR' ? 'IDR (Rp)' : 'USD ($)'}</span></div>
+              <div><small>Catalog</small><span>Orange Juice · Mango Juice · Fresh Lemon Juice</span></div>
             </div>
             <div className="auth-demo-hint">
               <span className="auth-demo-hint-label">Try a voice entry</span>
-              <code>“Record 3 orange juices at Rp 15,000 each today”</code>
+              <code>
+                {demoCurrency === 'IDR'
+                  ? '“Record 3 orange juices at Rp 15,000 each today”'
+                  : '“Record 3 orange juices at $3.50 each today”'}
+              </code>
             </div>
           </div>
           <button type="button" className="button button-action auth-demo-btn" onClick={() => void handleDemoLogin()} disabled={loading}>
-            {loading ? 'Connecting…' : 'Open demo workspace'}
+            {loading ? 'Connecting…' : `Open demo workspace (${demoCurrency})`}
             <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true" focusable="false">
               <path d="M4 10h11M10 5l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
             </svg>

@@ -546,6 +546,7 @@ const demoResetSchema = {
   additionalProperties: false,
   properties: {
     confirm: { type: 'boolean' },
+    currency: { type: 'string', enum: ['IDR', 'USD'] },
   },
 };
 
@@ -2029,7 +2030,29 @@ export function createApp(options: AppOptions) {
     }));
   });
 
-  const resetDemoWorkspaceData = async (businessId: string) => {
+  const resetDemoWorkspaceData = async (businessId: string, requestedCurrency?: 'IDR' | 'USD') => {
+    await poolQuery(options.pool, `
+      CREATE OR REPLACE FUNCTION prevent_business_currency_change()
+      RETURNS TRIGGER
+      LANGUAGE plpgsql
+      AS $$
+      BEGIN
+          IF NEW.currency <> OLD.currency AND NOT OLD.is_demo THEN
+              RAISE EXCEPTION 'business currency is immutable after creation' USING ERRCODE = '22000';
+          END IF;
+          RETURN NEW;
+      END;
+      $$;
+    `).catch(() => null);
+
+    const targetCurrency = requestedCurrency === 'USD' ? 'USD' : requestedCurrency === 'IDR' ? 'IDR' : null;
+    if (targetCurrency) {
+      await poolQuery(options.pool, 'UPDATE businesses SET currency = $1 WHERE id = $2', [targetCurrency, businessId]).catch(() => null);
+    }
+
+    const currentBiz = await poolQuery<{ currency: 'IDR' | 'USD' }>(options.pool, 'SELECT currency FROM businesses WHERE id = $1', [businessId]).catch(() => null);
+    const currency = targetCurrency ?? currentBiz?.rows?.[0]?.currency ?? 'IDR';
+
     await poolQuery(options.pool, 'DELETE FROM sale_revisions WHERE business_id = $1', [businessId]);
     await poolQuery(options.pool, 'DELETE FROM sales WHERE business_id = $1', [businessId]);
     await poolQuery(options.pool, 'DELETE FROM coverage_revisions WHERE business_id = $1', [businessId]);
@@ -2037,11 +2060,28 @@ export function createApp(options: AppOptions) {
     await poolQuery(options.pool, 'DELETE FROM operations WHERE business_id = $1', [businessId]);
     await poolQuery(options.pool, 'DELETE FROM proposals WHERE business_id = $1', [businessId]);
     await poolQuery(options.pool, 'DELETE FROM dashboards WHERE business_id = $1', [businessId]);
-    await poolQuery(options.pool, 'DELETE FROM products WHERE business_id = $1 AND id NOT IN (\'00000000-0000-4000-8000-000000000010\', \'00000000-0000-4000-8000-000000000011\')', [businessId]);
-    await poolQuery(options.pool, 'UPDATE products SET active = true, default_unit_price = CASE WHEN id = \'00000000-0000-4000-8000-000000000010\' THEN 15000 WHEN id = \'00000000-0000-4000-8000-000000000011\' THEN 18000 END WHERE business_id = $1', [businessId]);
+    await poolQuery(options.pool, "DELETE FROM products WHERE business_id = $1 AND id NOT IN ('00000000-0000-4000-8000-000000000011', '00000000-0000-4000-8000-000000000012', '00000000-0000-4000-8000-000000000013')", [businessId]);
+
+    const orangePrice = currency === 'USD' ? 350 : 15000;
+    const mangoPrice = currency === 'USD' ? 400 : 18000;
+    const lemonPrice = currency === 'USD' ? 300 : 12000;
+
+    await poolQuery(options.pool, `
+      INSERT INTO products (id, business_id, name, default_unit_price, version, active)
+      VALUES
+        ('00000000-0000-4000-8000-000000000011', $1, 'Orange Juice', $2, 1, true),
+        ('00000000-0000-4000-8000-000000000012', $1, 'Mango Juice', $3, 1, true),
+        ('00000000-0000-4000-8000-000000000013', $1, 'Fresh Lemon Juice', $4, 1, true)
+      ON CONFLICT (id, business_id) DO UPDATE
+      SET active = true,
+          name = EXCLUDED.name,
+          default_unit_price = EXCLUDED.default_unit_price
+    `, [businessId, orangePrice, mangoPrice, lemonPrice]);
+
     await poolQuery(options.pool, 'UPDATE businesses SET ledger_revision = 0 WHERE id = $1', [businessId]);
     proposals.clearMemoryProposals(businessId);
     dashboards.clearAllDrafts(businessId);
+    return { currency };
   };
 
   const registerDemoResetRoute = (routePath: string) => {
@@ -2050,18 +2090,20 @@ export function createApp(options: AppOptions) {
       if (!context.business.is_demo) {
         throw new ApiError('FORBIDDEN', 'Reset operation is restricted to demo workspaces only (FR-16)', { httpStatus: 403 });
       }
+      const body = (request.body as { confirm?: boolean; currency?: 'IDR' | 'USD' }) ?? {};
 
-      await resetDemoWorkspaceData(context.business.id);
+      const { currency } = await resetDemoWorkspaceData(context.business.id, body.currency);
 
       return reply.code(200).send(successEnvelope(String(request.id), {
         business_id: context.business.id,
         business_name: context.business.name,
+        currency,
         is_demo: true,
         ledger_revision: '0',
         message: 'Demo workspace successfully reset to initial clean state',
         reset_at: new Date().toISOString(),
       }, {
-        currency: context.business.currency,
+        currency,
         ledger_revision: '0',
       }));
     });
@@ -2214,7 +2256,8 @@ export function createApp(options: AppOptions) {
       );
       const demoBusiness = demo.rows[0];
       if (!demoBusiness) throw new ApiError('SERVICE_UNAVAILABLE', 'The demo workspace is not available.', { httpStatus: 503, retryable: true });
-      await resetDemoWorkspaceData(demoBusiness.id);
+      const demoCurrency = body.currency === 'USD' ? 'USD' : 'IDR';
+      const { currency: finalCurrency } = await resetDemoWorkspaceData(demoBusiness.id, demoCurrency);
       const session = await sessionAuth.createSession({ userId: demoBusiness.owner_user_id, businessId: demoBusiness.id });
       setSessionCookie(reply, session.token, session.expiresAt);
       return reply.code(200).send(successEnvelope(String(request.id), {
@@ -2222,7 +2265,7 @@ export function createApp(options: AppOptions) {
         business: {
           id: demoBusiness.id,
           name: demoBusiness.name,
-          currency: demoBusiness.currency,
+          currency: finalCurrency,
           is_demo: demoBusiness.is_demo,
           ledger_revision: '0',
         },

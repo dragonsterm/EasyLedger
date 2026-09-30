@@ -42,6 +42,12 @@ INSERT INTO products (
     '00000000-0000-4000-8000-000000000001',
     'Mango Juice',
     18000
+),
+(
+    '00000000-0000-4000-8000-000000000013',
+    '00000000-0000-4000-8000-000000000001',
+    'Fresh Lemon Juice',
+    12000
 )
 ON CONFLICT (id, business_id) DO UPDATE
 SET name = EXCLUDED.name,

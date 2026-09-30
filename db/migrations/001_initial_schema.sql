@@ -170,7 +170,7 @@ RETURNS TRIGGER
 LANGUAGE plpgsql
 AS $$
 BEGIN
-    IF NEW.currency <> OLD.currency THEN
+    IF NEW.currency <> OLD.currency AND NOT OLD.is_demo THEN
         RAISE EXCEPTION 'business currency is immutable after creation' USING ERRCODE = '22000';
     END IF;
     RETURN NEW;

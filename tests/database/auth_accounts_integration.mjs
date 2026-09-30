@@ -225,7 +225,7 @@ test('account auth, durable sessions, tenant isolation, demo, and migration base
   const demoCookie = cookieFrom(demoLogin);
   const demoProducts = await app.inject({ method: 'GET', url: '/api/v1/products', headers: { cookie: demoCookie } });
   const demoSales = await app.inject({ method: 'GET', url: '/api/v1/sales', headers: { cookie: demoCookie } });
-  assert.equal(demoProducts.json().data.products.length, 2);
+  assert.equal(demoProducts.json().data.products.length, 3);
   assert.deepEqual(demoSales.json().data.items, []);
   await app.inject({ method: 'POST', url: '/api/v1/auth/logout', headers: { cookie: demoCookie } });
   await app.close();

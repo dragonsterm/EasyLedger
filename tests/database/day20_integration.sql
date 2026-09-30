@@ -6,8 +6,8 @@ BEGIN;
 DO $$
 BEGIN
     IF (SELECT count(*) FROM products
-        WHERE business_id = '00000000-0000-4000-8000-000000000001') <> 2 THEN
-        RAISE EXCEPTION 'demo seed must contain exactly two products';
+        WHERE business_id = '00000000-0000-4000-8000-000000000001') <> 3 THEN
+        RAISE EXCEPTION 'demo seed must contain exactly three products';
     END IF;
 END;
 $$;

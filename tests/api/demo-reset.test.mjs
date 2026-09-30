@@ -52,7 +52,12 @@ function createMockDemoPool() {
         if (b) b.ledger_revision = '0';
         return { rows: [], rowCount: 1 };
       }
-      if (sql.startsWith('DELETE FROM')) {
+      if (sql.includes('UPDATE businesses SET currency = $1 WHERE id = $2')) {
+        const b = businesses.find((item) => item.id === values[1]);
+        if (b) b.currency = values[0];
+        return { rows: [], rowCount: 1 };
+      }
+      if (sql.startsWith('DELETE FROM') || sql.startsWith('INSERT INTO products') || sql.includes('CREATE OR REPLACE FUNCTION')) {
         return { rows: [], rowCount: 1 };
       }
       return { rows: [], rowCount: 0 };
@@ -140,4 +145,13 @@ test('TASK-28-02: demo workspace reset clears transactions and resets ledger rev
     payload: {},
   });
   assert.equal(aliasRes.statusCode, 200);
+
+  // Test resetting with currency USD
+  const usdRes = await app.inject({
+    method: 'POST',
+    url: '/api/v1/demo/reset',
+    payload: { confirm: true, currency: 'USD' },
+  });
+  assert.equal(usdRes.statusCode, 200);
+  assert.equal(usdRes.json().data.currency, 'USD');
 });
