@@ -1980,7 +1980,7 @@ function App() {
             <div className="editor-body inspector-closed">
               <main className="canvas" id="ledger">
                 <div className="canvas-inner">
-                  <LedgerJournal key={currentMerchant.id} businessId={currentMerchant.id} voiceControl={voiceControl} currency={currency} onChanged={refreshCharts} />
+                  <LedgerJournal key={`${currentMerchant.id}:${refreshCount}`} businessId={currentMerchant.id} voiceControl={voiceControl} currency={currency} onChanged={refreshCharts} />
                 </div>
               </main>
             </div>
@@ -1988,7 +1988,7 @@ function App() {
             <div className="editor-body catalog-editor-body">
               <main className="canvas catalog-canvas" id="catalog">
                 <Catalog
-                  key={currentMerchant.id}
+                  key={`${currentMerchant.id}:${refreshCount}`}
                   businessId={currentMerchant.id}
                   currency={currency}
                   section={catalogSection}

@@ -363,6 +363,129 @@ test('TASK-23-02: HTTP tool gateway supports propose_sales, propose_correction, 
   assert.equal(dispatchRes.statusCode, 200);
 });
 
+test('create_product voice tool creates a new product with flexible price parsing', async (t) => {
+  const products = [];
+  const pool = {
+    async query(text, values = []) {
+      const sql = String(text);
+      if (sql.includes('owner_user_id = $1')) {
+        return { rows: [{ id: business, name: 'Juice Stall Demo', currency: 'IDR', timezone: 'Asia/Jakarta', ledger_revision: '5', owner_user_id: owner }], rowCount: 1 };
+      }
+      if (sql.includes('businesses') && sql.includes('WHERE id = $1')) {
+        return { rows: [{ id: business, name: 'Juice Stall Demo', currency: 'IDR', timezone: 'Asia/Jakarta', ledger_revision: '5', owner_user_id: owner }], rowCount: 1 };
+      }
+      if (sql.includes('voice_sessions')) {
+        return { rows: [{ session_token_hash: 'hash', business_id: business, actor_user_id: owner, expires_at: new Date(Date.now() + 10000) }], rowCount: 1 };
+      }
+      return { rows: [], rowCount: 0 };
+    },
+    async connect() {
+      return {
+        async query(text, values = []) {
+          const sql = String(text);
+          if (sql === 'BEGIN' || sql === 'COMMIT' || sql === 'ROLLBACK') return { rows: [], rowCount: 0 };
+          if (sql.includes('INSERT INTO operations')) return { rows: [{ id: 'op-1' }], rowCount: 1 };
+          if (sql.includes('FROM businesses') && sql.includes('FOR UPDATE')) {
+            return { rows: [{ id: business, currency: 'IDR', ledger_revision: '5' }], rowCount: 1 };
+          }
+          if (sql.includes('FROM products') && sql.includes('name_normalized')) {
+            return { rows: [], rowCount: 0 };
+          }
+          if (sql.includes('INSERT INTO products')) {
+            const row = { id: `prod-${products.length + 1}`, business_id: business, name: values[2], active: true, default_unit_price: values[3], version: '1' };
+            products.push(row);
+            return { rows: [row], rowCount: 1 };
+          }
+          if (sql.includes('UPDATE businesses') && sql.includes('ledger_revision')) {
+            return { rows: [{ ledger_revision: '6' }], rowCount: 1 };
+          }
+          if (sql.includes('UPDATE operations')) {
+            return { rows: [], rowCount: 1 };
+          }
+          return { rows: [], rowCount: 0 };
+        },
+        release() {},
+      };
+    },
+  };
+
+  const app = createApp({
+    pool,
+    authAdapter: () => ({ userId: owner }),
+    assemblyTokenGenerator: () => 'mock_token',
+  });
+  t.after(() => app.close());
+
+  const sessionRes = await app.inject({ method: 'POST', url: '/api/v1/voice/sessions', payload: {} });
+  assert.equal(sessionRes.statusCode, 201, sessionRes.body);
+  const sessionToken = sessionRes.json().data.session_token;
+
+  // 1. Numeric price: 20000
+  const numRes = await app.inject({
+    method: 'POST',
+    url: '/api/v1/voice/tools/create_product',
+    headers: { 'x-session-token': sessionToken },
+    payload: { name: 'Ice Tea', price: 20000 },
+  });
+  assert.equal(numRes.statusCode, 201, numRes.body);
+  assert.equal(numRes.json().data.name, 'Ice Tea');
+  assert.equal(numRes.json().data.default_unit_price, '20000');
+
+  // 2. String with "20k"
+  const kRes = await app.inject({
+    method: 'POST',
+    url: '/api/v1/voice/tools/add_product',
+    headers: { 'x-session-token': sessionToken },
+    payload: { product_name: 'Lemon Tea', default_unit_price: '20k' },
+  });
+  assert.equal(kRes.statusCode, 201);
+  assert.equal(kRes.json().data.name, 'Lemon Tea');
+  assert.equal(kRes.json().data.default_unit_price, '20000');
+
+  // 3. Spoken shorthand from the voice transcript: "twenty k"
+  const spokenRes = await app.inject({
+    method: 'POST',
+    url: '/api/v1/voice/tools/create_product',
+    headers: { 'x-session-token': sessionToken },
+    payload: { name: 'Passionfruit Tea', default_unit_price: 'twenty k' },
+  });
+  assert.equal(spokenRes.statusCode, 201);
+  assert.equal(spokenRes.json().data.default_unit_price, '20000');
+
+  // An unrecognized explicit amount must fail instead of silently saving an unknown price.
+  const existingProducts = products.length;
+  const invalidPriceRes = await app.inject({
+    method: 'POST',
+    url: '/api/v1/voice/tools/create_product',
+    headers: { 'x-session-token': sessionToken },
+    payload: { name: 'Invalid Price Tea', default_unit_price: 'twenty elephants' },
+  });
+  assert.equal(invalidPriceRes.statusCode, 422);
+  assert.equal(invalidPriceRes.json().code, 'VALIDATION_ERROR');
+  assert.equal(products.length, existingProducts);
+
+  for (const [index, price] of ['20000.5', 20000.5].entries()) {
+    const fractionalPriceRes = await app.inject({
+      method: 'POST',
+      url: '/api/v1/voice/tools/create_product',
+      headers: { 'x-session-token': sessionToken },
+      payload: { name: `Fractional Price Tea ${index}`, default_unit_price: price },
+    });
+    assert.equal(fractionalPriceRes.statusCode, 422);
+    assert.equal(fractionalPriceRes.json().code, 'VALIDATION_ERROR');
+  }
+  assert.equal(products.length, existingProducts);
+
+  const extraPropertyRes = await app.inject({
+    method: 'POST',
+    url: '/api/v1/voice/tools/create_product',
+    headers: { 'x-session-token': sessionToken },
+    payload: { name: 'Unexpected Field Tea', default_unit_price: 20000, injected: true },
+  });
+  assert.equal(extraPropertyRes.statusCode, 422);
+  assert.equal(products.length, existingProducts);
+});
+
 test('voice proposals are bound to the session that created them', async (t) => {
   const app = createApp({
     pool: mockPool(),

@@ -272,12 +272,14 @@ const toolGetDashboardDraftSchema = {
 
 const toolCreateProductSchema = {
   type: 'object',
-  additionalProperties: false,
-  required: ['name'],
   properties: {
     name: { type: 'string', minLength: 1, maxLength: 100 },
-    default_unit_price: moneySchema,
+    product_name: { type: 'string', minLength: 1, maxLength: 100 },
+    default_unit_price: { type: ['string', 'number', 'null'] },
+    unit_price: { type: ['string', 'number', 'null'] },
+    price: { type: ['string', 'number', 'null'] },
   },
+  additionalProperties: false,
 };
 
 const toolSaleLineSchema = {
@@ -1990,22 +1992,116 @@ export function createApp(options: AppOptions) {
     }
   };
 
+  function parseVoicePrice(value: unknown, currency: 'IDR' | 'USD'): string | null {
+    if (value === null || value === undefined || value === '') return null;
+    if (typeof value === 'number') {
+      if (!Number.isSafeInteger(value) || value < 0) {
+        throw new ApiError('VALIDATION_ERROR', 'Price must be a non-negative integer in minor units', {
+          httpStatus: 422,
+          fieldErrors: { default_unit_price: 'invalid integer' },
+        });
+      }
+      return String(value);
+    }
+    if (typeof value !== 'string') {
+      throw new ApiError('VALIDATION_ERROR', 'Price must be an exact amount in the business currency', {
+        httpStatus: 422,
+        fieldErrors: { default_unit_price: 'invalid price' },
+      });
+    }
+    const cleaned = value.trim().toLowerCase().replace(/^(rp|idr|\$)\s*/, '');
+    if (!cleaned) return null;
+
+    const invalidPrice = () => new ApiError('VALIDATION_ERROR', 'Price must be an exact amount in the business currency', {
+      httpStatus: 422,
+      fieldErrors: { default_unit_price: 'invalid price' },
+    });
+
+    const wordNumbers: Record<string, bigint> = {
+      zero: 0n, one: 1n, two: 2n, three: 3n, four: 4n, five: 5n, six: 6n, seven: 7n,
+      eight: 8n, nine: 9n, ten: 10n, eleven: 11n, twelve: 12n, thirteen: 13n, fourteen: 14n,
+      fifteen: 15n, sixteen: 16n, seventeen: 17n, eighteen: 18n, nineteen: 19n,
+    };
+    const wordTens: Record<string, bigint> = {
+      twenty: 20n, thirty: 30n, forty: 40n, fifty: 50n, sixty: 60n, seventy: 70n,
+      eighty: 80n, ninety: 90n,
+    };
+    const parseNumberWords = (phrase: string): bigint | null => {
+      const words = phrase.trim().replaceAll('-', ' ').split(/\s+/);
+      if (words.length === 1) return wordNumbers[words[0]] ?? wordTens[words[0]] ?? null;
+      if (words.length === 2 && wordTens[words[0]] !== undefined && wordNumbers[words[1]] !== undefined) {
+        const ones = wordNumbers[words[1]];
+        if (ones > 0n && ones < 10n) return wordTens[words[0]] + ones;
+      }
+      return null;
+    };
+
+    const spokenThousands = cleaned.match(/^([a-z]+(?:[\s-]+[a-z]+)*)\s*(?:k|thousand)$/);
+    if (spokenThousands) {
+      const count = parseNumberWords(spokenThousands[1]);
+      if (count === null) throw invalidPrice();
+      return (count * 1000n).toString();
+    }
+
+    const numericThousands = cleaned.match(/^(\d+)(?:\.(\d+))?\s*k$/);
+    if (numericThousands) {
+      const fraction = numericThousands[2] ?? '';
+      const denominator = 10n ** BigInt(fraction.length);
+      const numerator = BigInt(`${numericThousands[1]}${fraction}`) * 1000n;
+      if (numerator % denominator !== 0n) throw invalidPrice();
+      return (numerator / denominator).toString();
+    }
+
+    if (currency === 'IDR') {
+      if (/[,.]/.test(cleaned) && !/^\d{1,3}(?:[,.]\d{3})+$/.test(cleaned)) throw invalidPrice();
+      const digitsOnly = cleaned.replace(/[,\.]/g, '');
+      if (/^\d+$/.test(digitsOnly)) return digitsOnly;
+    } else {
+      if (/^\d+\.\d{3,}$/.test(cleaned)) throw invalidPrice();
+      if (/^\d+(\.\d{1,2})?$/.test(cleaned)) {
+        const parts = cleaned.split('.');
+        const dollars = BigInt(parts[0]);
+        const cents = parts[1] ? parts[1].padEnd(2, '0').slice(0, 2) : '00';
+        return (dollars * 100n + BigInt(cents)).toString();
+      }
+      const digitsOnly = cleaned.replace(/[,\.]/g, '');
+      if (/^\d+$/.test(digitsOnly)) return digitsOnly;
+    }
+    const spokenAmount = parseNumberWords(cleaned);
+    if (spokenAmount !== null) return spokenAmount.toString();
+    throw invalidPrice();
+  }
+
   const handleCreateProductVoice = async (request: unknown, reply: unknown) => {
     const req = request as {
       id: string;
-      body: { name: string; default_unit_price?: string | null };
+      body?: {
+        name?: string;
+        product_name?: string;
+        default_unit_price?: string | number | null;
+        unit_price?: string | number | null;
+        price?: string | number | null;
+      };
       easyLedger: { userId: string; business: { id: string; currency: 'IDR' | 'USD'; ledger_revision: string } };
     };
     const rep = reply as { code: (status: number) => { send: (payload: unknown) => unknown } };
     const context = req.easyLedger;
-    const body = req.body;
+    const body = req.body ?? {};
+
+    const rawName = (body.name ?? body.product_name ?? '').trim();
+    if (!rawName) {
+      throw new ApiError('VALIDATION_ERROR', 'Product name is required', { httpStatus: 422 });
+    }
+
+    const rawPrice = body.default_unit_price ?? body.unit_price ?? body.price;
+    const cleanPrice = parseVoicePrice(rawPrice, context.business.currency);
 
     const receipt = await catalog.createProduct({
       business_id: context.business.id,
       actor_user_id: context.userId,
       idempotency_key: `voice-product-${randomUUID()}`,
-      name: body.name,
-      default_unit_price: body.default_unit_price,
+      name: rawName,
+      default_unit_price: cleanPrice,
     });
 
     return rep.code(201).send(successEnvelope(String(req.id), receipt.product, {

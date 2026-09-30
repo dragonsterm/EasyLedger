@@ -341,6 +341,13 @@ export function useVoiceAgent(callbacks: VoiceCallbacks = {}): VoiceAgentControl
         }
       }
 
+      if (name === 'create_product' || name === 'add_product') {
+        const rawName = argumentsValue.name || argumentsValue.product_name || argumentsValue.product;
+        if (typeof rawName === 'string') {
+          argumentsValue.name = rawName.trim();
+        }
+      }
+
       if (name === 'save_dashboard') {
         const saveName = typeof argumentsValue.name === 'string' && argumentsValue.name.trim() ? argumentsValue.name.trim() : (activeDashboardNameRef.current || 'Sales dashboard');
         setDashboardSave({

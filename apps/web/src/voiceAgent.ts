@@ -47,7 +47,7 @@ export const EASYLEDGER_VOICE_TOOLS = [
       required: ['name'],
       properties: {
         name: { type: 'string', minLength: 1, maxLength: 100 },
-        default_unit_price: { type: ['string', 'null'], pattern: '^(0|[1-9][0-9]*)$' },
+        default_unit_price: { type: ['string', 'number', 'null'] },
       },
       additionalProperties: false,
     },
