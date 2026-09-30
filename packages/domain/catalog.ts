@@ -280,7 +280,8 @@ export class CatalogService {
         `SELECT id, business_id, name, active, default_unit_price::text AS default_unit_price,
                 version::text AS version, created_at, updated_at
            FROM products
-          WHERE business_id = $1 AND name_normalized = normalize_product_name($2)`,
+          WHERE business_id = $1
+            AND name_normalized = lower(regexp_replace(btrim($2), '\\s+', ' ', 'g'))`,
         [businessId, name],
       );
       let targetRow: ProductRow;

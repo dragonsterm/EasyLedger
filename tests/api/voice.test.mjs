@@ -389,7 +389,11 @@ test('create_product voice tool creates a new product with flexible price parsin
             return { rows: [{ id: business, currency: 'IDR', ledger_revision: '5' }], rowCount: 1 };
           }
           if (sql.includes('FROM products') && sql.includes('name_normalized')) {
-            return { rows: [], rowCount: 0 };
+            assert.ok(sql.includes("lower(regexp_replace(btrim($2), '\\s+', ' ', 'g'))"), 'product lookup must match the generated name_normalized expression');
+            assert.doesNotMatch(sql, /normalize_product_name\s*\(/, 'product lookup must not call an undefined database function');
+            const normalizedName = String(values[1]).trim().replace(/\s+/g, ' ').toLowerCase();
+            const existing = products.find((product) => product.name.trim().replace(/\s+/g, ' ').toLowerCase() === normalizedName);
+            return { rows: existing ? [existing] : [], rowCount: existing ? 1 : 0 };
           }
           if (sql.includes('INSERT INTO products')) {
             const row = { id: `prod-${products.length + 1}`, business_id: business, name: values[2], active: true, default_unit_price: values[3], version: '1' };
@@ -420,6 +424,17 @@ test('create_product voice tool creates a new product with flexible price parsin
   assert.equal(sessionRes.statusCode, 201, sessionRes.body);
   const sessionToken = sessionRes.json().data.session_token;
 
+  // Manual catalog creation shares the same database path as voice creation.
+  const manualRes = await app.inject({
+    method: 'POST',
+    url: '/api/v1/products',
+    headers: { 'idempotency-key': 'manual-product-create' },
+    payload: { name: 'Manual Catalog Test', default_unit_price: '100' },
+  });
+  assert.equal(manualRes.statusCode, 201, manualRes.body);
+  assert.equal(manualRes.json().data.name, 'Manual Catalog Test');
+  assert.equal(manualRes.json().data.default_unit_price, '100');
+
   // 1. Numeric price: 20000
   const numRes = await app.inject({
     method: 'POST',
@@ -430,6 +445,16 @@ test('create_product voice tool creates a new product with flexible price parsin
   assert.equal(numRes.statusCode, 201, numRes.body);
   assert.equal(numRes.json().data.name, 'Ice Tea');
   assert.equal(numRes.json().data.default_unit_price, '20000');
+
+  const duplicateRes = await app.inject({
+    method: 'POST',
+    url: '/api/v1/voice/tools/create_product',
+    headers: { 'x-session-token': sessionToken },
+    payload: { name: '  ice   tea  ', default_unit_price: 25000 },
+  });
+  assert.equal(duplicateRes.statusCode, 409);
+  assert.equal(duplicateRes.json().code, 'CONFLICT');
+  assert.equal(products.length, 2, 'normalized duplicate must not insert a second product');
 
   // 2. String with "20k"
   const kRes = await app.inject({
